@@ -1,0 +1,410 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+
+{% block title %}
+Sociala/{{ product }}
+{% endblock title %}
+
+{% block meta_head %}  
+  <meta property="og:site_name" content="Sociala">
+  <meta property="og:title" content="{{ product.name }}">
+  <meta property="og:description" content="{{ product.description|truncatewords:20 }}">
+  <meta property="og:type" content="website">
+  {% if product.img  %}<meta property="og:image" content=" {{ product.img.url }}"> {% endif %}
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+{% endblock meta_head %}
+
+{% block body %}
+
+    <style>
+        /****** Rating Starts *****/
+        @import url(http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css);
+
+        fieldset, label { margin: 0; padding: 0; }
+        body{ margin: 20px; }
+        h1 { font-size: 1.5em; margin: 10px; }
+
+        .rating { 
+            border: none;
+            float: left;
+        }
+
+        .rating > input { display: none; } 
+        .rating > label:before { 
+            margin: 5px;
+            font-size: 1.25em;
+            font-family: FontAwesome;
+            display: inline-block;
+            content: "\f005";
+        }
+
+        .rating > .half:before { 
+            content: "\f089";
+            position: absolute;
+        }
+
+        .rating > label { 
+            color: #ddd; 
+        }
+
+        .rating > input:checked ~ label, 
+        .rating:not(:checked) > label:hover,  
+        .rating:not(:checked) > label:hover ~ label { color: #FFD700;  }
+
+        .rating > input:checked + label:hover, 
+        .rating > input:checked ~ label:hover,
+        .rating > label:hover ~ input:checked ~ label, 
+        .rating > input:checked ~ label:hover ~ label { color: #FFED85;  }     
+
+        .rating > label{float:right}
+    </style>
+    
+    <!-- main content -->
+    <div class="container bg-white" style='margin-top:60px'>
+        <div class="row">
+            <div class="col-xl-12 mt-3 mb-5">
+                <div class="row">
+                    <div class="col-lg-5 offset-lg-1 mb-4">
+                        <div class="product-slider-3 owl-carousel owl-theme dot-none owl-nav-link edge-link">
+                            
+                            {% if product.gallary.all %}
+                                {% for i in product.gallary.all %}
+                                        <div class="owl-items pt-lg--10 pb-lg--10 bg-white rounded-3"><img data-thumb="<img src='{{ i.img.url }}' />" src="{{ i.img.url }}" alt="icon"></div>
+                                {% endfor %}
+                                <div class="owl-items pt-lg--10 pb-lg--10 bg-white rounded-3"><img data-thumb="<img src='{{ product.img.url }}' />" src="{{ product.img.url }}" alt="icon"></div>
+                            {% else %}
+                                <div class="owl-items pt-lg--10 pb-lg--10 bg-white rounded-3"><img data-thumb="<img src='{{ product.img.url }}' />" src="{{ product.img.url }}" alt="icon"></div>
+                            {% endif %}
+                            
+                        </div>                        
+                    </div>
+                    <div class="col-lg-6  col-md-12 pad-top-lg-200 pad-bottom-lg-100 pad-top-100 pad-bottom-75 ps-md--5">
+                        {% if product.stock == 0 %}
+                        <h3 class="text-danger font-xssss fw-700 ls-2">Out Of Stock</h3>
+                        {% else %}
+                        <h3 class="text-primary font-xssss fw-700 ls-2">On Sale</h3>
+                        {% endif %}
+                            
+                        <h2 class="fw-700 text-grey-900 display1-size lh-3 porduct-title display2-md-size"> {{ product.name }}</h2>
+                        <div class="star d-block w-100 text-left">
+                            {% for i in product.products.all %}
+                                {% for stars in '12345' %}
+                                    {% if i.rating >= forloop.counter %}
+                                        <img src="{% static 'images/star.png' %}" alt="star" class="w15">
+                                    {% else %}
+                                        <img src="{% static 'images/star-disable.png' %}" alt="star" class="w15">
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        </div>
+                        <p class="review-link font-xssss fw-500 text-grey-500 lh-3"> {{ product.products.all.count }} customer review</p>
+                        <div class="clearfix"></div>
+                        <p class="font-xsss fw-400 text-grey-500 lh-30 pe-5 mt-3 me-5">{{ product.description }}</p>
+                        <h6 class="display2-size fw-700 text-current ls-2 mb-2" id="product-price" 
+                            data-base-price="{% if not product.discount_price %}{{ product.price }}{% else %}{{ product.discount_price }}{% endif %}">
+                            {% if product.discount_price %}
+                                <span id="display-price" class="font-xl">${{product.discount_price}}</span>
+                                <span class="font-xs text-grey-500" style="text-decoration: line-through;">${{product.price}}</span>
+                            {% else %}
+                                <span id="display-price" class="font-xl">${{product.price}}</span>
+                            {% endif %}
+                        </h6>
+                        <div class="clearfix"></div>
+
+                        <form method='POST' action="{% url 'add-to-cart' product.category.slug product.slug product.pk %}" class="form--action mt-4 mb-3"  id="add-to-cart-form">
+                            {% csrf_token %}
+
+                            {% if varform.color %}
+                                <h5>Color:</h5>
+                                <div class="variation-group" data-variation-prices="{{ varform.color_prices|jsonify }}">
+                                    {% for radio in varform.color %}
+                                        <div class="form-check">
+                                            {{ radio.tag }}
+                                            <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                                {{ radio.choice_label }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div><br>
+                            {% endif %}
+
+                            {% if varform.size %}
+                                <h5>Size:</h5>
+                                <div class="variation-group" data-variation-prices="{{ varform.size_prices|jsonify }}">
+                                    {% for radio in varform.size %}
+                                        <div class="form-check">
+                                            {{ radio.tag }}
+                                            <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                                {{ radio.choice_label }} 
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %} <br>
+                                
+                            <div class="product-action flex-row align-items-center">
+                                {% comment %} <button type="submit" class="add-to-cart bg-dark text-white fw-700 ps-lg-5 pe-lg-5 text-uppercase font-xssss float-left border-dark border rounded-3 border-size-md d-inline-block mt-0 p-3 text-center ls-3">
+                                    <span class="submit-text">Add to cart</span>
+                                    <span class="spinner" style="display: none;">
+                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        Adding...
+                                    </span>
+                                </button> {% endcomment %}
+                                <button type="submit" class="add-to-cart bg-dark text-white fw-700 ps-lg-5 pe-lg-5 text-uppercase font-xssss float-left border-dark border rounded-3 border-size-md d-inline-block mt-0 p-3 text-center ls-3">Add to cart</button>
+                                <a href="{% url 'add' product.category.slug product.slug product.pk %}" class="btn-round-xl alert-dark text-white d-inline-block mt-0 ms-4 float-left"><i class="ti-heart font-sm"></i></a>
+                            </div>
+                        </form>
+                        
+                        <div class="d-inline-flex">
+                            <a class="text-dark px-2" style='text-decoration: none;' href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" target="_blank">
+                                <i class="ti-facebook"></i>
+                            </a>
+            
+                            <button class='btn' onclick="copyToClipboard('{{ request.build_absolute_uri }}')">
+                                <i class="ti-link"></i>
+                            </button>
+                        </div>
+                        <div class="clearfix"></div>
+                        <ul class="product-feature-list mt-5">
+                            <li class="w-50 lh-32 font-xsss text-grey-500 fw-500 float-left"><b class="text-grey-900"> Category : </b>{{ product.category }}</li>
+                        </ul>
+                    </div>
+                </div> 
+            </div>               
+        </div>
+
+        <div class="nav nav-tabs mb-4">
+            <p>Reviews {{ product.products.all.count }}</p>
+        </div>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="tab-pane-1">
+                <h3 class="mb-3">Product Description</h3>
+                <p> <b>{{ product.description }}</b></p>
+            </div><br>
+
+            <div class="tab-pane fade show active" id="tab-pane-3">
+                <div class="row">
+                    <h4 class="mb-4">{{ product.products.all.count }} review for "{{ product.name }}"</h4>
+                    {% if product.products.all %} 
+                        {% for i in product.products.all %}
+                            <div class="col-md-6">
+                                <div class="media mb-4">
+                                    <div class="media-body">
+                                        <h6>{{ i.user }}<small> - <i>{{ i.updated_at|timesince }}</i></small></h6>
+                                        <div class="text-primary mb-2">
+                                            {% for stars in '12345' %}
+                                                {% if i.rating >= forloop.counter %}
+                                                    <img src="{% static 'images/star.png' %}" alt="star" class="w15">
+                                                {% else %}
+                                                    <img src="{% static 'images/star-disable.png' %}" alt="star" class="w15">
+                                                {% endif %}
+                                            {% endfor %}
+                                            
+                                        </div>
+                                        <p>{{ i.review }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="col-md-6">
+                        <h4 class="mb-4">Leave a review</h4>
+                        <form id='review-form' method='POST' action='{{ product.review_url }}'>
+                            {% csrf_token %}
+                            <input type="hidden" name="product_id" id='product_id' value='{{ product_id }}'>
+                            <div class="d-flex my-3">
+                                <p class="mb-0 mr-2">Your Rating * :</p>
+                                <fieldset class="rating">
+                                    <input type="radio" id="star5" name="rating" value="5" />
+                                    <label for="star5" title="Awesome - 5 stars"></label>
+                                    <input type="radio" id="star4" name="rating" value="4" />
+                                    <label for="star4" title="Pretty good - 4 stars"></label>
+                                    <input type="radio" id="star3" name="rating" value="3" />
+                                    <label for="star3" title="Meh - 3 stars"></label>
+                                    <input type="radio" id="star2" name="rating" value="2" />
+                                    <label for="star2" title="Kinda bad - 2 stars"></label>
+                                    <input type="radio" id="star1" name="rating" value="1" />
+                                    <label for="star1" title="Sucks big time - 1 star"></label>
+                                </fieldset>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="subject">Subject</label>
+                                <input type="text" class="form-control" name=subject id="subject">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="review">Your Review</label>
+                                <textarea id="review" cols="30" rows="5" name='review' class="form-control"></textarea>
+                            </div>
+                            
+                            <div class="form-group mb-0">
+                                {% if orderitem.exists %}
+                                    <button type="submit" class="btn btn-primary px-3">Leave Your Review</button>
+                                {% else %}
+                                    <p class="text-primary px-3">You Must Buy This Product.</p>
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+    </div>
+    <!-- main content -->
+
+
+    {% block script %}
+        <script src="{% static 'js/plugin.js' %}"></script>
+        <script src="{% static 'js/scripts.js' %}"></script>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const basePrice = parseFloat(document.getElementById("product-price").dataset.basePrice) || 0;
+                const priceDisplay = document.getElementById("display-price");
+                const variationGroups = document.querySelectorAll(".variation-group");
+                
+                function formatPrice(price) {
+                    return `$${price.toFixed(2)}`;
+                }
+            
+                function updatePrice() {
+                    let totalPrice = basePrice;
+                    
+                    // Calculate total price from all variation groups
+                    variationGroups.forEach(group => {
+                        const prices = JSON.parse(group.dataset.variationPrices || '{}');
+                        const checkedRadio = group.querySelector('input[type="radio"]:checked');
+                        
+                        if (checkedRadio) {
+                            const variationPrice = prices[checkedRadio.value] || 0;
+                            totalPrice += variationPrice;
+                        }
+                    });
+            
+                    // Update the display price
+                    priceDisplay.textContent = formatPrice(totalPrice);
+                }
+            
+                // Add event listeners to all radio buttons
+                variationGroups.forEach(group => {
+                    const radios = group.querySelectorAll('input[type="radio"]');
+                    radios.forEach(radio => {
+                        radio.addEventListener("change", updatePrice);
+                    });
+                });
+            
+                // Initialize the price display
+                updatePrice();
+            });
+    
+            function copyToClipboard(text) {
+                const tempInput = document.createElement('input');
+                tempInput.value = text;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                alert('Product link copied to clipboard!');
+            }
+            
+            $(document).ready(function(){
+                var owl = $('.product-slider-3');
+                    owl.owlCarousel({
+                        autoplay: true,
+                        autoplayTimeout: 3000,
+                        loop: true,
+                        items: 1,
+                        center: true,
+                        nav: true,
+                        thumbs: true,
+                        thumbImage: false,
+                        thumbsPrerendered: true,
+                        thumbContainerClass: 'owl-thumbs',
+                        thumbItemClass: 'owl-thumb-item',
+                        navText: ["<i class='ti-angle-left icon-nav'></i>","<i class='ti-angle-right icon-nav'></i>"],
+                    });
+            });
+
+            $(document).ready(function() {
+                // Function to create a temporary message
+                function showTempMessage(message, isSuccess = true) {
+                    const messageDiv = $('<div>').addClass(`alert ${isSuccess ? 'alert-success' : 'alert-danger'}`)
+                        .text(message)
+                        .css({
+                            'position': 'fixed',
+                            'top': '20px',
+                            'right': '20px',
+                            'z-index': '9999',
+                            'min-width': '250px',
+                            'opacity': '0',
+                            'transition': 'opacity 0.5s'
+                        })
+                        .appendTo('body');
+                    
+                    // Fade in
+                    setTimeout(() => messageDiv.css('opacity', '1'), 100);
+                    
+                    // Fade out and remove after 3 seconds
+                    setTimeout(() => {
+                        messageDiv.css('opacity', '0');
+                        setTimeout(() => messageDiv.remove(), 500);
+                    }, 3000);
+                }
+
+                $('#review-form').on('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const form = $(this);
+                    const formData = form.serialize();
+                    const url = form.attr('action');
+                    const submitButton = form.find('button[type="submit"]');
+                    
+                    // Disable the submit button
+                    submitButton.prop('disabled', true).text('Submitting...');
+                    
+                    $.ajax({
+                        type: 'POST',
+                        url: url,
+                        data: formData,
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success) {
+                                showTempMessage('Thank you for your review!');
+                                form[0].reset();
+                                
+                                // Update the page with the new review
+                                if (response.review) {
+                                    appendNewReview(response.review);
+                                }
+                            } else {
+                                showTempMessage(response.error || 'There was an error submitting your review.', false);
+                            }
+                        },
+                        error: function(xhr) {
+                            let errorMsg = 'There was an error submitting your review. Please try again.';
+                            if (xhr.responseJSON && xhr.responseJSON.error) {
+                                errorMsg = xhr.responseJSON.error;
+                            }
+                            showTempMessage(errorMsg, false);
+                            console.error(xhr.status + ": " + xhr.responseText);
+                        },
+                        complete: function() {
+                            submitButton.prop('disabled', false).text('Leave Your Review');
+                        }
+                    });
+                });
+            });
+
+        </script>
+
+        <script src="https://gijsroge.github.io/owl-carousel2-thumbs/assets/OwlCarousel2Thumbs.min.js"></script>
+
+    {% endblock script %}
+
+
+{% endblock body %}

@@ -1,0 +1,4 @@
+{
+    "workbench.preferredHighContrastColorTheme": "Default Dark Modern",
+    "editor.defaultFormatter": "ms-python.black-formatter"
+}

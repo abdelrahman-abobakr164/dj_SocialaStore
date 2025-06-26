@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}
+Sociala/{{ payment_option }}
+{% endblock title %}
+
+{% block body %}
+
+    <style>
+        .checkout-container {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .checkout-button {
+            background-color: #6772e5;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .checkout-button:hover {
+            background-color: #5469d4;
+        }
+    </style>
+
+    <div class="container-fluid">
+        <div class="row px-xl-5">
+            <div class="col-lg-6 mx-auto table-responsive mb-5">
+                {% if payment_option == 'Stripe' %}
+                    <script src="https://js.stripe.com/v3/"></script>
+                    <div class="checkout-container">
+                        <h1>Complete Your Purchase</h1>
+                        <button id="checkout-button" class="checkout-button">Buy Now ${{ order.total }}</button>
+                    </div>
+                {% elif payment_option == 'CashOnDelivery' %}
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="checkout-container">
+                            <h1>Complete Your Purchase</h1>
+                            <button type='submit' class="checkout-button">Buy Now ${{ order.total }}</button>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+
+            <!-- Right Table -->
+            <div class="col-lg-6">
+                <h5 class="section-title position-relative text-uppercase mb-3"><span class="bg-secondary pr-3">Order Details</span></h5>
+                <div class="bg-light p-30 mb-5">
+                    <div class="border-bottom">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Qty</th>
+                                    <th>Color</th>
+                                    <th>Size</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in order.items.all %}
+                                <tr>
+                                    <td>
+                                        <p><a style='text-decoration:none; color: black' href='{{ i.product.get_absolute_url }}'>{{ i.product.name }}</a></p>
+                                    </td>
+                                    <td>{{i.quantity}}</td>
+                                    <td>{% if i.color %}
+                                        <p> ({{i.color.value}}) {% if i.color.price %}+${{i.color.price}} {% endif %}</p>
+                                    {% endif %}</td>
+                                    <td>{% if i.size %}
+                                        <p>({{i.size.value}}) {% if i.size.price %}+${{i.size.price}} {% endif %}</p>
+                                    {% endif %}</td>
+                                    <td><p>${{ i.get_product_price }}</p></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="border-bottom pt-2 pb-2">
+                        <div class="d-flex justify-content-between mt-2">
+                            <h6>Payment Method</h6>
+                            <h6 style='color:{% if payment_option == "CashOnDelivery" %}green{% elif payment_option == "Stripe" %}#6772e5{% endif %}'>
+                            {{ payment_option }}</h6>
+                        </div>
+                    </div>
+
+                    {% if request.session.applied_coupon %}
+                        <div class="border-bottom pt-3 pb-2">
+                            <div class="d-flex justify-content-between mb-3">
+                                <h6>Coupon</h6>
+                                <h6 id='price-value' style='color:green'>${{ request.session.applied_coupon }}0</h6>
+
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="pt-2">
+                        <div class="d-flex justify-content-between mt-2">
+                            <h4>Total</h4>
+                            <h4>${{ order.total }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock body %}

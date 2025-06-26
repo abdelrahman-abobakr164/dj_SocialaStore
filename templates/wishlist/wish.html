@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+Sociala/Wishlist
+{% endblock title %}
+{% block body %}
+
+    <div class="container bg-white" style='margin-top:60px'>
+        <div class="row">
+            <div class="col-xl-12 cart-wrapper">
+                <div class="row mb-4">
+                    <div class="col-lg-12">
+                        <div class="card p-md-5 p-4 bg-primary-gradiant rounded-3 shadow-xss bg-pattern border-0 overflow-hidden">
+                            <div class="bg-pattern-div"></div>
+                            <h2 class="display2-size display2-md-size fw-700 text-white mb-0 mt-5">Wish List <span class="fw-700 ls-3 text-grey-200 font-xsssss mt-2 d-block">{{ WishCount }} PRODUCT FOUND</span></h2>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div class="col-lg-12 mb-3">
+                        <div class="table-content table-responsive">
+                            <table class="table text-center">
+                                <thead class="bg-greyblue rounded-3">
+                                    <tr>
+                                        <th class="border-0 p-4">&nbsp;</th>
+                                        <th class="border-0 p-4 text-left">Product</th>
+                                        <th class="border-0 p-4">Price</th>
+                                        <th class="border-0 p-4">&nbsp;</th>
+                                        <th class="border-0 p-4">&nbsp;</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for i in wishies %}
+                                    <tr>
+                                        <td class="product-thumbnail text-left ps-0">
+                                            <img src="{{ i.product.img.url }}" alt="Product Thumnail" class="w75 rounded-3">
+                                        </td>
+                                        <td class="product-headline text-left wide-column">
+                                            <h3>
+                                                <a href="{{ i.product.get_absolute_url }}" class="text-grey-900 fw-600 font-xsss">{{ i.product.name }}</a>
+                                            </h3>
+                                        </td>
+                                        <td class="product-p">
+                                            <span class="product-price-wrapper">
+                                                <span class="money text-grey-500 fw-600 font-xsss"><span class="font-xsssss">$</span> 
+                                                {% if i.product.discount_price %}
+                                                {{ i.product.discount_price }}</span>
+                                                {% else %}
+                                                {{ i.product.price }}</span>
+                                                {% endif %}
+                                            </span>
+                                        </td>
+                                        
+                                        {% if not i.product.variations.all %}
+                                            <td>
+                                                <form action="{{ i.product.add_to_cart_url }}" method="POST">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="size">
+                                                    <input type="hidden" name="color">
+                                                    <button type='submit' class="inc btn qtybutton"><i class='ti-plus'></i></button>
+                                                </form>
+                                            </td>
+                                        {% else %}
+                                            <td></td>
+                                        {% endif %}
+                                        <td class="product-remove text-right"><a href="{% url 'remove' i.product.category.slug i.product.slug i.product.pk  %}"><i class="ti-trash font-xs text-grey-500"></i></a></td>
+                                        {% empty %}
+                                        <td colspan='5'>You Don't Have Products Yet</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>               
+        </div>
+    </div>
+
+{% endblock %}

@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+Siciala/Checkout
+{% endblock title %}
+
+{% block body %}
+
+    <!-- main content -->
+    <div class="container bg-white" style='margin-top: 60px'>
+        <div class="row">
+            <div class="col-xl-12 mb-4">
+
+                <div class="row">
+                    <div class="col-lg-12 mb-3">
+                        <div class="card p-lg-5 p-4 bg-primary-gradiant rounded-3 shadow-xss bg-pattern border-0 overflow-hidden">
+                            <div class="bg-pattern-div"></div>
+                            <h2 class="display2-size display2-md-size fw-700 text-white mb-0 mt-0">Checkout  </h2>
+                        </div>
+                    </div>                                 
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="card bg-greyblue border-0 p-2 mb-5">
+                            <form action="{% url 'apply-coupon' %}" id='coupon_info' method='POST'>
+                                {% csrf_token %}
+                                <div class="coupon float-left mb-2">
+                                    {{couponform.code}}
+                                    <button type="submit" class="bg-dark text-white fw-600 text-uppercase font-xssss border-dark border rounded-3 border-size-md d-inline-block w175 p-3 text-center ls-3">Apply Coupon</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-6 col-lg-6">
+                        <form class='mb-3' method="POST">
+                            {% csrf_token %}
+
+                            <h4 class="mont-font fw-600 font-md mb-lg-5 mb-5">Shipping address</h4>
+                            <div id='shiping-content' class="page-title">
+                                <div class="row">
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">First Name</label>
+                                            <input class="form-control" type="text" name='shipping_first_name' placeholder="Abderahman">
+                                        </div>        
+                                    </div>
+
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">Last Name</label>
+                                            <input class="form-control" type="text" name='shipping_last_name' placeholder="Abobakr">
+                                        </div>        
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">Email</label>
+                                            <input class="form-control" type="email" name='shipping_email' placeholder="example@email.com">
+                                        </div>        
+                                    </div>
+
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">Phone</label>
+                                            <input class="form-control" type="tel" name='shipping_phone' placeholder="+123 456 789">
+                                        </div>        
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-12 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">Address1</label>
+                                            <input class="form-control" type="text" name='shipping_address1' placeholder="123 Street">
+                                        </div>        
+                                    </div>
+
+                                    <div class="col-lg-12 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">Address2</label>
+                                            <input class="form-control" type="text" name='shipping_address2' placeholder="123 Street (Optional)">
+                                        </div>        
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">Twon / City</label>
+                                            <input class="form-control" type="text" name='shipping_city' placeholder="Cairo">
+                                        </div>        
+                                    </div>
+
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">Postcode</label>
+                                            <input class="form-control" type="text" name='shipping_zip' placeholder="123">
+                                        </div>        
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12 mb-3">
+                                    {% if default_shipping_address %}
+                                        {% for shipping in default_shipping_address %}
+                                        <div class="form-check text-left mb-2">
+                                            <input class="form-check-input mt-2" id='use_default_shipping_{{shipping.id}}' value='{{shipping.id}}' type="radio" name='use_default_shipping'>
+                                            <label class="pt--1 form-check-label fw-600 font-xsss text-grey-700" for="use_default_shipping_{{shipping.id}}">Use Default Shipping Address: {{ shipping.full_address }}</label>
+                                        </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                    <div class="form-check text-left mb-3">
+                                        <input class="form-check-input mt-2" id='set_default_shipping' type="checkbox" name='set_default_shipping'>
+                                        <label class="pt--1 form-check-label fw-600 font-xsss text-grey-700" for="set_default_shipping">Set as Default Shipping Address</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="billing-address" class="page-title">
+                                <h4 class="mont-font fw-600 font-md mb-lg-5 mb-5">Billing address</h4>
+                                <div class="row">
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">First Name</label>
+                                            <input class="form-control" type="text" name='billing_first_name' placeholder="Abderahman">
+                                        </div>        
+                                    </div>
+
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">Last Name</label>
+                                            <input class="form-control" type="text" name='billing_last_name' placeholder="Abobakr">
+                                        </div>        
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">Email</label>
+                                            <input class="form-control" type="email" name='billing_email' placeholder="example@email.com">
+                                        </div>        
+                                    </div>
+
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">Phone</label>
+                                            <input class="form-control" type="tel" name='billing_phone' placeholder="+123 456 789">
+                                        </div>        
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-12 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">Address1</label>
+                                            <input class="form-control" type="text" name='billing_address1' placeholder="123 Street">
+                                        </div>        
+                                    </div>
+
+                                    <div class="col-lg-12 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">Address2</label>
+                                            <input class="form-control" type="text" name='billing_address2' placeholder="123 Street (Optional)">
+                                        </div>        
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">Twon / City</label>
+                                            <input class="form-control" type="text" name='billing_city' placeholder="Cairo">
+                                        </div>        
+                                    </div>
+
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">Postcode</label>
+                                            <input class="form-control" type="text" name='billing_zip' placeholder="123">
+                                        </div>        
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12 mb-3">
+                                    {% if default_billing_address %}
+                                        {% for billing in default_billing_address %}
+                                        <div class="form-check text-left mb-2">
+                                            <input class="form-check-input mt-2" id='use_default_billing_{{billing.id}}' value='{{billing.id}}' type="radio" name='use_default_billing'>
+                                            <label class="pt--1 form-check-label fw-600 font-xsss text-grey-700" for="use_default_billing_{{billing.id}}">Use Default Billing Address: {{ billing.full_address }}</label>
+                                        </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                    <div class="form-check text-left mb-2">
+                                        <input class="form-check-input mt-2" id='set_default_billing' type="checkbox" name='set_default_billing'>
+                                        <label class="pt--1 form-check-label fw-600 font-xsss text-grey-700" for="set_default_billing">Set as Default Billing Address</label>
+                                    </div>
+                                    <div class="form-check text-left mb-2">
+                                        <input class="form-check-input mt-2" id='same_shipping_address' type="checkbox" name='same_shipping_address'>
+                                        <label class="pt--1 form-check-label fw-600 font-xsss text-grey-700" for="same_shipping_address">Same Shipping Address</label>
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+
+                    <!-- Right Side -->
+                    <div class="col-xl-5 offset-xl-1 col-lg-6">
+                        <div class="order-details">
+                            <h4 class="mont-font fw-600 font-md mb-5">Order Details</h4>
+                            <div class="table-content table-responsive mb-5 card border-0 bg-greyblue p-lg-5 p-4">
+                            <table class="table order-table order-table-2 mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="border-0">Product</th>
+                                        <th class="border-0">Color</th>
+                                        <th class="border-0">Size</th>
+                                        <th class="border-0">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for i in cartitems %}
+                                    <tr>
+                                        <td class="text-grey-500 fw-500 font-xsss">{{ i.product.name }}
+                                            <strong><span>✕</span>{{ i.quantity }}</strong>
+                                        </td>
+                                        <td class="text-grey-500 fw-500 font-xsss">
+                                            <p class="btn-round-sm" style="background-color: {{i.color.value}}"></p>
+                                        </td>
+                                        <td class="text-grey-500 fw-500 font-xsss">{{ i.size.value }}</td>
+                                        <td class="text-grey-500 fw-500 font-xsss">${{ i.get_product_price }}</td>
+                                    </tr>
+                                {% endfor %}
+
+                                </tbody>
+                                <tfoot>
+                                    <tr class="cart-subtotal">
+                                        <th>Subtotal</th>
+                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700">${{ total_price }}</td>
+                                    </tr>
+                                    
+                                    {% if request.session.applied_coupon %}
+                                    <tr class="order-total">
+                                        <th>Coupon</th>
+                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{ request.session.applied_coupon }}0</span></td>
+                                    </tr>
+                                    {% endif %}
+
+                                    <tr class="order-total">
+                                        <th>Order Total</th>
+                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{request.session.total_price}}0</span></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div class="checkout-payment card border-0 mb-3 bg-greyblue p-lg-4 p-4">
+                            
+                            <div class="payment-group mb-0">
+                                <div class="payment-radio">
+                                    <input type="radio" {% if last_payment.method == 'Stripe' %} checked {% endif %} value="Stripe" name="payment_option" id="Stripe">
+                                    <label class="payment-label fw-600 font-xsss text-grey-900" for="Stripe">Stripe</label>
+                                </div>
+                            </div>
+                            
+                            <div class="payment-group mb-0">
+                                <div class="payment-radio">
+                                    <input type="radio" {% if last_payment.method == 'CashOnDelivery' %} checked {% endif %} value="CashOnDelivery" name="payment_option" id="CashOnDelivery">
+                                    <label class="payment-label fw-600 font-xsss text-grey-900" for="CashOnDelivery">CashOnDelivery</label>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-current rounded-3 fw-600 ls-3">Place Order</button>    
+                        </form>
+                        </div>
+                    </div>
+                </div>
+            </div>               
+        </div>
+    </div>
+    <!-- main content -->
+
+    {% block script %}
+        <script>
+
+            const useDefaultShippingRadios = document.querySelectorAll('[name="use_default_shipping"]');
+            const ShippingFieldscardElementContainer = document.getElementById("shiping-content");
+            
+            const SameShippingCheckbox = document.getElementById("same_shipping_address");
+            const useDefaultbillingCheckbox = document.querySelectorAll("[name='use_default_billing']");
+            const billingfiledsElementContainer = document.getElementById("billing-address");
+
+            useDefaultShippingRadios.forEach((radio) => {
+                radio.addEventListener("change", (event) => {
+                    if (event.target.checked) {
+                        // Hide Card Element when using default shipping
+                        ShippingFieldscardElementContainer.style.display = "none";
+                    } else {
+                        // Show Card Element when not using default shipping
+                        ShippingFieldscardElementContainer.style.display = "block";
+                    }
+                });
+            });
+
+            useDefaultbillingCheckbox.forEach((radio) => {
+                radio.addEventListener("change", (event) => {
+                    if (event.target.checked) {
+                        // Hide Card Element when using default card
+                        billingfiledsElementContainer.style.display = "none";
+                    } else {
+                        // Show Card Element when not using default card
+                        billingfiledsElementContainer.style.display = "block";
+                    }
+                });
+            });
+
+            document.querySelectorAll('[name="use_default_shipping"]').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    const shippingFields = document.querySelectorAll('[name="shipping_first_name"],[name="shipping_last_name"],[name="shipping_email"],[name="shipping_phone"],[name="shipping_address1"],[name="shipping_address2"],[name="shipping_city"],[name="shipping_zip"],[name="set_default_shipping"],[name="same_shipping_address"]');
+                    shippingFields.forEach(field => field.disabled = this.checked);
+                });
+            });
+
+            document.querySelectorAll('[name="use_default_billing"]').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    const billingFields = document.querySelectorAll('[name="same_shipping_address"], [name="set_default_billing"],[name="billing_first_name"],[name="billing_last_name"],[name="billing_email"],[name="billing_phone"],[name="billing_address1"],[name="billing_address2"],[name="billing_city"],[name="billing_zip"]');
+                    billingFields.forEach(field => field.disabled = this.checked);
+                });
+            });
+            
+            document.getElementById('same_shipping_address').addEventListener('change', function(){
+                if (this.checked) {
+                    document.querySelector('[name="billing_first_name"]').value = document.querySelector('[name="shipping_first_name"]').value; 
+                    document.querySelector('[name="billing_last_name"]').value = document.querySelector('[name="shipping_last_name"]').value;
+                    document.querySelector('[name="billing_email"]').value = document.querySelector('[name="shipping_email"]').value;
+                    document.querySelector('[name="billing_phone"]').value = document.querySelector('[name="shipping_phone"]').value;
+                    document.querySelector('[name="billing_address1"] ').value = document.querySelector('[name="shipping_address1"]').value;
+                    document.querySelector('[name="billing_address2"]').value = document.querySelector('[name="shipping_address2"]').value;
+                    document.querySelector('[name="billing_city"]').value = document.querySelector('[name="shipping_city"]').value;
+                    document.querySelector('[name="billing_zip"]').value = document.querySelector('[name="shipping_zip"]').value;
+                }
+            });
+
+        </script>
+    {% endblock script %}
+    
+{% endblock body %}

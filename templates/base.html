@@ -1,0 +1,67 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}
+    {% endblock title %}</title>
+    {% block meta_head %}  
+    {% endblock meta_head %}
+    
+    <link rel="stylesheet" href="{% static 'css/themify-icons.css' %}">
+    <link rel="stylesheet" href="{% static 'css/feather.css' %}">
+    <!-- Favicon icon -->
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon.png' %}">
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}"> 
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet">
+
+</head>
+
+<body class="color-theme-blue">
+
+    <div class="preloader"></div>
+
+    <div class="main-wrap mt-5 mb-5">
+
+      {% include 'parts/navbar.html' %}
+
+        {% if messages %}
+          <div class="container" style='margin-top:70px'>
+            {% for msg in messages %}
+              {% if msg.level == 40 %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                  {{msg}}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </button>
+                </div>
+              {% else %}
+                <div id="coupon-message" class="alert alert-{{msg.tags}} alert-dismissible fade show" style='margin-bottom:30px; margin-top:20px' role="alert">
+                  {{msg}}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </button>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% block body %}
+
+        {% endblock body %}
+      </div>
+      
+    {% block script %}
+    {% endblock script %}
+
+    <!-- Before closing body tag -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+    <script src="{% static 'js/plugin.js' %}"></script>
+    <script src="{% static 'js/scripts.js' %}"></script>
+</body>
+
+</html>

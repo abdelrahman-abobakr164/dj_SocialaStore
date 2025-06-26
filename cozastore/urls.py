@@ -1,0 +1,30 @@
+from django.conf import settings
+from django.conf.urls import handler404, handler500
+from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import path, include
+from django.conf.urls.i18n import i18n_patterns
+
+
+urlpatterns = [
+    path("__debug__/", include("debug_toolbar.urls")),
+    path("admin/", admin.site.urls),
+    path("i18n/", include("django.conf.urls.i18n")),
+    path("accounts/", include("allauth.urls")),
+    path("accounts/", include("accounts.urls")),
+]
+urlpatterns += i18n_patterns(
+    path("wishlist/", include("wishlist.urls")),
+    path("cart/", include("cart.urls")),
+    path("orders/", include("orders.urls")),
+    path("", include("core.urls")),
+    prefix_default_language=True,
+)
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+handler404 = "core.views.handler_404"
+handler500 = "core.views.handler_500"

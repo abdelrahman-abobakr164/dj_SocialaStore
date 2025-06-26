@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+Sociala/Cart Summary
+{% endblock title %}
+{% block body %}
+
+    <div class="container bg-white" style='margin-top:60px'>
+        <div class="row">
+            <div class="col-xl-12 cart-wrapper">
+                <div class="row mb-4">
+                    <div class="col-lg-12">
+                        <div class="card p-md-5 p-4 bg-primary-gradiant rounded-3 shadow-xss bg-pattern border-0 overflow-hidden">
+                            <div class="bg-pattern-div"></div>
+                            <h2 class="display2-size display2-md-size fw-700 text-white mb-0 mt-5">Cart <span class="fw-700 ls-3 text-grey-200 font-xsssss mt-2 d-block">{{ CartCount }} PRODUCT FOUND</span></h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8 mb-3">
+                        <div class="table-content table-responsive">
+                            <table class="table text-center">
+                                <thead class="bg-greyblue rounded-3">
+                                    <tr>
+                                        <th class="border-0 p-4">&nbsp;</th>
+                                        <th class="border-0 p-4 text-left">Product</th>
+                                        <th class="border-0 p-4">Color</th>
+                                        <th class="border-0 p-4">Size</th>
+                                        <th class="border-0 p-4">Price</th>
+                                        <th class="border-0 p-4">Quantity</th>
+                                        <th class="border-0 p-4">Total</th>
+                                        <th class="border-0 p-4">&nbsp;</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for i in cartitems %}
+                                    <tr>
+                                        <td class="product-thumbnail text-left ps-0">
+                                            <img src="{{ i.product.img.url }}" alt="Product Thumnail" class="w75 rounded-3">
+                                        </td>
+                                        <td class="product-headline text-left wide-column">
+                                            <h3>
+                                                <a href="{{ i.product.get_absolute_url }}" class="text-grey-900 fw-600 font-xsss">{{ i.product.name }}</a>
+                                            </h3>
+                                        </td>
+                                        <td class="product-headline text-left wide-column">
+                                            {% if i.color %}
+                                                <h3>
+                                                    <a href="{% url 'color_slug' i.color.value %}" class="btn-round-sm" style="background-color: {{i.color.value}}"></a>
+                                                </h3>
+                                            {% endif %}
+                                        </td>
+                                        <td class="product-headline text-left wide-column">
+                                            {% if i.size %}
+                                                <h3>
+                                                    <a href="{% url 'size_slug' i.size.value %}" class="text-grey-900 fw-600 font-xsss">{{ i.size.value }}</a>
+                                                </h3>
+                                            {% endif %}
+                                        </td>
+
+                                        <td class="product-p">
+                                            <span class="product-price-wrapper">
+                                                <span class="money text-grey-500 fw-600 font-xsss"><span class="font-xsssss">$</span> {{ i.get_price }}</span>
+                                            </span>
+                                        </td>
+                                        <td class="product-quantity">
+                                            <form method="POST">
+                                                <div class="quantity">
+                                                    {% csrf_token %}
+                                                    <input readonly type='number' class="quantity-input open-font fw-600"  value="{{ i.quantity }}">
+                                                    <div class="dec qtybutton"><a style='color:black' href="{% url 'minus-from-cart' i.pk %}">-</a></div>
+                                                    <input type="hidden" name="cart_item_id" value="{{i.pk}}">
+                                                    <div class="inc qtybutton"><button class='btn'>+</button></div>
+                                                </div>
+                                            </form>
+                                        </td>
+                                        <td class="product-total-price">
+                                            <span class="product-price-wrapper">
+                                                <span class="money fmont"><strong><span class="font-xsssss">$ </span>{{ i.get_product_price }}</strong></span>
+                                            </span>
+                                        </td>
+                                        <td class="product-remove text-right"><a href="{% url 'remove-from-cart' i.pk %}" data-cartitem-id="{{ i.pk }}"><i class="ti-trash font-xs text-grey-500"></i></a></td>
+                                        {% empty %}
+                                        <td colspan='5'>You Don't Have Products Yet</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <form action="{% url 'apply-coupon' %}" method='POST'>
+                            {% csrf_token %}
+                            <div class="coupon float-left mb-2">
+                                {{couponform.code}}
+                                <button type="submit" class="bg-dark text-white fw-600 text-uppercase font-xssss border-dark border rounded-3 border-size-md d-inline-block w175 p-3 text-center ls-3">Apply Coupon</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="checkout-payment card border-0 mb-3 bg-greyblue p-4">
+                            <div class="cart-totals">
+                                <h4 class="mont-font fw-600 font-md mb-5">Cart totals</h4>
+                                <div class="table-content table-responsive">
+                                    <table class="table order-table">
+                                        <tbody>
+                                            <tr>
+                                                <td class="font-xsss pt-2 fw-600">Subtotal</td>
+                                                <td class="font-xssss fw-700 text-grey-600 pt-2 text-right">${{total_price}}</td>  
+                                            </tr>
+
+                                            {% if request.session.applied_coupon %}
+                                            <tr>
+                                                <td class="font-xsss pt-2 fw-600">Coupon</td>
+                                                <td class="font-xssss fw-700 text-grey-600 pt-2 text-right">
+                                                    <span>${{ request.session.applied_coupon }}0</span>
+                                                </td>  
+                                            </tr>
+                                            {% endif %}
+                                            <tr class="order-total">
+                                                <td class="font-xsss pt-2 fw-600">Total</td>
+                                                <td class="font-xssss fw-700 text-grey-600 pt-2 text-right">
+                                                    <span class="product-price-wrapper">
+                                                        <span class="money fmont">${{ request.session.total_price }}0</span>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        <a href="{% url 'checkout' %}" class="bg-dark float-right text-white fw-600 text-uppercase font-xsss border-dark border rounded-3 border-size-md d-inline-block w-100 p-3 text-center ls-3">Proceed To Checkout</a>
+                    </div>
+                </div>
+            </div>               
+        </div>
+    </div>
+
+{% endblock %}

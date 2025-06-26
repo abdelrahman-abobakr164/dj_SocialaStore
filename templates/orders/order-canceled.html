@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}
+Sociala/Order Cancelation
+{% endblock title %}
+
+{% block body %}
+
+    <div class="container" style='margin-top: 15%'>
+        <div class="row ">
+            <div class="col-lg-6 mx-auto table-responsive mb-5">
+                <h1 class=' text-center mb-3'> <strong>Are You Sure To Cancel This Order:</strong><br> ({{ order.order_number }}) </h1>
+                <form style='margin-left:172px; margin-top:30px' method="POST">
+                    {% csrf_token %}
+                    <a style='float:left' class='btn btn-success' onclick="history.back()" >Cancel</a>
+                    <button style='margin-left: 100px' class='btn btn-outline-danger' type="submit">Yes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock body %}

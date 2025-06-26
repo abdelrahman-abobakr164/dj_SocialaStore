@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}
+Sociala/Order Failed
+{% endblock title %}
+
+{% block body %}
+
+    <div class="container" style='margin-top: 15%'>
+        <div class="row ">
+            <div class="col-lg-6 mx-auto table-responsive mb-5">
+                <h1 class='text-danger text-center mb-3'> Your Order is Failed <i class='ti-close font-sm'></i></h1>
+                <a class='btn btn-danger' style='margin-left:172px; text-decoration: none; color:black' href="{% url 'order-detail' order.order_number %}">COMPLETE YOUR ORDER <i class="ti-arrow-right ms-1"></i></a>
+            </div>
+        </div>
+    </div>
+
+{% endblock body %}

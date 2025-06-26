@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+Siciala/Payment - {{ payment_option }}
+{% endblock title %}
+
+{% block body %}
+
+    <!-- main content -->
+    <div class="container bg-white" style='margin-top: 60px'>
+        <div class="row">
+            <div class="col-xl-12 mb-4">
+                <div class="row">
+                    <div class="col-lg-12 mb-3">
+                        <div class="card p-lg-5 p-4 bg-primary-gradiant rounded-3 shadow-xss bg-pattern border-0 overflow-hidden">
+                            <div class="bg-pattern-div"></div>
+                            <h2 class="display2-size display2-md-size fw-700 text-white mb-0 mt-0">Payment - {{ payment_option }}</h2>
+                        </div>
+                    </div>                                 
+                </div>
+
+                <div class="row">
+                    <div class="col-xl-5 col-lg-6">
+                        <h4 class="mont-font fw-600 font-md mb-lg-5 mb-5">Shipping address</h4>
+                        <div class="page-title mb-2">
+                            <div class="row">
+                                <div class="col-lg-6 mb-3">
+                                    <div class="form-gorup">
+                                        <label class="mont-font fw-600 font-xssss">First Name</label>
+                                        <input class="form-control" type="text" disabled value='{{order.shipping_address.first_name}}'>
+                                    </div>        
+                                </div>
+
+                                <div class="col-lg-6 mb-3">
+                                    <div class="form-gorup">
+                                        <label class="mont-font fw-600 font-xssss">Last Name</label>
+                                        <input class="form-control" type="text" disabled value='{{order.shipping_address.last_name}}'>
+                                    </div>        
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 mb-3">
+                                    <div class="form-gorup">
+                                        <label class="mont-font fw-600 font-xssss">Email</label>
+                                        <input class="form-control" type="email" disabled value='{{order.shipping_address.email}}'>
+                                    </div>        
+                                </div>
+
+                                <div class="col-lg-6 mb-3">
+                                    <div class="form-gorup">
+                                        <label class="mont-font fw-600 font-xssss">Phone</label>
+                                        <input class="form-control" type="tel" disabled value='{{order.shipping_address.phone}}'>
+                                    </div>        
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-12 mb-3">
+                                    <div class="form-gorup">
+                                        <label class="mont-font fw-600 font-xssss">Address1</label>
+                                        <input class="form-control" type="text" disabled value='{{order.shipping_address.address1}}'>
+                                    </div>        
+                                </div>
+
+                                <div class="col-lg-12 mb-3">
+                                    <div class="form-gorup">
+                                        <label class="mont-font fw-600 font-xssss">Address2</label>
+                                        <input class="form-control" type="text" disabled value='{{order.shipping_address.address2}}'>
+                                    </div>        
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 mb-3">
+                                    <div class="form-gorup">
+                                        <label class="mont-font fw-600 font-xssss">Twon / City</label>
+                                        <input class="form-control" type="text" disabled value='{{order.shipping_address.city}}'>
+                                    </div>        
+                                </div>
+
+                                <div class="col-lg-6 mb-3">
+                                    <div class="form-gorup">
+                                        <label class="mont-font fw-600 font-xssss">Postcode</label>
+                                        <input class="form-control" type="text" disabled value='{{order.shipping_address.zip_code}}'>
+                                    </div>        
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4 class="mont-font fw-600 font-md mb-lg-5 mb-5">Billing address</h4>
+                        <div class="page-title">
+                            <div class="row">
+                                <div class="col-lg-6 mb-3">
+                                    <div class="form-gorup">
+                                        <label class="mont-font fw-600 font-xssss">First Name</label>
+                                        <input class="form-control" type="text" disabled value='{{order.billing_address.first_name}}'>
+                                    </div>        
+                                </div>
+
+                                <div class="col-lg-6 mb-3">
+                                    <div class="form-gorup">
+                                        <label class="mont-font fw-600 font-xssss">Last Name</label>
+                                        <input class="form-control" type="text" disabled value='{{order.billing_address.last_name}}'>
+                                    </div>        
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 mb-3">
+                                    <div class="form-gorup">
+                                        <label class="mont-font fw-600 font-xssss">Email</label>
+                                        <input class="form-control" type="email" disabled value='{{order.billing_address.email}}'>
+                                    </div>        
+                                </div>
+
+                                <div class="col-lg-6 mb-3">
+                                    <div class="form-gorup">
+                                        <label class="mont-font fw-600 font-xssss">Phone</label>
+                                        <input class="form-control" type="tel" disabled value='{{order.billing_address.phone}}'>
+                                    </div>        
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-12 mb-3">
+                                    <div class="form-gorup">
+                                        <label class="mont-font fw-600 font-xssss">Address1</label>
+                                        <input class="form-control" type="text" disabled value='{{order.billing_address.address1}}'>
+                                    </div>        
+                                </div>
+
+                                <div class="col-lg-12 mb-3">
+                                    <div class="form-gorup">
+                                        <label class="mont-font fw-600 font-xssss">Address2</label>
+                                        <input class="form-control" type="text" disabled value='{{order.billing_address.address2}}'>
+                                    </div>        
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 mb-3">
+                                    <div class="form-gorup">
+                                        <label class="mont-font fw-600 font-xssss">Twon / City</label>
+                                        <input class="form-control" type="text" disabled value='{{order.billing_address.city}}'>
+                                    </div>        
+                                </div>
+
+                                <div class="col-lg-6 mb-3">
+                                    <div class="form-gorup">
+                                        <label class="mont-font fw-600 font-xssss">Postcode</label>
+                                        <input class="form-control" type="text" disabled value='{{order.billing_address.zip_code}}'>
+                                    </div>        
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Side -->
+                    <div class="col-xl-6 offset-xl-1 col-lg-6">
+                        <div class="order-details">
+                            <h4 class="mont-font fw-600 font-md mb-5">Order Details</h4>
+                            <div class="table-content table-responsive mb-5 card border-0 bg-greyblue p-lg-5 p-4">
+                            <table class="table order-table order-table-2 mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="border-0">Product</th>
+                                        <th class="border-0">Color</th>
+                                        <th class="border-0">Size</th>
+                                        <th class="border-0">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for i in order.items.all %}
+                                    <tr>
+                                        <td class="text-grey-500 fw-500 font-xsss">{{ i.product.name }}
+                                            <strong><span>✕</span>{{ i.quantity }}</strong>
+                                        </td>
+                                        <td class="text-grey-500 fw-500 font-xsss">
+                                            <p class="btn-round-sm" style="background-color: {{i.color.value}}"></p>
+                                        </td>
+                                        <td class="text-grey-500 fw-500 font-xsss">{{ i.size.value }}</td>
+                                        <td class="text-grey-500 fw-500 font-xsss">${{ i.get_product_price }}</td>
+                                    </tr>
+                                {% endfor %}
+
+                                </tbody>
+                                <tfoot>
+                                    
+                                    {% if request.session.applied_coupon %}
+                                    <tr class="order-total">
+                                        <th>Order Total</th>
+                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{ request.session.applied_coupon }}0</span></td>
+                                    </tr>
+                                    {% endif %}
+
+                                    <tr class="order-total">
+                                        <th>Order Total</th>
+                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{order.total}}</span></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <div class="checkout-payment card border-0 mb-3 bg-greyblue p-lg-4 p-4">
+                            {% if payment_option == 'Stripe' %}
+                                <script src="https://js.stripe.com/v3/"></script>
+                                <button id="checkout-button" type="submit" class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-current rounded-3 fw-600 ls-3">Buy Now ${{ order.total }}</button>    
+                            {% elif payment_option == 'CashOnDelivery' %}
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-current rounded-3 fw-600 ls-3">Buy Now ${{ order.total }}</button>    
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>               
+        </div>
+    </div>
+    <!-- main content -->
+    
+{% endblock body %}
+
+{% block script %}
+    {% if payment_option == "Stripe" %}
+        <script type="text/javascript">
+            // Your public Stripe key
+            var stripe = Stripe('{{ stripe_public_key }}');  // Replace with your public key
+        
+            // The function to create the checkout session
+            function createCheckoutSession() {
+                fetch('/orders/create_checkout_session/{{order.order_number}}/', {
+                    method: 'POST',
+                })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (sessionId) {
+                    return stripe.redirectToCheckout({ sessionId: sessionId.id });
+                })
+                .then(function (result) {
+                    if (result.error) {
+                        // If redirect fails, show an error to the user
+                        alert(result.error.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error:', error);
+                    alert("An error occurred while processing the payment.");
+                });
+            }
+        
+            // Add event listener to the button
+            document.getElementById("checkout-button").addEventListener("click", function(e) {
+                e.preventDefault();
+                createCheckoutSession();
+            });
+        </script>
+    {% endif %}
+
+    <script>
+
+        const useDefaultShippingRadios = document.querySelectorAll('[name="use_default_shipping"]');
+        const ShippingFieldscardElementContainer = document.getElementById("shiping-content");
+        
+        const SameShippingCheckbox = document.getElementById("same_shipping_address");
+        const useDefaultbillingCheckbox = document.querySelectorAll("[name='use_default_billing']");
+        const billingfiledsElementContainer = document.getElementById("billing-address");
+
+        useDefaultShippingRadios.forEach((radio) => {
+            radio.addEventListener("change", (event) => {
+                if (event.target.checked) {
+                    // Hide Card Element when using default shipping
+                    ShippingFieldscardElementContainer.style.display = "none";
+                } else {
+                    // Show Card Element when not using default shipping
+                    ShippingFieldscardElementContainer.style.display = "block";
+                }
+            });
+        });
+
+        useDefaultbillingCheckbox.forEach((radio) => {
+            radio.addEventListener("change", (event) => {
+                if (event.target.checked) {
+                    // Hide Card Element when using default card
+                    billingfiledsElementContainer.style.display = "none";
+                } else {
+                    // Show Card Element when not using default card
+                    billingfiledsElementContainer.style.display = "block";
+                }
+            });
+        });
+
+        document.querySelectorAll('[name="use_default_shipping"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const shippingFields = document.querySelectorAll('[name="shipping_first_name"],[name="shipping_last_name"],[name="shipping_email"],[name="shipping_phone"],[name="shipping_address1"],[name="shipping_address2"],[name="shipping_city"],[name="shipping_zip"],[name="set_default_shipping"],[name="same_shipping_address"]');
+                shippingFields.forEach(field => field.disabled = this.checked);
+            });
+        });
+
+        document.querySelectorAll('[name="use_default_billing"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const billingFields = document.querySelectorAll('[name="same_shipping_address"], [name="set_default_billing"],[name="billing_first_name"],[name="billing_last_name"],[name="billing_email"],[name="billing_phone"],[name="billing_address1"],[name="billing_address2"],[name="billing_city"],[name="billing_zip"]');
+                billingFields.forEach(field => field.disabled = this.checked);
+            });
+        });
+        
+        document.getElementById('same_shipping_address').addEventListener('change', function(){
+            if (this.checked) {
+                document.querySelector('[name="billing_first_name"]').value = document.querySelector('[name="shipping_first_name"]').value; 
+                document.querySelector('[name="billing_last_name"]').value = document.querySelector('[name="shipping_last_name"]').value;
+                document.querySelector('[name="billing_email"]').value = document.querySelector('[name="shipping_email"]').value;
+                document.querySelector('[name="billing_phone"]').value = document.querySelector('[name="shipping_phone"]').value;
+                document.querySelector('[name="billing_address1"] ').value = document.querySelector('[name="shipping_address1"]').value;
+                document.querySelector('[name="billing_address2"]').value = document.querySelector('[name="shipping_address2"]').value;
+                document.querySelector('[name="billing_city"]').value = document.querySelector('[name="shipping_city"]').value;
+                document.querySelector('[name="billing_zip"]').value = document.querySelector('[name="shipping_zip"]').value;
+            }
+        });
+
+    </script>
+{% endblock script %}
