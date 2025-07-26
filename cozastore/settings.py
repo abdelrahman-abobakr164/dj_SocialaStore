@@ -23,6 +23,7 @@ CSRF_TRUSTED_ORIGINS = ["https://eager-badly-crayfish.ngrok-free.app"]
 # Application definition
 
 INSTALLED_APPS = [
+    "channels",
     "modeltranslation",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -202,3 +203,20 @@ EMAIL_HOST_PASSWORD = "xkbourmgyydfphno"
 PHONENUMBER_DEFAULT_REGION = "EG"
 PHONENUMBER_DB_FORMAT = "E164"
 PHONENUMBER_DEFAULT_FORMAT = "INTERNATIONAL"
+
+# Django Channels Configuration
+ASGI_APPLICATION = "cozastore.asgi.application"
+
+# Channel Layers Configuration
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],  # Redis server configuration
+        },
+    },
+    # For development without Redis, you can use in-memory channel layer:
+    # "default": {
+    #     "BACKEND": "channels.layers.InMemoryChannelLayer"
+    # },
+}
