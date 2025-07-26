@@ -5,9 +5,12 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <div id="chat-log"></div>
-    <input id="chat-message-input" type="text" placeholder="Type a message..." />
-    <button id="chat-message-submit">Send</button>
+    <div id="chat-log" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
+    
+    <form id="chat-form">
+        <input id="chat-message-input" type="text" placeholder="Type a message..." style="width: 70%; padding: 5px;" />
+        <button id="chat-message-submit" type="submit" style="width: 25%; padding: 5px;">Send</button>
+    </form>
 
     <script>
         // WebSocket connection for chat
@@ -18,29 +21,67 @@
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            const messageElement = $('<div>').text(data.username + ': ' + data.message);
+            const messageElement = $('<div>').html('<strong>' + data.username + ':</strong> ' + data.message);
             $('#chat-log').append(messageElement);
+            // Auto-scroll to bottom
+            $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
         };
 
         chatSocket.onclose = function(e) {
             console.error('Chat socket closed unexpectedly');
         };
 
-        $('#chat-message-input').focus();
-        $('#chat-message-input').keypress(function(e) {
-            if (e.which == 13) {  // Enter key
-                $('#chat-message-submit').click();
-            }
-        });
+        chatSocket.onopen = function(e) {
+            console.log('Chat socket connected');
+        };
 
-        $('#chat-message-submit').click(function(e) {
+        chatSocket.onerror = function(e) {
+            console.error('Chat socket error:', e);
+        };
+
+        // Function to send message
+        function sendMessage() {
             const messageInputDom = $('#chat-message-input')[0];
-            const message = messageInputDom.value;
+            const message = messageInputDom.value.trim();
+            
+            if (message === '') {
+                return false;
+            }
+            
             chatSocket.send(JSON.stringify({
                 'message': message,
                 'username': '{{ user.username|default:"Anonymous" }}'
             }));
             messageInputDom.value = '';
+            return false;
+        }
+
+        // Handle form submission
+        $('#chat-form').on('submit', function(e) {
+            e.preventDefault(); // Prevent page refresh
+            sendMessage();
+            return false;
+        });
+
+        // Handle button click
+        $('#chat-message-submit').on('click', function(e) {
+            e.preventDefault(); // Prevent page refresh
+            sendMessage();
+            return false;
+        });
+
+        // Handle Enter key press
+        $('#chat-message-input').on('keypress', function(e) {
+            if (e.which == 13 || e.keyCode == 13) {  // Enter key
+                e.preventDefault(); // Prevent page refresh
+                sendMessage();
+                return false;
+            }
+        });
+
+        // Focus on input when page loads
+        $(document).ready(function() {
+            $('#chat-message-input').focus();
         });
 
         // WebSocket connection for notifications
