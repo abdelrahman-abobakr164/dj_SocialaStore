@@ -67,16 +67,14 @@ Sociala/{{ product }}
                 <div class="row">
                     <div class="col-lg-5 offset-lg-1 mb-4">
                         <div class="product-slider-3 owl-carousel owl-theme dot-none owl-nav-link edge-link">
-                            
                             {% if product.gallary.all %}
                                 {% for i in product.gallary.all %}
-                                        <div class="owl-items pt-lg--10 pb-lg--10 bg-white rounded-3"><img data-thumb="<img src='{{ i.img.url }}' />" src="{{ i.img.url }}" alt="icon"></div>
+                                    <div class="owl-items pt-lg--10 pb-lg--10 bg-white rounded-3"><img data-thumb="<img src='{{ i.img.url }}' />" src="{{ i.img.url }}" alt="icon"></div>
                                 {% endfor %}
                                 <div class="owl-items pt-lg--10 pb-lg--10 bg-white rounded-3"><img data-thumb="<img src='{{ product.img.url }}' />" src="{{ product.img.url }}" alt="icon"></div>
                             {% else %}
                                 <div class="owl-items pt-lg--10 pb-lg--10 bg-white rounded-3"><img data-thumb="<img src='{{ product.img.url }}' />" src="{{ product.img.url }}" alt="icon"></div>
                             {% endif %}
-                            
                         </div>                        
                     </div>
                     <div class="col-lg-6  col-md-12 pad-top-lg-200 pad-bottom-lg-100 pad-top-100 pad-bottom-75 ps-md--5">
@@ -143,16 +141,14 @@ Sociala/{{ product }}
                                 </div>
                             {% endif %} <br>
                                 
-                            <div class="product-action flex-row align-items-center">
-                                {% comment %} <button type="submit" class="add-to-cart bg-dark text-white fw-700 ps-lg-5 pe-lg-5 text-uppercase font-xssss float-left border-dark border rounded-3 border-size-md d-inline-block mt-0 p-3 text-center ls-3">
-                                    <span class="submit-text">Add to cart</span>
-                                    <span class="spinner" style="display: none;">
-                                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                        Adding...
-                                    </span>
-                                </button> {% endcomment %}
-                                <button type="submit" class="add-to-cart bg-dark text-white fw-700 ps-lg-5 pe-lg-5 text-uppercase font-xssss float-left border-dark border rounded-3 border-size-md d-inline-block mt-0 p-3 text-center ls-3">Add to cart</button>
-                                <a href="{% url 'add' product.category.slug product.slug product.pk %}" class="btn-round-xl alert-dark text-white d-inline-block mt-0 ms-4 float-left"><i class="ti-heart font-sm"></i></a>
+                            <button type="submit" class="add-to-cart bg-dark text-white fw-700 ps-lg-5 pe-lg-5 text-uppercase font-xssss float-left border-dark border rounded-3 border-size-md d-inline-block mt-0 p-3 text-center ls-3">
+                                <span class="submit-text">Add to cart</span>
+                                <span class="spinner" style="display: none;">
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    Adding...
+                                </span>
+                            </button>
+                            <a href="{% url 'add' product.category.slug product.slug product.pk %}" class="btn-round-xl alert-dark text-white d-inline-block mt-0 ms-4 float-left"><i class="ti-heart font-sm"></i></a>
                             </div>
                         </form>
                         
@@ -259,9 +255,27 @@ Sociala/{{ product }}
 
 
     {% block script %}
-        <script src="{% static 'js/plugin.js' %}"></script>
-        <script src="{% static 'js/scripts.js' %}"></script>
+        <script src="https://gijsroge.github.io/owl-carousel2-thumbs/assets/OwlCarousel2Thumbs.min.js"></script>
 
+        <script>
+            $(document).ready(function(){
+            var owl = $('.product-slider-3');
+                owl.owlCarousel({
+                    autoplay: false,
+                    autoplayTimeout: 4000,
+                    loop: true,
+                    items: 1,
+                    center: true,
+                    nav: true,
+                    thumbs: true,
+                    thumbImage: false,
+                    thumbsPrerendered: true,
+                    thumbContainerClass: 'owl-thumbs',
+                    thumbItemClass: 'owl-thumb-item',
+                    navText: ["<i class='ti-angle-left icon-nav'></i>","<i class='ti-angle-right icon-nav'></i>"],
+                });
+            });
+        </script>  
         <script>
             document.addEventListener("DOMContentLoaded", function () {
                 const basePrice = parseFloat(document.getElementById("product-price").dataset.basePrice) || 0;
@@ -301,15 +315,13 @@ Sociala/{{ product }}
                 // Initialize the price display
                 updatePrice();
             });
-    
+            
             function copyToClipboard(text) {
-                const tempInput = document.createElement('input');
-                tempInput.value = text;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                document.execCommand('copy');
-                document.body.removeChild(tempInput);
-                alert('Product link copied to clipboard!');
+                navigator.clipboard.writeText(text).then(() => {
+                    alert("Link copied to clipboard!");
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                });
             }
             
             $(document).ready(function(){
@@ -402,7 +414,6 @@ Sociala/{{ product }}
 
         </script>
 
-        <script src="https://gijsroge.github.io/owl-carousel2-thumbs/assets/OwlCarousel2Thumbs.min.js"></script>
 
     {% endblock script %}
 

@@ -4,6 +4,7 @@ from accounts.models import User
 from django.db.models import Avg
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 
 
 class Product(models.Model):
@@ -34,7 +35,7 @@ class Product(models.Model):
     def discount_percentage(self):
         if self.discount_price and self.price:
             discount = ((self.price - self.discount_price) / self.price) * 100
-            return round(discount, 1)
+            return f" %{round(discount, 1 )}"
         return 0
 
     def get_absolute_url(self):
@@ -50,7 +51,6 @@ class Product(models.Model):
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name_ar, allow_unicode=True)
-
         super().save(*args, **kwargs)
 
     def review_url(self):
@@ -94,7 +94,7 @@ class Brand(models.Model):
     slug = models.CharField(max_length=150, null=True, blank=True)
 
     def get_absolute_url(self):
-        return reverse("brand_slug", kwargs={"brand_slug": self.slug})
+        return reverse("brand_slug", kwargs={"brand": self.slug})
 
     def __str__(self):
         return self.name
@@ -114,7 +114,7 @@ class Category(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("cat_slug", kwargs={"cat_slug": self.slug})
+        return reverse("cat_slug", kwargs={"category": self.slug})
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name_ar, allow_unicode=True)
@@ -139,7 +139,13 @@ class Variation(models.Model):
     )
     key = models.CharField(max_length=150, choices=variation_choices)
     value = models.CharField(_("Value"), max_length=150)
-    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="The Color price Not The New Product Pice like (red = $5) ")
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="The Color price Not The New Product Pice like (red = $5) ",
+    )
     active = models.BooleanField(default=True)
 
     objects = VariationManager()

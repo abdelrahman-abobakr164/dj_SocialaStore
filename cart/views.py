@@ -21,30 +21,25 @@ def validiation_coupon(request, code, cart_obj):
     try:
         coupon = Coupon.objects.get(code=code)
         cart_items = CartItem.objects.filter(cart=cart_obj)
+        total_price = sum(item.get_product_price() for item in cart_items)
 
         if cart_items.count() == 0:
-            messages.error(request, "You Don't Have Any Item")
+            messages.warning(request, "You Don't Have Any Item")
             return None
 
         elif not coupon.is_active:
             messages.warning(request, "This Coupon Code is Not Active Yet.")
             return None
 
-        elif coupon.amount >= sum(item.get_product_price() for item in cart_items):
-            messages.error(request, "Your Total Price is Less Than Coupon Amount")
-            return None
-
-        elif coupon.minimum_purchase_amount >= sum(
-            item.get_product_price() for item in cart_items
-        ):
-            messages.error(request, "Yoursss Total Price is Less Than Coupon Amount")
+        elif coupon.amount >= total_price:
+            messages.warning(request, "Your Total Price is Less Than Coupon Amount")
             return None
 
         elif coupon.end_date and now() > coupon.end_date:
             messages.warning(request, "This Coupon Code is Expired.")
             return None
 
-        elif coupon.max_uses and coupon.used_count >= coupon.max_uses:
+        elif coupon.max_uses and coupon.used_count == coupon.max_uses:
             messages.warning(request, "This Coupon Code Has Been Ended.")
             return None
 
@@ -59,7 +54,6 @@ def apply_coupon(request):
     url = request.META.get("HTTP_REFERER")
     cart_obj, created = Cart.objects.get_or_new(request)
     cart_items = CartItem.objects.filter(cart=cart_obj)
-
     total_price = sum(item.get_product_price() for item in cart_items)
 
     if request.method == "POST":
@@ -73,13 +67,9 @@ def apply_coupon(request):
 
                 request.session["applied_coupon"] = float(coupon_code.amount)
 
-                return redirect(url)
-
-            else:
-                return redirect(url)
+            return redirect(url)
 
         else:
-            messages.error(request, "This Field is Required")
             return redirect(url)
 
 
@@ -95,8 +85,14 @@ def add_to_cart(request, category_slug, product_slug, pk):
 
     if request.method == "POST":
         if product_count >= product.stock:
-            messages.warning(request, "There is no Quantity available for this product")
-            return redirect(url)
+            return _json_or_redirect(
+                request,
+                {
+                    "success": False,
+                    "message": "There is no Quantity available for this product",
+                },
+                url,
+            )
 
         form = VariationForm(request.POST, product=product)
         if form.is_valid():
@@ -105,20 +101,9 @@ def add_to_cart(request, category_slug, product_slug, pk):
             size_id = form.cleaned_data.get("size")
 
             color = (
-                Variation.objects.get(
-                    product=product, id=color_id, key="color", active=True
-                )
-                if color_id
-                else None
+                Variation.objects.get(id=color_id, active=True) if color_id else None
             )
-
-            size = (
-                Variation.objects.get(
-                    product=product, id=size_id, key="size", active=True
-                )
-                if size_id
-                else None
-            )
+            size = Variation.objects.get(id=size_id, active=True) if size_id else None
 
             size_price = size.price if size and size.price else 0
             color_price = color.price if color and color.price else 0
@@ -144,32 +129,97 @@ def add_to_cart(request, category_slug, product_slug, pk):
                     size=size,
                     price=total_price,
                 )
-            messages.success(request, "Product Added To Cart!")
 
+            updated_cart_items = CartItem.objects.filter(cart=cart_obj)
+            cart_count = sum(item.quantity for item in updated_cart_items)
+            total_price = sum(item.get_product_price() for item in updated_cart_items)
+
+            return _json_or_redirect(
+                request,
+                {
+                    "success": True,
+                    "message": "Product Added To Cart!",
+                    "cart_count": cart_count,
+                    "total_price": float(total_price),
+                },
+                url,
+            )
+        else:
+            errors = form.errors.as_text()
+            return _json_or_redirect(
+                request,
+                {
+                    "success": False,
+                    "message": f"Form validation error: {errors}",
+                },
+                url,
+            )
+
+    # GET requests should redirect to product page
     return redirect(url)
 
 
 def remove_from_cart(request, cartitem_pk):
     cart_obj, created = Cart.objects.get_or_new(request)
     cartitems = CartItem.objects.filter(cart=cart_obj, id=cartitem_pk)
+    url = request.META.get("HTTP_REFERER")
 
     if cartitems.exists():
         cartitems.delete()
-    return redirect(request.META.get("HTTP_REFERER"))
+
+        # Calculate updated cart count and total for response
+        updated_cart_items = CartItem.objects.filter(cart=cart_obj)
+        cart_count = sum(item.quantity for item in updated_cart_items)
+        total_price = sum(item.get_product_price() for item in updated_cart_items)
+
+        return _json_or_redirect(
+            request,
+            {
+                "success": True,
+                "message": "Item removed from cart",
+                "cart_count": cart_count,
+                "total_price": float(total_price),
+            },
+            url,
+        )
+    else:
+        return _json_or_redirect(
+            request, {"success": False, "message": "Item not found in cart"}, url
+        )
 
 
 def minus_from_cart(request, cartitem_pk):
     cart_obj, created = Cart.objects.get_or_new(request)
-    cartitems = CartItem.objects.get(cart=cart_obj, pk=cartitem_pk)
+    url = request.META.get("HTTP_REFERER")
 
-    if cartitems.quantity > 1:
-        cartitems.quantity -= 1
-        cartitems.save()
+    try:
+        cartitems = CartItem.objects.get(cart=cart_obj, pk=cartitem_pk)
 
-    else:
-        cartitems.delete()
+        if cartitems.quantity > 1:
+            cartitems.quantity -= 1
+            cartitems.save()
+        else:
+            cartitems.delete()
 
-    return redirect(request.META.get("HTTP_REFERER"))
+        # Calculate updated cart count and total for response
+        updated_cart_items = CartItem.objects.filter(cart=cart_obj)
+        cart_count = sum(item.quantity for item in updated_cart_items)
+        total_price = sum(item.get_product_price() for item in updated_cart_items)
+
+        return _json_or_redirect(
+            request,
+            {
+                "success": True,
+                "message": "Cart updated",
+                "cart_count": cart_count,
+                "total_price": float(total_price),
+            },
+            url,
+        )
+    except CartItem.DoesNotExist:
+        return _json_or_redirect(
+            request, {"success": False, "message": "Item not found in cart"}, url
+        )
 
 
 def cart_summary(request):
@@ -190,18 +240,16 @@ def cart_summary(request):
                     else 0
                 )
 
-                if cart_item.product.discount_price:
-                    total_price = (
-                        cart_item.product.discount_price + size_price + color_price
-                    )
-
-                else:
-                    total_price = cart_item.product.price + size_price + color_price
+                total_price = (
+                    cart_item.product.discount_price
+                    or cart_item.product.price + size_price + color_price
+                )
 
                 cart_item.price += total_price
                 cart_item.quantity += 1
                 cart_item.save()
                 return redirect("cart-summary")
+
             except CartItem.DoesNotExist:
                 return redirect("cart-summary")
 

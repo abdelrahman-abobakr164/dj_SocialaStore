@@ -7,7 +7,8 @@ from core.models import Product, Variation
 
 class CartManager(models.Manager):
     def get_or_new(self, request):
-        cart_id = request.session.get("cart_id", None)
+
+        cart_id = request.session.get("cart_id")
         cart_obj = None
         created = False
 
@@ -20,25 +21,37 @@ class CartManager(models.Manager):
                 try:
                     session_cart = self.get_queryset().get(id=cart_id, active=True)
 
-                    if user_cart:
+                    if user_cart and session_cart.id != user_cart.id:
                         session_items = session_cart.cartitem_set.all()
-
                         for item in session_items:
-                            item.cart = user_cart
-                            item.save()
 
-                        if session_cart.user == None:
+                            existing_item = user_cart.cartitem_set.filter(
+                                product=item.product,
+                                size=item.size,
+                                color=item.color,
+                            ).first()
+                            if existing_item:
+                                existing_item.quantity += item.quantity
+                                existing_item.save()
+                                item.delete()
+                            else:
+                                item.cart = user_cart
+                                item.save()
+
+                        if session_cart.user is None:
                             session_cart.delete()
 
                         cart_obj = user_cart
 
-                    else:
+                    elif not user_cart:
                         session_cart.user = request.user
                         session_cart.save()
                         cart_obj = session_cart
+                    else:
+                        cart_obj = user_cart
 
                 except self.model.DoesNotExist:
-                    # if Session Deleted in DB
+
                     if user_cart:
                         cart_obj = user_cart
                     else:
@@ -48,7 +61,6 @@ class CartManager(models.Manager):
                         created = True
 
             else:
-                # No session cart - use existing user cart or create new
                 if user_cart:
                     cart_obj = user_cart
                 else:
@@ -151,14 +163,8 @@ class CartItem(models.Model):
 class Coupon(models.Model):
     code = models.CharField(max_length=10, unique=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    minimum_purchase_amount = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        help_text="The minimum cart amount required to apply this coupon.",
-    )
     max_uses = models.PositiveIntegerField(blank=True, null=True)
     used_count = models.PositiveIntegerField(default=0, editable=False)
-    start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     is_active = models.BooleanField(default=True)
 

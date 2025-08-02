@@ -1,29 +1,37 @@
 from pathlib import Path
+from environ import Env
 import os
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+env = Env()
+Env.read_env()
+ENVIRONMENT = env("ENVIRONMENT", default="production")
+
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-_#+o-yo@*-^)xg+htgn*r&c7&)f&v95!e01v##mrtcbmak7=-0"
-STRIPE_PUBLISHABLE_KEY = "pk_test_51Q3xnYH4IAM7G10vw0mAzfEqkajCpWH5PuIrYJziEdvBURYUnHzQXitK8ntYVdqoGknPH0fw9p8cHoErROxU1eGu00xRPC5XiA"
-STRIPE_SECRET_KEY = "sk_test_51Q3xnYH4IAM7G10vjZxB1hYy3pSjbEypfl8OkJh7j6AbDCMw4fLXPiTp1t1A6Yh8CfGDK1gXZMudT4m0wcOqTET200aouCIE60"
+SECRET_KEY = env("SECRET_KEY")
+STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY")
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+if ENVIRONMENT == "development":
+    DEBUG = True
+else:
+    DEBUG = False
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "eager-badly-crayfish.ngrok-free.app",
+]
 
 CSRF_TRUSTED_ORIGINS = ["https://eager-badly-crayfish.ngrok-free.app"]
 
-# Application definition
-
 INSTALLED_APPS = [
     "modeltranslation",
+    "jazzmin",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -45,8 +53,20 @@ INSTALLED_APPS = [
     "debug_toolbar",
 ]
 
+JAZZMIN_SETTINGS = {
+    "site_title": "Sociala Admin",
+    "site_header": "Sociala",
+    "site_brand": "Sociala",
+    "site_logo": "/images/favicon.png",
+    "welcome_sign": "Welcome to the Sociala Admin",
+    "copyright": "Sociala",
+    "search_model": ["accounts.User"],
+    "user_avatar": None,
+}
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -98,26 +118,19 @@ SOCIALACCOUNT_PROVIDERS = {
 AUTH_USER_MODEL = "accounts.User"
 
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("PGDATABASE"),
-        "USER": os.getenv("PGUSER"),
-        "PASSWORD": os.getenv("PGPASSWORD"),
-        "HOST": os.getenv("PGHOST"),
-        "PORT": os.getenv("PGPORT"),
+        "NAME": env("DB_NAME"),
+        "USER": env("DB_USER"),
+        "PASSWORD": env("DB_PASSWORD"),
+        "HOST": env("DB_HOST"),
+        "PORT": env("DB_PORT"),
     }
 }
 
-
 SITE_ID = 1
 
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -134,9 +147,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
 
 LANGUAGE_CODE = "ar"
 
@@ -156,19 +166,15 @@ LANGUAGES = [
 LOCALE_PATHS = [
     BASE_DIR / "locale",
 ]
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
+
 
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
-# STATICFILES_DIRS = [BASE_DIR / "static"]
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -177,10 +183,9 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
-LOGIN_REDIRECT_URL = "/"
-LOGOUT_REDIRECT_URL = "/"
+LOGIN_REDIRECT_URL = "store"
+LOGOUT_REDIRECT_URL = "/en/store/"
 
-# Email
 
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 ACCOUNT_CHANGE_EMAIL = True
@@ -190,14 +195,27 @@ ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_NOTIFICATIONS = True
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = "/accounts/login/"
-ACCOUNT_LOGOUT_REDIRECT_URL = "/"
+ACCOUNT_LOGOUT_REDIRECT_URL = "/en/store"
+ACCOUNT_USERNAME_BLACKLIST = [
+    "admin",
+    "boda",
+    "administrator",
+    "moderator",
+    "staff",
+    "superuser",
+    "support",
+    "help",
+    "root",
+]
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"  # Your email host (e.g., Gmail, Outlook, etc.)
-EMAIL_PORT = 587  # Common port for TLS
-EMAIL_USE_TLS = True  # Use TLS for secure connection
-EMAIL_HOST_USER = "abdelrahmanforlearn@gmail.com"
-EMAIL_HOST_PASSWORD = "xkbourmgyydfphno"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = f'Sociala {env("EMAIL_HOST_USER")}'
+ACCOUNT_EMAIL_SUBJECT_PREFIX = ""
 
 PHONENUMBER_DEFAULT_REGION = "EG"
 PHONENUMBER_DB_FORMAT = "E164"

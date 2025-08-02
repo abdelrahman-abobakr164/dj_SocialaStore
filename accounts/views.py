@@ -1,15 +1,21 @@
 from django.shortcuts import render, redirect
-from accounts.models import *
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 
-# Create your views here.
+
+from accounts.models import Contact
 
 
+User = get_user_model()
+
+
+@login_required
 def settings(request):
     return render(request, "account/settings.html")
 
 
+@login_required
 def my_account(request):
-    profile = Profile.objects.get(user=request.user)
     user = User.objects.get(username=request.user.username)
     if request.method == "POST":
         first_name = request.POST.get("first_name")
@@ -23,11 +29,11 @@ def my_account(request):
         user.save()
 
         if file:
-            profile.img = file
-            profile.save()
+            user.img = file
+            user.save()
 
         return redirect("my-account")
-    return render(request, "account/my_account.html", {"profile": profile})
+    return render(request, "account/my_account.html", {"profile": user})
 
 
 def contact_us(request):
@@ -35,5 +41,5 @@ def contact_us(request):
         email = request.POST.get("email")
         message = request.POST.get("message")
         Contact.objects.create(email=email, message=message)
-        return redirect('contact-us')
+        return redirect("contact-us")
     return render(request, "account/contact_us.html")

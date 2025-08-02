@@ -1,6 +1,4 @@
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from django.contrib.auth.models import (
     BaseUserManager,
     AbstractBaseUser,
@@ -85,26 +83,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.is_superuser:
             return set()
         return super().get_group_permissions(obj)
-
-
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    img = models.ImageField(default="profile-2.png", upload_to="ProfileImage")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.user.email
-
-    class Meta:
-        ordering = ("-created_at",)
-
-
-@receiver(post_save, sender=User)
-def create_profile(instance, sender, created, **kwargs):
-    if created:
-        profile = Profile.objects.create(user=instance)
-        profile.save()
 
 
 class Contact(models.Model):

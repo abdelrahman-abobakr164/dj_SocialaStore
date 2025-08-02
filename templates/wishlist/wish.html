@@ -45,9 +45,9 @@ Sociala/Wishlist
                                             <span class="product-price-wrapper">
                                                 <span class="money text-grey-500 fw-600 font-xsss"><span class="font-xsssss">$</span> 
                                                 {% if i.product.discount_price %}
-                                                {{ i.product.discount_price }}</span>
+                                                {{ i.product.price }} <p style='color:red'>{{ i.product.discount_percentage }}</p></span>
                                                 {% else %}
-                                                {{ i.product.price }}</span>
+                                                    {{ i.product.price }}</span>
                                                 {% endif %}
                                             </span>
                                         </td>

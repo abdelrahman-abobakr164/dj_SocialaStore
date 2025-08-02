@@ -14,7 +14,6 @@ class UserAdmin(admin.ModelAdmin):
         "is_admin",
         "is_superuser",
     ]
-    list_editable = ["is_active", "is_staff", "is_admin", "is_superuser"]
     search_fields = ["first_name", "last_name", "username", "email", "phone"]
     list_filter = ["is_active", "is_staff", "is_admin", "is_superuser"]
     list_display_links = ["first_name", "last_name", "username", "email"]
@@ -22,7 +21,7 @@ class UserAdmin(admin.ModelAdmin):
 
 
 class ContactAdmin(admin.ModelAdmin):
-    list_display = [ "email", "created_at"]
+    list_display = ["email", "created_at"]
     search_fields = ["email"]
     list_filter = ["created_at", "email"]
     list_display_links = ["email"]
@@ -30,5 +29,4 @@ class ContactAdmin(admin.ModelAdmin):
 
 
 admin.site.register(User, UserAdmin)
-admin.site.register(Profile)
 admin.site.register(Contact, ContactAdmin)

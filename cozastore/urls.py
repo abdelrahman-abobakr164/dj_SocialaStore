@@ -8,14 +8,14 @@ from django.conf.urls.i18n import i18n_patterns
 
 urlpatterns = [
     path("__debug__/", include("debug_toolbar.urls")),
-    path("admin/", admin.site.urls),
+    path("boda/", admin.site.urls),
     path("i18n/", include("django.conf.urls.i18n")),
     path("accounts/", include("allauth.urls")),
     path("accounts/", include("accounts.urls")),
 ]
 urlpatterns += i18n_patterns(
-    path("wishlist/", include("wishlist.urls")),
     path("cart/", include("cart.urls")),
+    path("wishlist/", include("wishlist.urls")),
     path("orders/", include("orders.urls")),
     path("", include("core.urls")),
     prefix_default_language=True,

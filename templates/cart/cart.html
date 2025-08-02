@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
+{% load django_bootstrap5 %}
+
 {% block title %}
 Sociala/Cart Summary
 {% endblock title %}
@@ -65,13 +67,17 @@ Sociala/Cart Summary
                                             </span>
                                         </td>
                                         <td class="product-quantity">
-                                            <form method="POST">
+                                            <form method="POST" class="quantity-form">
                                                 <div class="quantity">
                                                     {% csrf_token %}
-                                                    <input readonly type='number' class="quantity-input open-font fw-600"  value="{{ i.quantity }}">
-                                                    <div class="dec qtybutton"><a style='color:black' href="{% url 'minus-from-cart' i.pk %}">-</a></div>
+                                                    <input readonly type='number' class="quantity-input open-font fw-600" value="{{ i.quantity }}">
+                                                    <div class="dec qtybutton">
+                                                        <a href="{% url 'minus-from-cart' i.pk %}" class="minus-item" data-cartitem-id="{{ i.pk }}">-</a>
+                                                    </div>
                                                     <input type="hidden" name="cart_item_id" value="{{i.pk}}">
-                                                    <div class="inc qtybutton"><button class='btn'>+</button></div>
+                                                    <div class="inc qtybutton">
+                                                        <button type="submit" class="btn">+</button>
+                                                    </div>
                                                 </div>
                                             </form>
                                         </td>
@@ -80,7 +86,11 @@ Sociala/Cart Summary
                                                 <span class="money fmont"><strong><span class="font-xsssss">$ </span>{{ i.get_product_price }}</strong></span>
                                             </span>
                                         </td>
-                                        <td class="product-remove text-right"><a href="{% url 'remove-from-cart' i.pk %}" data-cartitem-id="{{ i.pk }}"><i class="ti-trash font-xs text-grey-500"></i></a></td>
+                                        <td class="product-remove text-right">
+                                            <a href="{% url 'remove-from-cart' i.pk %}" class="remove-item" data-cartitem-id="{{ i.pk }}">
+                                                <i class="ti-trash font-xs text-grey-500"></i>
+                                            </a>
+                                        </td>
                                         {% empty %}
                                         <td colspan='5'>You Don't Have Products Yet</td>
                                     </tr>
@@ -98,39 +108,48 @@ Sociala/Cart Summary
                     </div>
                     <div class="col-lg-4">
                         <div class="checkout-payment card border-0 mb-3 bg-greyblue p-4">
-                            <div class="cart-totals">
-                                <h4 class="mont-font fw-600 font-md mb-5">Cart totals</h4>
-                                <div class="table-content table-responsive">
-                                    <table class="table order-table">
-                                        <tbody>
-                                            <tr>
-                                                <td class="font-xsss pt-2 fw-600">Subtotal</td>
-                                                <td class="font-xssss fw-700 text-grey-600 pt-2 text-right">${{total_price}}</td>  
-                                            </tr>
-
-                                            {% if request.session.applied_coupon %}
-                                            <tr>
-                                                <td class="font-xsss pt-2 fw-600">Coupon</td>
-                                                <td class="font-xssss fw-700 text-grey-600 pt-2 text-right">
-                                                    <span>${{ request.session.applied_coupon }}0</span>
-                                                </td>  
-                                            </tr>
-                                            {% endif %}
-                                            <tr class="order-total">
-                                                <td class="font-xsss pt-2 fw-600">Total</td>
-                                                <td class="font-xssss fw-700 text-grey-600 pt-2 text-right">
-                                                    <span class="product-price-wrapper">
-                                                        <span class="money fmont">${{ request.session.total_price }}0</span>
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                            <div class="cart_totals text-left bg-greyblue">
+                                <div class="cart_totals_wrap w-100">
+                                    <h4 class="mont-font fw-600 font-md mb-3">Cart totals</h4>
+                                    <div class="table-content table-responsive">
+                                        <table class="table">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="cart-subtotal">Subtotal</td>
+                                                    <td class="text-right"><span class="subtotal-price">${{ total_price }}</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="cart-coupon">Coupon</td>
+                                                    <td class="text-right">
+                                                        {% if request.session.applied_coupon %}
+                                                            <span class="coupon-amount">-${{ request.session.applied_coupon }}</span>
+                                                        {% else %}
+                                                            <span class="coupon-amount">$0.00</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="cart-total">Total</td>
+                                                    <td class="text-right"><span class="cart-total-price">${{ request.session.total_price }}</span></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="coupon-wrap">
+                                        <h4 class="title-17 mb-3">Coupon</h4>
+                                        <p class="text-grey-700 font-xssss">Enter your coupon code if you have one.</p>
+                                        <form method="post" action="{% url 'apply-coupon' %}" class="d-flex mt-3">
+                                            {% csrf_token %}
+                                            {{couponform }}
+                                            <button class="btn bg-dark text-white">Apply</button>
+                                        </form>
+                                    </div>
+                                    <div class="checkout-btn mt-2">
+                                        <a href="{% url 'checkout' %}" class="checkout-button btn bg-current text-white">Proceed to checkout</a>
+                                    </div>
                                 </div>
                             </div>
-                            
                         </div>
-                        <a href="{% url 'checkout' %}" class="bg-dark float-right text-white fw-600 text-uppercase font-xsss border-dark border rounded-3 border-size-md d-inline-block w-100 p-3 text-center ls-3">Proceed To Checkout</a>
                     </div>
                 </div>
             </div>               

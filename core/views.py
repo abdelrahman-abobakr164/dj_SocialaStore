@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator
 from django.db.models import Prefetch, Q
 from django.http import JsonResponse
@@ -11,19 +11,36 @@ from core.models import *
 
 def index(request):
     products = Product.objects.order_by("-created_at")
-    paginator = Paginator(products, 1)
-    page = request.GET.get("p")
-    page_obj = paginator.get_page(page)
+
+    paginator = Paginator(
+        products,
+        1,
+        error_messages={
+            "no_results": "No products found on this page",
+            "invalid_page": "Invalid page number",
+            "page_not_an_integer": "Page number must be an integer",
+            "empty_page": "This page is empty",
+        },
+    )
+
+    page = request.GET.get("p", 1)
+    try:
+        page_obj = paginator.get_page(page)
+    except (ValueError, TypeError):
+        page_obj = paginator.get_page(1)
 
     if "recently_products" in request.session:
         recently_products_cat = products.filter(
-            category__slug__in=request.session["recently_products"]
+            category__name__in=request.session["recently_products"]
         )
 
     else:
         recently_products_cat = []
 
-    context = {"products": page_obj, "recently_viewed": recently_products_cat}
+    context = {
+        "products": page_obj,
+        "recently_viewed": recently_products_cat,
+    }
     return render(request, "core/index.html", context)
 
 
@@ -42,20 +59,20 @@ def product_detail(request, category_slug, slug, pk):
         orderitem = None
 
     if "recently_products" in request.session:
-        if product.category.slug in request.session["recently_products"]:
-            request.session["recently_products"].remove(product.category.slug)
+        if product.category.name in request.session["recently_products"]:
+            request.session["recently_products"].remove(product.category.name)
 
         recent_view = Product.objects.filter(
-            category__slug__in=request.session["recently_products"]
+            category__name__in=request.session["recently_products"]
         )
 
-        request.session["recently_products"].append(product.category.slug)
+        request.session["recently_products"].append(product.category.name)
 
         if len(request.session["recently_products"]) > 4:
             request.session["recently_products"].pop(0)
 
     else:
-        request.session["recently_products"] = [product.category.slug]
+        request.session["recently_products"] = [product.category.name]
         recent_view = []
 
     request.session.modified = True
@@ -98,12 +115,12 @@ def product_review(request, category_slug, slug, pk):
     )
 
 
-def shop(request, cat_slug=None, brand_slug=None, color_slug=None, size_slug=None):
+def shop(request, category=None, brand=None, color=None, size=None, page=0):
     products = Product.objects.all()
 
-    if color_slug:
+    if color:
         color_variations = Variation.objects.filter(
-            key="color", value=color_slug, active=True
+            key="color", value=color, active=True
         )
         products = (
             Product.objects.prefetch_related(
@@ -113,16 +130,14 @@ def shop(request, cat_slug=None, brand_slug=None, color_slug=None, size_slug=Non
             )
             .filter(
                 variations__key="color",
-                variations__value=color_slug,
+                variations__value=color,
                 variations__active=True,
             )
             .distinct()
         )
 
-    if size_slug:
-        size_variations = Variation.objects.filter(
-            key="size", value=size_slug, active=True
-        )
+    if size:
+        size_variations = Variation.objects.filter(key="size", value=size, active=True)
         products = (
             Product.objects.prefetch_related(
                 Prefetch(
@@ -131,17 +146,17 @@ def shop(request, cat_slug=None, brand_slug=None, color_slug=None, size_slug=Non
             )
             .filter(
                 variations__key="size",
-                variations__value=size_slug,
+                variations__value=size,
                 variations__active=True,
             )
             .distinct()
         )
 
-    if cat_slug:
-        products = products.filter(category__slug=cat_slug)
+    if category:
+        products = products.filter(category__slug=category)
 
-    if brand_slug:
-        products = products.filter(brand__slug=brand_slug)
+    if brand:
+        products = products.filter(brand__slug=brand)
 
     search = request.GET.get("s")
     Pfrom = request.GET.get("from", 0.00)
@@ -160,18 +175,42 @@ def shop(request, cat_slug=None, brand_slug=None, color_slug=None, size_slug=Non
 
     if search:
         products = products.filter(
-            (Q(name__icontains=search) | Q(category__name__icontains=search)),
+            (Q(name__icontains=search) | Q(category__name__icontains=search))
         )
 
     paginator = Paginator(
         products,
-        4,
-        error_messages={"no_results": "Page does not exist"},
+        1,
+        error_messages={
+            "no_results": "No products found on this page",
+            "invalid_page": "Invalid page number",
+            "page_not_an_integer": "Page number must be an integer",
+            "empty_page": "This page is empty",
+        },
     )
-    page_number = request.GET.get("p")
-    page_obj = paginator.get_page(page_number)
 
-    return render(request, "core/shop.html", {"products": page_obj})
+    page_number = request.GET.get("p", 1)
+    try:
+        page_obj = paginator.get_page(page_number)
+    except (ValueError, TypeError):
+        page_obj = paginator.get_page(1)
+
+    return render(
+        request,
+        "core/shop.html",
+        {
+            "products": page_obj,
+            "current_filters": {
+                "category": category,
+                "brand": brand,
+                "color": color,
+                "size": size,
+                "search": search,
+                "price_from": Pfrom,
+                "price_to": Pto,
+            },
+        },
+    )
 
 
 def handler_404(request, exception):

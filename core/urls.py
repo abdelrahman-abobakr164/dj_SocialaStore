@@ -3,12 +3,13 @@ from .views import *
 
 
 urlpatterns = [
-    path("", index, name="index"),
+    path("store/", index, name="store"),
     path("shop/", shop, name="shop"),
-    path("shop/category/<cat_slug>/", shop, name="cat_slug"),
-    path("shop/brand/<brand_slug>/", shop, name="brand_slug"),
-    path("shop/color/<color_slug>/", shop, name="color_slug"),
-    path("shop/size/<size_slug>/", shop, name="size_slug"),
+    path("shop/category/<category>/", shop, name="cat_slug"),
+    path("page/<int:page>/", shop, name="product_list_paginated"),
+    path("shop/brand/<brand>/", shop, name="brand_slug"),
+    path("shop/color/<color>/", shop, name="color_slug"),
+    path("shop/size/<size>/", shop, name="size_slug"),
     path(
         "cat/<category_slug>/<str:slug>/<str:pk>/",
         product_detail,

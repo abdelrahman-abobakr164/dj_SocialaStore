@@ -44,9 +44,9 @@ msgstr "الفئات"
 
 #: .\core\models.py:34 .\templates\core\shop.html:37
 #, fuzzy
-#| msgid "Brand Name"
+#| msgid "Brands"
 msgid "Brand"
-msgstr "اسم العلامة التجارية"
+msgstr "العلامة التجارية"
 
 #: .\core\models.py:40
 msgid "Slug"
@@ -54,7 +54,7 @@ msgstr "العنوان"
 
 #: .\core\models.py:100
 msgid "Brand Name"
-msgstr "اسم العلامة التجارية"
+msgstr "العلامة التجارية"
 
 #: .\core\models.py:112
 #, fuzzy

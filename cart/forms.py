@@ -36,7 +36,7 @@ class CouponForm(forms.Form):
         max_length=10,
         required=True,
         widget=forms.TextInput(
-            attrs={"placeholder": "Coupon Code..", "class": "input-code form-control h60 p-3"}
+            attrs={"placeholder": "Coupon Code..", "class": "input-code form-control"}
         ),
     )
 

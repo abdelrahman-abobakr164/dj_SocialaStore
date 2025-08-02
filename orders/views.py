@@ -209,11 +209,6 @@ def checkout(request):
                 orderItem.product_price = item.get_product_price()
                 orderItem.save()
 
-            if "applied_coupon" in request.session:
-                coupon = Coupon.objects.get(amount=request.session["applied_coupon"])
-                coupon.used_count += 1
-                coupon.save()
-
             cart_items.delete()
 
             payment_option = form.cleaned_data.get("payment_option")
@@ -275,6 +270,12 @@ def payment(request, payment_option, order_number):
                 product = Product.objects.get(id=item.product.id)
                 product.stock -= item.quantity
                 product.save()
+
+            if "applied_coupon" in request.session:
+                coupon = Coupon.objects.get(amount=request.session["applied_coupon"])
+                coupon.used_count += 1
+                coupon.save()
+                request.session["applied_coupon"].delete()
 
             order_obj.status = "Paid"
             order_obj.is_ordered = True
@@ -433,6 +434,12 @@ def stripe_webhook(request):
                 product = Product.objects.get(id=item.product.id)
                 product.stock -= item.quantity
                 product.save()
+
+            if "applied_coupon" in request.session:
+                coupon = Coupon.objects.get(amount=request.session["applied_coupon"])
+                coupon.used_count += 1
+                coupon.save()
+                request.session["applied_coupon"].delete()
 
             order.status = "Paid"
             order.is_ordered = True

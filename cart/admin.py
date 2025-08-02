@@ -29,10 +29,8 @@ class CouponAdmin(admin.ModelAdmin):
     list_display = [
         "code",
         "amount",
-        "minimum_purchase_amount",
         "max_uses",
         "used_count",
-        "start_date",
         "end_date",
         "is_active",
     ]

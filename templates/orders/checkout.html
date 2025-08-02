@@ -280,70 +280,69 @@ Siciala/Checkout
             </div>               
         </div>
     </div>
-    <!-- main content -->
 
-    {% block script %}
-        <script>
+{% endblock body %}
 
-            const useDefaultShippingRadios = document.querySelectorAll('[name="use_default_shipping"]');
-            const ShippingFieldscardElementContainer = document.getElementById("shiping-content");
-            
-            const SameShippingCheckbox = document.getElementById("same_shipping_address");
-            const useDefaultbillingCheckbox = document.querySelectorAll("[name='use_default_billing']");
-            const billingfiledsElementContainer = document.getElementById("billing-address");
+{% block script %}
+    <script>
 
-            useDefaultShippingRadios.forEach((radio) => {
-                radio.addEventListener("change", (event) => {
-                    if (event.target.checked) {
-                        // Hide Card Element when using default shipping
-                        ShippingFieldscardElementContainer.style.display = "none";
-                    } else {
-                        // Show Card Element when not using default shipping
-                        ShippingFieldscardElementContainer.style.display = "block";
-                    }
-                });
-            });
+        const useDefaultShippingRadios = document.querySelectorAll('[name="use_default_shipping"]');
+        const ShippingFieldscardElementContainer = document.getElementById("shiping-content");
+        
+        const SameShippingCheckbox = document.getElementById("same_shipping_address");
+        const useDefaultbillingCheckbox = document.querySelectorAll("[name='use_default_billing']");
+        const billingfiledsElementContainer = document.getElementById("billing-address");
 
-            useDefaultbillingCheckbox.forEach((radio) => {
-                radio.addEventListener("change", (event) => {
-                    if (event.target.checked) {
-                        // Hide Card Element when using default card
-                        billingfiledsElementContainer.style.display = "none";
-                    } else {
-                        // Show Card Element when not using default card
-                        billingfiledsElementContainer.style.display = "block";
-                    }
-                });
-            });
-
-            document.querySelectorAll('[name="use_default_shipping"]').forEach(radio => {
-                radio.addEventListener('change', function () {
-                    const shippingFields = document.querySelectorAll('[name="shipping_first_name"],[name="shipping_last_name"],[name="shipping_email"],[name="shipping_phone"],[name="shipping_address1"],[name="shipping_address2"],[name="shipping_city"],[name="shipping_zip"],[name="set_default_shipping"],[name="same_shipping_address"]');
-                    shippingFields.forEach(field => field.disabled = this.checked);
-                });
-            });
-
-            document.querySelectorAll('[name="use_default_billing"]').forEach(radio => {
-                radio.addEventListener('change', function () {
-                    const billingFields = document.querySelectorAll('[name="same_shipping_address"], [name="set_default_billing"],[name="billing_first_name"],[name="billing_last_name"],[name="billing_email"],[name="billing_phone"],[name="billing_address1"],[name="billing_address2"],[name="billing_city"],[name="billing_zip"]');
-                    billingFields.forEach(field => field.disabled = this.checked);
-                });
-            });
-            
-            document.getElementById('same_shipping_address').addEventListener('change', function(){
-                if (this.checked) {
-                    document.querySelector('[name="billing_first_name"]').value = document.querySelector('[name="shipping_first_name"]').value; 
-                    document.querySelector('[name="billing_last_name"]').value = document.querySelector('[name="shipping_last_name"]').value;
-                    document.querySelector('[name="billing_email"]').value = document.querySelector('[name="shipping_email"]').value;
-                    document.querySelector('[name="billing_phone"]').value = document.querySelector('[name="shipping_phone"]').value;
-                    document.querySelector('[name="billing_address1"] ').value = document.querySelector('[name="shipping_address1"]').value;
-                    document.querySelector('[name="billing_address2"]').value = document.querySelector('[name="shipping_address2"]').value;
-                    document.querySelector('[name="billing_city"]').value = document.querySelector('[name="shipping_city"]').value;
-                    document.querySelector('[name="billing_zip"]').value = document.querySelector('[name="shipping_zip"]').value;
+        useDefaultShippingRadios.forEach((radio) => {
+            radio.addEventListener("change", (event) => {
+                if (event.target.checked) {
+                    // Hide Card Element when using default shipping
+                    ShippingFieldscardElementContainer.style.display = "none";
+                } else {
+                    // Show Card Element when not using default shipping
+                    ShippingFieldscardElementContainer.style.display = "block";
                 }
             });
+        });
 
-        </script>
-    {% endblock script %}
-    
-{% endblock body %}
+        useDefaultbillingCheckbox.forEach((radio) => {
+            radio.addEventListener("change", (event) => {
+                if (event.target.checked) {
+                    // Hide Card Element when using default card
+                    billingfiledsElementContainer.style.display = "none";
+                } else {
+                    // Show Card Element when not using default card
+                    billingfiledsElementContainer.style.display = "block";
+                }
+            });
+        });
+
+        document.querySelectorAll('[name="use_default_shipping"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const shippingFields = document.querySelectorAll('[name="shipping_first_name"],[name="shipping_last_name"],[name="shipping_email"],[name="shipping_phone"],[name="shipping_address1"],[name="shipping_address2"],[name="shipping_city"],[name="shipping_zip"],[name="set_default_shipping"],[name="same_shipping_address"]');
+                shippingFields.forEach(field => field.disabled = this.checked);
+            });
+        });
+
+        document.querySelectorAll('[name="use_default_billing"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const billingFields = document.querySelectorAll('[name="same_shipping_address"], [name="set_default_billing"],[name="billing_first_name"],[name="billing_last_name"],[name="billing_email"],[name="billing_phone"],[name="billing_address1"],[name="billing_address2"],[name="billing_city"],[name="billing_zip"]');
+                billingFields.forEach(field => field.disabled = this.checked);
+            });
+        });
+        
+        document.getElementById('same_shipping_address').addEventListener('change', function(){
+            if (this.checked) {
+                document.querySelector('[name="billing_first_name"]').value = document.querySelector('[name="shipping_first_name"]').value; 
+                document.querySelector('[name="billing_last_name"]').value = document.querySelector('[name="shipping_last_name"]').value;
+                document.querySelector('[name="billing_email"]').value = document.querySelector('[name="shipping_email"]').value;
+                document.querySelector('[name="billing_phone"]').value = document.querySelector('[name="shipping_phone"]').value;
+                document.querySelector('[name="billing_address1"] ').value = document.querySelector('[name="shipping_address1"]').value;
+                document.querySelector('[name="billing_address2"]').value = document.querySelector('[name="shipping_address2"]').value;
+                document.querySelector('[name="billing_city"]').value = document.querySelector('[name="shipping_city"]').value;
+                document.querySelector('[name="billing_zip"]').value = document.querySelector('[name="shipping_zip"]').value;
+            }
+        });
+
+    </script>
+{% endblock script %}
