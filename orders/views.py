@@ -1,15 +1,14 @@
-import json
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
 from orders.forms import RefundForm, CheckoutForm
-from django.core.mail import send_mail
 from django.contrib import messages
-from cart.forms import CouponForm
 from django.conf import settings
 import logging
 
+from cart.forms import CouponForm
+from orders.tasks import send_mails_to_clients
 from core.models import Product
 from orders.models import *
 from cart.models import *
@@ -28,21 +27,59 @@ def is_valid_form(values):
     return valid
 
 
+# @login_required(login_url="account_login")
+# def buy_now(request, id, slug):
+#     product = get_object_or_404(Product, id=id, slug=slug)
+
+#     if request.method == "POST":
+#         form = VariationForm(request.POST, product=product)
+#         if form.is_valid():
+
+#             color_id = form.cleaned_data.get("color")
+#             size_id = form.cleaned_data.get("size")
+
+#             color = (
+#                 Variation.objects.get(id=color_id, active=True) if color_id else None
+#             )
+#             size = Variation.objects.get(id=size_id, active=True) if size_id else None
+
+#             size_price = size.price if size and size.price else 0
+#             color_price = color.price if color and color.price else 0
+#             base_price = product.discount_price or product.price
+#             total_price = base_price + size_price + color_price
+#             orderitem = OrderItem.objects.create(
+#                 user=request.user,
+#                 product_id=product.id,
+#                 color=color,
+#                 size=size,
+#                 quantity=1,
+#                 product_price=total_price,
+#             )
+#             orderitem.save()
+
+#             request.session["orderitem_id"] = orderitem.id
+#             return redirect("checkout")
+
+#         messages.error(request, "Please Choose Variation")
+#         return redirect(request.META.get("HTTP_REFERER"))
+#     return redirect(
+#         "product-detail", category_slug=product.category.slug, slug=slug, pk=id
+#     )
+
+
 @login_required(login_url="account_login")
 def checkout(request):
     cart_obj, created = Cart.objects.get_or_new(request)
     cart_items = CartItem.objects.filter(cart=cart_obj)
 
-    if not cart_items.exists():
-        messages.info(request, "You Don't Have Orders")
+    if not cart_items.exists() and "orderitem_id" not in request.session:
         return redirect("shop")
 
     form = CheckoutForm()
-    couponform = CouponForm()
 
     last_payment = Payment.objects.filter(user=request.user)
     if last_payment.exists():
-        last_payment.latest("created_at")
+        last_payment = last_payment.latest("created_at")
 
     default_shipping_address = Address.objects.filter(
         user=request.user, default=True, address_type="Shipping"
@@ -56,7 +93,8 @@ def checkout(request):
         if form.is_valid():
 
             order = Order.objects.create(
-                user=request.user, total=request.session.get("total_price")
+                user=request.user,
+                total=request.session.get("total_price"),
             )
 
             use_default_billing = request.POST.get("use_default_billing")
@@ -114,7 +152,7 @@ def checkout(request):
                         shipping_address.save()
 
                 else:
-                    messages.error(
+                    messages.warning(
                         request, "Please Fill in Required Shipping Address Fields"
                     )
                     return redirect("checkout")
@@ -190,26 +228,34 @@ def checkout(request):
                         billing_address.default = True
                         billing_address.save()
                 else:
-                    messages.error(
+                    messages.warning(
                         request,
                         "Please fill in the required billing address fields",
                     )
                     return redirect("checkout")
 
             order.save()
+            if "orderitem_id" in request.session:
+                BuyNow = OrderItem.objects.filter(
+                    id=request.session.get("orderitem_id")
+                )
+                for i in BuyNow:
+                    i.order_id = order.id
+                    i.save()
+                del request.session["orderitem_id"]
+            else:
+                for item in cart_items:
+                    orderItem = OrderItem()
+                    orderItem.user_id = request.user.id
+                    orderItem.order_id = order.id
+                    orderItem.product_id = item.product.id
+                    orderItem.quantity = item.quantity
+                    orderItem.color = item.color
+                    orderItem.size = item.size
+                    orderItem.product_price = item.get_product_price()
+                    orderItem.save()
 
-            for item in cart_items:
-                orderItem = OrderItem()
-                orderItem.user_id = request.user.id
-                orderItem.order_id = order.id
-                orderItem.product_id = item.product.id
-                orderItem.quantity = item.quantity
-                orderItem.color = item.color
-                orderItem.size = item.size
-                orderItem.product_price = item.get_product_price()
-                orderItem.save()
-
-            cart_items.delete()
+                cart_items.delete()
 
             payment_option = form.cleaned_data.get("payment_option")
             if payment_option == "Stripe":
@@ -231,12 +277,12 @@ def checkout(request):
                 return redirect("checkout")
 
         else:
-            messages.error(request, "Please fill in the required Fields")
+            messages.warning(request, "Please fill in the required Fields")
             return redirect("checkout")
 
     context = {
         "form": form,
-        "couponform": couponform,
+        "couponform": CouponForm(),
         "last_payment": last_payment,
         "default_shipping_address": default_shipping_address,
         "default_billing_address": default_billing_address,
@@ -251,46 +297,46 @@ def payment(request, payment_option, order_number):
         messages.warning(request, "You Don't Have an Order")
         return redirect("shop")
 
+    if payment_option not in ["Stripe", "CashOnDelivery"]:
+        messages.error(request, "Not Supported Payment Option")
+
     order_obj = get_object_or_404(Order, order_number=order_number)
     request.session["order_id"] = str(order_obj.order_number)
 
     orderitems = OrderItem.objects.filter(order=order_obj)
 
-    if payment_option in ["Stripe", "CashOnDelivery"]:
-        if payment_option == "CashOnDelivery" and request.method == "POST":
-            Payment.objects.create(
-                user=request.user,
-                order_id=order_obj.id,
-                status=True,
-                amount=order_obj.total,
-                method="CashOnDelivery",
-            )
+    if payment_option == "CashOnDelivery" and request.method == "POST":
+        Payment.objects.create(
+            user=request.user,
+            order_id=order_obj.id,
+            status=True,
+            amount=order_obj.total,
+            method="CashOnDelivery",
+        )
 
-            for item in orderitems:
-                product = Product.objects.get(id=item.product.id)
-                product.stock -= item.quantity
-                product.save()
+        for item in orderitems:
+            product = Product.objects.get(id=item.product.id)
+            product.stock -= item.quantity
+            product.bestseller += 1
+            product.save()
 
-            if "applied_coupon" in request.session:
-                coupon = Coupon.objects.get(amount=request.session["applied_coupon"])
-                coupon.used_count += 1
-                coupon.save()
-                request.session["applied_coupon"].delete()
+        if "applied_coupon" in request.session:
+            coupon = Coupon.objects.get(amount=request.session["applied_coupon"])
+            coupon.used_count += 1
+            coupon.save()
+            del request.session["applied_coupon"]
 
-            order_obj.status = "Paid"
-            order_obj.is_ordered = True
-            order_obj.save()
+        order_obj.status = "Pending"
+        order_obj.is_ordered = True
+        order_obj.save()
 
-            send_mail(
-                subject="Cahs On Delivery Payment Confirmation",
-                message=f"Payment of ${order_obj.total} was successful, Order id ({order_obj.order_number}).",
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[request.user.email],
-            )
-            return redirect("success", order_number=order_obj.order_number)
+        send_mails_to_clients.delay(
+            "COD Payment Confirmation",
+            f"Payment of ${order_obj.total} was successful, Order id ({order_obj.order_number}).",
+            request.user.email,
+        )
 
-    else:
-        messages.error(request, "Not Supported Payment Option")
+        return redirect("success", order_number=order_obj.order_number)
 
     context = {
         "order": order_obj,
@@ -338,75 +384,6 @@ def create_checkout_session(request, order_number):
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 
-@login_required(login_url="account_login")
-def request_refund(request, order_number):
-    if request.method == "POST":
-        send_mail(
-            "Requested Refund",
-            f"You Can Refund Your Order From This Link Below http://127.0.0.1:8000/orders/refund/{order_number} Click Here",
-            settings.EMAIL_HOST_USER,
-            [request.user.email],
-            fail_silently=False,
-        )
-
-        return redirect("order-detail", order_number=order_number)
-    return redirect("order-detail", order_number=order_number)
-
-
-@login_required(login_url="account_login")
-def refund_payment(request, order_number):
-    form = RefundForm()
-    order = get_object_or_404(Order, order_number=order_number)
-    if request.method == "POST":
-        form = RefundForm(request.POST)
-        if form.is_valid():
-            try:
-                payment = get_object_or_404(Payment, order=order)
-
-                refund_model = Refund.objects.create(
-                    user=request.user,
-                    order=order,
-                    email=form.cleaned_data["email"],
-                    image=form.cleaned_data["image"],
-                    reason=form.cleaned_data["reason"],
-                    payment=payment,
-                    refund_id=f"ref_{uuid.uuid4()}",
-                    amount=int(order.total * 100) / 100,
-                    status="PENDING",
-                )
-
-                order.status = "Refunded"
-                order.save()
-
-                send_mail(
-                    "Refund Was Send",
-                    f"We Recieved The Refunded We Well Check Your Order Soon. Refund Id {refund_model.refund_id}",
-                    settings.EMAIL_HOST_USER,
-                    recipient_list=[form.cleaned_data["email"]],
-                    fail_silently=False,
-                )
-
-                messages.success(request, f"The Refund Sent.")
-                return redirect("order-detail", order_number=order_number)
-
-            except Order.DoesNotExist:
-                return JsonResponse(
-                    {"status": "error", "message": "Order Does Not Exist"}, status=404
-                )
-
-            except stripe.error.StripeError as e:
-                messages.error(
-                    request, f"Stripe refund failed. Please try again later. {e}"
-                )
-                return redirect("order-detail", order_number=order_number)
-
-        else:
-            messages.error(request, "Invalid form data")
-            return redirect("order-detail", order_number=order_number)
-
-    return render(request, "orders/refund.html", {"order": order, "form": form})
-
-
 @csrf_exempt
 def stripe_webhook(request):
     payload = request.body
@@ -433,6 +410,7 @@ def stripe_webhook(request):
             for item in order_items:
                 product = Product.objects.get(id=item.product.id)
                 product.stock -= item.quantity
+                product.bestseller += 1
                 product.save()
 
             if "applied_coupon" in request.session:
@@ -454,17 +432,83 @@ def stripe_webhook(request):
                 method="Stripe",
             )
 
-            send_mail(
-                subject="Stripe Payment",
-                message=f"Thank you for your payment. Your order ID is {order_number}.",
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=[order.user.email],
-                fail_silently=False,
+            send_mails_to_clients.delay(
+                "Stripe Payment",
+                f"Thank you for your payment. Your order ID is {order_number}.",
+                order.user.email,
             )
 
         except Order.DoesNotExist:
-            messages.error(request, f"Order with ID {order_number} not found.")
+            messages.info(request, f"No Order with This ID: {order_number} .")
     return JsonResponse({"status": "success"})
+
+
+@login_required(login_url="account_login")
+def request_refund(request, order_number):
+    if request.method == "POST":
+        order = get_object_or_404(Order, order_number=order_number)
+        payment = get_object_or_404(Payment, order=order)
+        if payment.method == "Stripe":
+            send_mails_to_clients.delay(
+                "Requested Refund",
+                f"You Can Refund Your Order From This Link Below http://127.0.0.1:8000/orders/refund/{uuid.uuid4()}/{order_number}/ Click Here.",
+                request.user.email,
+            )
+
+            return redirect("order-detail", order_number=order_number)
+        else:
+            return redirect("order-detail", order_number=order_number)
+    else:
+        messages.error(request, "Wrong Request")
+
+
+@login_required(login_url="account_login")
+def refund_payment(request, refund_number, order_number):
+    forms = RefundForm()
+    order = get_object_or_404(Order, order_number=order_number)
+    payment = get_object_or_404(Payment, order=order)
+
+    if Refund.objects.filter(order=order).exists():
+        messages.info(request, "Your Order is being considered")
+        return redirect("order-detail", order_number=order_number)
+
+    if payment.method == "Stripe":
+
+        if request.method == "POST":
+            form = RefundForm(request.POST, request.FILES)
+            if form.is_valid():
+
+                payment = get_object_or_404(Payment, order=order)
+                refund_model = Refund.objects.create(
+                    user=request.user,
+                    order=order,
+                    email=form.cleaned_data["email"],
+                    image=form.cleaned_data["image"],
+                    reason=form.cleaned_data["reason"],
+                    payment=payment,
+                    refund_id=f"ref_{uuid.uuid4()}",
+                    amount=int(order.total * 100) / 100,
+                    status="PENDING",
+                )
+
+                order.status = "Refund Requested"
+                order.save()
+
+                send_mails_to_clients.delay(
+                    "Refund Was Send",
+                    f"We Recieved The Refunded We Well Check Your Order Soon. Refund Id {refund_model.refund_id}.",
+                    form.cleaned_data["email"],
+                )
+
+                messages.success(request, f"Refund Requested Successfully!")
+                return redirect("order-detail", order_number=order_number)
+
+            else:
+                messages.error(request, form.errors.as_text())
+
+        return render(request, "orders/refund.html", {"order": order, "form": forms})
+    else:
+        return redirect("order-detail", order_number=order_number)
 
 
 @login_required(login_url="account_login")
@@ -482,14 +526,8 @@ def failed(request, order_number):
 @login_required(login_url="account_login")
 def order_detail(request, order_number):
     order = get_object_or_404(Order, order_number=order_number)
-    payment = None
-    if order.is_ordered == True:
-        payment = Payment.objects.get(order=order)
-
     form = CheckoutForm()
-
-    context = {"order": order, "form": form, "payment": payment}
-    return render(request, "orders/order-detail.html", context)
+    return render(request, "orders/order-detail.html", {"order": order, "form": form})
 
 
 @login_required(login_url="account_login")
@@ -499,13 +537,24 @@ def order_list(request):
 
 
 @login_required(login_url="account_login")
-def incomplete_orders(request):
+def uncomplete_orders(request, order_number):
     if request.method == "POST":
+        url = request.META.get("HTTP_REFERER")
+        order = get_object_or_404(Order, order_number=order_number)
         payment_option = request.POST.get("payment_option")
-        order_number = request.POST.get("order_number")
-        return redirect(
-            "payment", payment_option=payment_option, order_number=order_number
-        )
+
+        if "payment_option" not in request.POST:
+            messages.warning(
+                request, "You Must To Select One Of This Fields, Don't Mess"
+            )
+            return redirect(url)
+        elif payment_option not in ["Stripe", "CashOnDelivery"]:
+            messages.error(request, "Wrong Payment Option, Don't Mess")
+            return redirect(url)
+        else:
+            return redirect(
+                "payment", payment_option=payment_option, order_number=order_number
+            )
 
 
 @login_required(login_url="account_login")

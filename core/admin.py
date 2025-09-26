@@ -14,15 +14,15 @@ class VariationInline(admin.TabularInline):
 
 
 class VariationAdmin(admin.ModelAdmin):
-    list_display = ["product", "key", "value", "price","active"]
+    list_display = ["product", "key", "value", "price", "active"]
     list_editable = ["active"]
     list_filter = ["key"]
-    search_fields = ("product__name", "key", "value")
+    search_fields = ( "key", "value")
     list_per_page = 20
 
 
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ["product", "subject", "rating", "status", "user"]
+    list_display = ["product", "rating", "status", "user"]
     list_editable = ["status"]
     list_filter = ["product", "user", "rating"]
     search_fields = ["product"]
@@ -30,7 +30,14 @@ class ReviewAdmin(admin.ModelAdmin):
 
 
 class ProductAdmin(TranslationAdmin):
-    list_display = ["name", "price", "discount_price", "stock", "category"]
+    list_display = [
+        "name",
+        "price",
+        "discount_price",
+        "stock",
+        "bestseller",
+        "category",
+    ]
     list_editable = ["stock", "discount_price"]
     list_filter = ["price"]
     list_per_page = 20

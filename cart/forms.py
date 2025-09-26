@@ -5,30 +5,32 @@ from core.models import Variation
 class VariationForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
-        product = kwargs.pop("product")
+        product = kwargs.pop("product", None)
         super().__init__(*args, **kwargs)
 
-        color = Variation.objects.filter(product=product, key="color")
-        if color.exists():
-            self.fields["color"] = forms.ChoiceField(
-                choices=[(v.id, v.value) for v in color],
-                widget=forms.RadioSelect(attrs={"class": "variation-radio"}),
-                required=True,
-            )
-            self.color_prices = {
-                str(v.id): float(v.price) if v.price else None for v in color
-            }
+        if product:
+            color = Variation.objects.filter(product=product, key="color", active=True)
+            size = Variation.objects.filter(product=product, key="size", active=True)
 
-        size = Variation.objects.filter(product=product, key="size")
-        if size.exists():
-            self.fields["size"] = forms.ChoiceField(
-                choices=[(v.id, v.value) for v in size],
-                widget=forms.RadioSelect(attrs={"class": "variation-radio"}),
-                required=True,
-            )
-            self.size_prices = {
-                str(v.id): float(v.price) if v.price else None for v in size
-            }
+            if color.exists():
+                self.fields["color"] = forms.ChoiceField(
+                    choices=[(v.id, v.value) for v in color],
+                    widget=forms.RadioSelect(attrs={"class": "variation-radio"}),
+                    required=True,
+                )
+                self.color_prices = {
+                    str(v.id): float(v.price) if v.price else None for v in color
+                }
+
+            if size.exists():
+                self.fields["size"] = forms.ChoiceField(
+                    choices=[(v.id, v.value) for v in size],
+                    widget=forms.RadioSelect(attrs={"class": "variation-radio"}),
+                    required=True,
+                )
+                self.size_prices = {
+                    str(v.id): float(v.price) if v.price else None for v in size
+                }
 
 
 class CouponForm(forms.Form):
@@ -39,4 +41,3 @@ class CouponForm(forms.Form):
             attrs={"placeholder": "Coupon Code..", "class": "input-code form-control"}
         ),
     )
-

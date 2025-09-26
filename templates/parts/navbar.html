@@ -1,39 +1,209 @@
 {% load static %}
-<div class="nav-header bg-white shadow-xs border-0">
-    <div class="nav-top">
-        <a href="{% url 'store' %}"><i class="feather-zap text-success display1-size me-2 ms-0"></i><span class="d-inline-block fredoka-font ls-3 fw-600 text-current font-xxl logo-text mb-0">Sociala. </span> </a>
+{% load i18n %}
+
+<div class="nav-header bg-white shadow-lg border-0 sticky-top">
+    <div class="container-fluid px-4">
+        <div class="row align-items-center justify-content-between">
+            
+            <div class="col-auto">
+                <div class="nav-top">
+                    <a href="{% url 'store' %}" class="text-decoration-none">
+                        <i class="feather-zap text-success display1-size me-2 ms-0"></i>
+                        <span class="d-inline-block fredoka-font ls-3 fw-600 text-current font-xxl logo-text mb-0">Sociala.</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-4 d-none d-md-block">
+                <form action="{% url 'shop' %}" class="header-search">
+                    <div class="form-group mb-0 icon-input position-relative">
+                        <i class="feather-search font-sm text-grey-400 position-absolute" style="top: 50%; left: 15px; transform: translateY(-50%); z-index: 2;"></i>
+                        <input type="search" name='query' placeholder="{% trans 'Start typing to search...' %}" 
+                               class="form-control bg-grey border-0 lh-32 pt-2 pb-2 ps-5 pe-3 font-xssss fw-500 rounded-xl theme-dark-bg" 
+                               style="padding-left: 45px;">
+                    </div>
+                </form>
+            </div>
+
+            <div class="col-auto">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2" style='margin-left: {% if request.user.is_authenticated %} -10% {% endif %}'>
+                        <a href="{% url 'store' %}" title="{% trans 'Store' %}" class="nav-icon-link">
+                            <i class="feather-home font-lg btn-round-lg {% if 'store' in request.path %} bg-primary text-white {% else %} bg-greylight text-grey-500 hover-bg-primary hover-text-white {% endif %} btn-round-lg theme-dark-bg transition-all"></i>
+                        </a>
+                        <a href="{% url 'shop' %}" title="{% trans 'Home' %}" class="nav-icon-link">
+                            <i class="feather-shopping-bag font-lg btn-round-lg {% if 'shop' in request.path %} bg-primary text-white{% else %} bg-greylight text-grey-500 hover-bg-primary hover-text-white {% endif %} theme-dark-bg transition-all"></i>
+                        </a>
+                        <a href="{% url 'contact-us' %}" title="{% trans 'Contact-us' %}" class="nav-icon-link">
+                            <i class="feather-mail font-lg btn-round-lg {% if 'contact-us' in request.path %} bg-primary text-white{% else %} bg-greylight text-grey-500 hover-bg-primary hover-text-white {% endif %} theme-dark-bg transition-all"></i>
+                        </a>
+                    </div>
+
+                    <div class="dropdown ms-2">
+                        <button class="btn btn-round-lg bg-greylight text-grey-500 p-2 border-0 d-flex align-items-center dropdown-toggle hover-bg-primary hover-text-white transition-all" 
+                                type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% get_current_language as LANGUAGE_CODE %}
+                            {% if LANGUAGE_CODE == 'ar' %}
+                                <img src="https://flagcdn.com/w20/eg.png" alt="العربية" class="me-1 rounded-sm" style="width: 20px; height: 15px;">
+                                <span class="font-xsss fw-600 d-none d-sm-inline">AR</span>
+                            {% else %}
+                                <img src="https://flagcdn.com/w20/us.png" alt="English" class="me-1 rounded-sm" style="width: 20px; height: 15px;">
+                                <span class="font-xsss fw-600 d-none d-sm-inline">EN</span>
+                            {% endif %}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-xl mt-2" aria-labelledby="languageDropdown" style="min-width: 150px;">
+                            <li>
+                                <form action="{% url 'set_language' %}" method="post" class="m-0">
+                                    {% csrf_token %}
+                                    <input name="next" type="hidden" value="{{ request.get_full_path }}" />
+                                    <button type="submit" name="language" value="en" class="dropdown-item d-flex align-items-center py-3 px-3 border-0 bg-transparent w-100 text-start {% if LANGUAGE_CODE == 'en' %}bg-light{% endif %}">
+                                        <img src="https://flagcdn.com/w20/us.png" alt="English" class="me-2 rounded-sm" style="width: 20px; height: 15px;">
+                                        <span class="fw-500">English</span>
+                                        {% if LANGUAGE_CODE == 'en' %}<i class="feather-check ms-auto text-success"></i>{% endif %}
+                                    </button>
+                                </form>
+                            </li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li>
+                                <form action="{% url 'set_language' %}" method="post" class="m-0">
+                                    {% csrf_token %}
+                                    <input name="next" type="hidden" value="{{ request.get_full_path }}" />
+                                    <button type="submit" name="language" value="ar" class="dropdown-item d-flex align-items-center py-3 px-3 border-0 bg-transparent w-100 text-start {% if LANGUAGE_CODE == 'ar' %}bg-light{% endif %}">
+                                        <img src="https://flagcdn.com/w20/eg.png" alt="العربية" class="me-2 rounded-sm" style="width: 20px; height: 15px;">
+                                        <span class="fw-500">العربية</span>
+                                        {% if LANGUAGE_CODE == 'ar' %}<i class="feather-check ms-auto text-success"></i>{% endif %}
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-3 ">
+                        <div class="position-relative me-2">
+                            <a href="{% url 'wish-summary' %}" class="nav-icon-link" title="{% trans 'Wishlist' %}">
+                                <i class="feather-heart font-xl {% if 'wishlist' in request.path %} text-current {% else %} text-grey-500 hover-text-primary {% endif %} transition-all"></i>
+                                {% if WishCount > 0 %}
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white font-xsssss">
+                                        {{ WishCount }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </div>
+
+                        <div class="position-relative">
+                            <a href="{% url 'cart-summary' %}" class="nav-icon-link" title="{% trans 'Shopping Cart' %}">
+                                <i class="feather-shopping-cart font-xl {% if 'cart' in request.path %} text-current {% else %} text-grey-500 hover-text-primary {% endif %} transition-all"></i>
+                                {% if CartCount > 0 %}
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success text-white font-xsssss">
+                                        {{ CartCount }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </div>
+                    </div>
+
+                    {% if request.user.is_authenticated %}
+                        <div class="dropdown">
+                            <button class="btn p-0 border-0 bg-transparent dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img src="{% static 'images/1.png' %}" alt="Image" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-xl mt-2" aria-labelledby="userDropdown">
+                                <li><h6 class="dropdown-header">{% trans 'Hello' %}, {{ request.user.first_name|default:request.user.username }}!</h6></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item py-2"  title="{% trans 'settings' %}" href="{% url 'settings' %}"><i class="feather-settings me-2"></i>{% trans 'Settings' %}</a></li>
+                                <li><a class="dropdown-item py-2"  title="{% trans 'logout' %}" href="{% url 'account_logout' %}"><i class="feather-log-out me-2"></i>{% trans 'Logout' %}</a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <div class="d-flex align-items-center gap-2">
+                            <a href="{% url 'account_login' %}"  title="{% trans 'Login' %}"class="btn btn-outline-primary rounded-lg px-3 py-2 font-xsss fw-600 text-decoration-none">
+                                {% trans 'Login' %}
+                            </a>
+                            <a href="{% url 'account_signup' %}"  title="{% trans 'Signup' %}"class="btn btn-primary rounded-lg px-3 py-2 font-xsss fw-600 text-decoration-none text-white">
+                                {% trans 'Register' %}
+                            </a>
+                        </div>
+                    {% endif %}
+                    
+                </div>
+            </div>
+        </div>
     </div>
-    
-    <form action="{% url 'shop' %}" class="float-left header-search">
-        <div class="form-group mb-0 icon-input">
-            <i class="feather-search font-sm text-grey-400"></i>
-            <input type="search" name='s' placeholder="Start typing to search.." class="bg-grey border-0 lh-32 pt-2 pb-2 ps-5 pe-3 font-xssss fw-500 rounded-xl w350 theme-dark-bg">
-        </div>
-    </form>
-
-    <a href="{% url 'store' %}" class="p-2 text-center ms-3 menu-icon center-menu-icon"><i class="feather-home font-lg {% if 'store' in request.path %} alert-primary text-current {% else %} bg-greylight text-grey-500 {% endif %} btn-round-lg theme-dark-bg "></i></a>
-    <a href="{% url 'shop' %}" class="p-2 text-center ms-0 menu-icon center-menu-icon"><i class="feather-shopping-bag font-lg t btn-round-lg theme-dark-bg  {% if 'shop' in request.path %} alert-primary text-current {% else %} bg-greylight text-grey-500 {% endif %}"></i></a>
-    
-    <a href="{% url 'wish-summary' %}" style='margin-left: 250px'>
-        <i class="feather-heart d-inline-block font-xl {% if 'wishlist' in request.path %} text-current {% else %} text-grey-500 {% endif %}"></i>
-    </a>
-    <h4 class='mt-2 ms-1'>{{ WishCount }}</h4>
-
-    <a href="{% url 'cart-summary' %}">
-        <i class="feather-shopping-cart ms-4 d-inline-block font-xl {% if 'cart' in request.path %} text-current {% else %} text-grey-500 {% endif %}"></i>
-    </a>
-    <h4 class='mt-2 ms-1'>{{ CartCount }}</h4>
-    
-    
-    {% if request.user.is_authenticated %}
-        <a href="{% url 'settings' %}" style='margin-left: 130px'>
-            <i class="feather-settings d-inline-block font-xl {% if 'accounts' in request.path %} text-current {% else %} text-grey-500 {% endif %}"></i>
-        </a>
-    {% else %}
-        <div class="d-flex" style='margin-left:70px'>
-            <a href="{% url 'account_login' %}"><h4 class='d-inline-block text-grey-500'>Login / </h4></a>
-            <a href="{% url 'account_signup' %}"><h4 class='ms-1 d-inline-block text-grey-500'> Register</h4></a>
-        </div>
-    {% endif %}
-    
 </div>
+
+
+<style>
+    .nav-header {
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    .nav-icon-link {
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .nav-icon-link:hover {
+        transform: translateY(-2px);
+    }
+
+    .dropdown-toggle::after {
+        font-size: 0.7em;
+    }
+
+    .dropdown-menu {
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .dropdown-item:hover {
+        background-color: #f8f9fa;
+        transform: translateX(5px);
+        transition: all 0.2s ease;
+    }
+
+    .badge {
+        font-size: 0.7em;
+        min-width: 18px;
+        height: 18px;
+        line-height: 1;
+    }
+
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+
+    .hover-bg-primary:hover {
+        background-color: var(--bs-primary) !important;
+    }
+
+    .hover-text-white:hover {
+        color: white !important;
+    }
+
+    .hover-text-primary:hover {
+        color: var(--bs-primary) !important;
+    }
+
+    /* RTL Support for Arabic */
+    [dir="rtl"] .dropdown-menu {
+        right: auto;
+        left: 0;
+    }
+
+    [dir="rtl"] .me-1, [dir="rtl"] .me-2 {
+        margin-left: 0.25rem;
+        margin-right: 0;
+    }
+
+    @media (max-width: 768px) {
+        .header-search {
+            display: none;
+        }
+        
+        .container-fluid {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    }
+</style>

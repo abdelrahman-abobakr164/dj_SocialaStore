@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
+{% load query_string %}
+{% load humanize %}
 
 {% block title %}
 Sociala/Shop
@@ -15,7 +17,7 @@ Sociala/Shop
                     <div class="col-lg-12">
                         <div class="card p-md-5 p-4 bg-primary-gradiant rounded-3 shadow-xss bg-pattern border-0 overflow-hidden">
                             <div class="bg-pattern-div"></div>
-                            <h2 class="display2-size display2-md-size fw-700 text-white mb-0 mt-0">{% trans 'Shop' %} <span class="fw-700 ls-3 text-grey-200 font-xsssss mt-2 d-block">{{ products|length }} {% trans 'PRODUCT FOUND' %}</span></h2>
+                            <h2 class="display2-size display2-md-size fw-700 text-white mb-0 mt-0">{% trans 'Shop' %} <span class="fw-700 ls-3 text-grey-200 font-xsssss mt-2 d-block">{{ page_obj|length }} {% trans 'PRODUCTS FOUND' %}</span></h2>
                         </div>
                     </div>
 
@@ -26,42 +28,54 @@ Sociala/Shop
                                     <div class="form-group mb-0">
                                         <label for="Search" class="fw-600 text-grey-900 font-xsss">{% trans 'Categories' %}</label>
                                     </div>
-                                    <ul class="recent-post mt-2">
-                                        {% for cat in categories %}
-                                            <li class="mb-0"><a href="{{cat.get_absolute_url}}" class="fw-600 font-xssss">
-                                            {{ cat.name }}</a></li>
-                                        {% endfor %}
-                                    </ul>
+                                    <form method='GET' id='FilterForm'>
+                                        <ul>
+                                            {% for cat in categories %}
+                                                <li>
+                                                    <input type="checkbox" onclick="this.form.submit()" {% if cat.name in selected_categories %} checked {% endif %} value='{{cat.name}}' name="category_" id="cat-{{cat.id}} ">
+                                                    <label for="cat-{{cat.id}} ">{{cat.name}} </label> <br>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
                                 </div>
                                 <div class="col-lg-3 pe-4">
                                     <div class="form-group mb-0">
                                         <label for="Search" class="fw-600 text-grey-900 font-xsss">{% trans 'Brand Name' %}</label>
                                     </div>
-                                    {% for brand in brands %}
-                                        <div class="form-group mb-2 mt-2">
-                                            <a href='{{ brand.get_absolute_url }}' class="small-size fw-600 text-grey-800 font-xssss d-block">{{ brand.name }}<span class="float-right fw-600 text-grey-600 font-xssss mt-1"> {{brand.brands.count}}</span></a>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                                <div class="col-lg-3">
-                                    <div class="form-group mb-0">
-                                        <label for="Search" class="fw-600 text-grey-900 font-xsss">{% trans 'Sizes' %}</label>
-                                    </div>
-                                    <ul class="list-inline mt-2">
-                                        {% for size in size_variations %}
-                                            <li class="list-inline-item me-0 mb-2"><a href="{% url 'size_slug' size %}" class="btn-round-sm bg-white fw-600 font-xssss text-grey-800 ">{{ size }}</a></li>
-                                        {% endfor %}
-                                    </ul> 
-
-                                    <div class="form-group mb-0 mt-4">
-                                        <label for="Search" class="fw-600 text-grey-900 font-xsss">{% trans 'Colors' %}</label>
-                                    </div>
-                                    <ul class="list-inline mt-2">
-                                        {% for color in variations %}
-                                            <li class="list-inline-item me-0"><a href="{% url 'color_slug' color %}" class="btn-round-sm" style="background-color: {{color}}"></a></li>
+                                    <ul class="list-inline">
+                                        {% for brand in brands %}
+                                            <li class="me-0">
+                                                <input type="checkbox" name="brand_" id="{{brand.id}}" value='{{brand.name}}' onclick="this.form.submit()" {% if brand.name in selected_brands %} checked {% endif %}>
+                                                <label for="{{brand.id}} ">{{brand.name}} </label> <br>
+                                            </li>
                                         {% endfor %}
                                     </ul>
+                                </div>
+                                <div class="col-lg-3">
+                                    {% if size_variations %}
+                                        <div class="form-group mb-0">
+                                            <label for="Search" class="fw-600 text-grey-900 font-xsss">{% trans 'Sizes' %}</label>
+                                        </div>
+                                        <ul class="list-inline">
+                                            {% for size in size_variations %}
+                                                <li class="me-0">
+                                                    <input onclick='this.form.submit()' {% if size in selected_size %} checked {% endif %} type="checkbox" name="size_" id="size-{{size}}" value='{{ size }}'>
+                                                    <label for="size-{{size}}">{{size}} </label> <br>
+                                                </li>
+                                            {% endfor %}
+                                        </ul> 
+                                    {% endif %}
 
+                                    {% if color_variations %}
+                                        <div class="form-group mb-0 mt-4">
+                                            <label for="Search" class="fw-600 text-grey-900 font-xsss">{% trans 'Colors' %}</label>
+                                        </div>
+                                        <ul class="list-inline mt-2">
+                                            {% for color in color_variations %}
+                                                <li class="list-inline-item me-0"><a href="{% url 'color_slug' color %}" class="btn-round-sm" style="background-color: {{color}}"></a></li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
                                 </div>
                                 <div class="col-lg-3">
                                     <div class="form-group mb-0 mt-0">
@@ -70,10 +84,8 @@ Sociala/Shop
                                     <div class="form-group mt-3 mb-0">
                                         <div class="row">
                                             <div class="col-sm-12">
-                                                <form method='GET'>
-                                                    <input type="number" class='form-control' name="from" required step='0.1' min='1' placeholder='From 0'>
-                                                    <input type="number" class='form-control mt-2' name="to" required step='0.1' min='1'placeholder='To 0.000'>
-                                                    <button type="submit" class="form-control text-center mt-2 style2-input text-white fw-600 bg-primary p-0">Filter</button>
+                                                    <input type="number" onchange='this.form.submit()' class='form-control' id='from' name="from" step='0.1' min='1' placeholder='From 1'>
+                                                    <input type="number" onchange='this.form.submit()' class='form-control mt-2' id='to' name="to" step='0.1' min='1' placeholder='To 99999'>
                                                 </form>
                                             </div>
                                         </div>
@@ -83,8 +95,20 @@ Sociala/Shop
                         </div>
                     </div>
 
-                    
-                    {% for i in products %}
+                    <div class="row" style='margin-left:82%'>
+                        <div class="col-2">
+                            <form>
+                                <select name="sort_by" onchange="this.form.submit()" class='form-control mt-2'>
+                                    <option value="date-descending" {% if sort_by == 'date-descending' %} selected {% else %} {% endif %}>Date: {% trans 'New To Old' %}</option>
+                                    <option value="date-ascending" {% if sort_by == 'date-ascending' %} selected {% else %} {% endif %}>Date: {% trans 'Old To New' %}</option>
+                                    <option value="price-descending" {% if sort_by == 'price-descending' %} selected {% else %} {% endif %}>Price: {% trans 'High &gt; Low' %}</option>
+                                    <option value="price-ascending" {% if sort_by == 'price-ascending' %} selected {% else %} {% endif %}>Price: {% trans 'Low &gt; High' %}</option>
+                                </select>
+                            </form>
+                        </div>
+                    </div>
+
+                    {% for i in page_obj %}
                         <div class="col-lg-4 col-md-6">
                             <div class="card w-100 border-0 mt-4">
                                 <div class="card-image w-100 p-0 text-center bg-greylight rounded-3 mb-2">
@@ -93,32 +117,32 @@ Sociala/Shop
                                 <div class="card-body w-100 p-0 text-center">
                                     <h2 class="mt-2 mb-1"><a href="{{ i.get_absolute_url }}" class="text-black fw-700 font-xsss lh-26">{{ i.name }}</a></h2>
                                     {% if i.discount_percentage %}
-                                    <h6 class="font-xsss fw-600 text-grey-500 ls-2">${{i.discount_price}}</h6>
-                                    <h6 class="font-xsss fw-600 text-danger ls-2">% {{i.discount_percentage}}</h6>
+                                        <h6 class="font-xsss fw-600 text-grey-500 ls-2">${{i.discount_price|intcomma}}</h6>
+                                        <h6 class="font-xsss fw-600 text-danger ls-2">{{i.discount_percentage}}</h6>
                                     {% else %}
-                                    <h6 class="font-xsss fw-600 text-grey-500 ls-2">${{i.price}}</h6>
+                                        <h6 class="font-xsss fw-600 text-grey-500 ls-2">${{i.price|intcomma}}</h6>
                                     {% endif %}
                                 </div>                                
                             </div>
                         </div>
                     {% endfor %}
 
-                    {% if products.has_other_pages %}
+                    {% if page_obj.has_other_pages %}
                         <div class="col-12 mb-5">
                             <nav>
-                            <ul class="pagination justify-content-center">
-                            {% if products.has_previous %}
-                            <li><a href="?p={{products.previous_page_number}}"><span class="ti-angle-left"></span></span></a></li>
-                            {% endif %} 
+                                <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                <li><a href="?{% query_string request page=page_obj.previous_page_number %}"><span class="ti-angle-left"></span></span></a></li>
+                                {% endif %} 
+                                
+                                {% for i in custom_page_range %}
+                                    <li style='text-decoration: {% if i >= page_obj.number %} none {% else %} line-through {% endif %}' class="page-item me-3 ms-3"><a href="?page={{i}}">{{i}}</a></li>
+                                {% endfor %}
 
-                            {% for i in products.paginator.page_range %}
-                            <li style='text-decoration: {% if i >= products.number %} none {% else %} line-through {% endif %}' class="page-item me-3 ms-3"><a href="?p={{i}}">{{i}}</a></li>
-                            {% endfor %}
-                            
-                            {% if products.has_next %}
-                            <li><a href="?p={{products.next_page_number}}"><span class="ti-angle-right"></span></a></li>
-                            {% endif %}
-                            </ul>
+                                {% if page_obj.has_next %}
+                                    <li><a href="?{% query_string request page=page_obj.next_page_number %}"><span class="ti-angle-right"></span></a></li>
+                                {% endif %}
+                                </ul>
                             </nav>
                         </div>
                     {% endif %}
@@ -126,5 +150,5 @@ Sociala/Shop
             </div>               
         </div>
     </div>
-    
+
 {% endblock body %}

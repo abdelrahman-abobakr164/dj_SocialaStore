@@ -1,6 +1,7 @@
 {% load static %}
 {% load i18n %}
 <!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}
 <html dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
 <head>
     <meta charset="UTF-8">
@@ -22,7 +23,17 @@
 </head>
 
 <body class="color-theme-blue">
-
+    <style>
+      #alert_div{
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 250px;
+        opacity: 1;
+        transition: opacity 0.5s; 
+      }
+    </style>
     <div class="preloader"></div>
 
     <div class="main-wrapper mt-5 mb-5">
@@ -30,33 +41,34 @@
       {% include 'parts/navbar.html' %}
 
         {% if messages %}
-          <div class="container" style='margin-top:70px'>
-            {% for msg in messages %}
-              {% if msg.level == 40 %}
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                  {{msg}}
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </button>
-                </div>
-              {% else %}
-                <div id="coupon-message" class="alert alert-{{msg.tags}} alert-dismissible fade show" style='margin-bottom:30px; margin-top:20px' role="alert">
-                  {{msg}}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </button>
-                </div>
-              {% endif %}
-            {% endfor %}
-          </div>
+          {% for msg in messages %}
+            {% if msg.level == 40 %}
+              <div class="alert alert-danger" id='alert_div'>{{msg}}</div>
+            {% else %}
+              <div class="alert alert-{{msg.tags}}" id='alert_div'>{{msg}}</div>
+            {% endif %}
+          {% endfor %}
         {% endif %}
 
         {% block body %}
 
         {% endblock body %}
-      </div>
 
+
+    <script>
+      const messageDiv = document.getElementById('alert_div');
+      document.onmousemove = function (e) {
+          setTimeout(() => {
+            document.getElementById('alert_div').style.opacity = 0;
+            setTimeout(() => messageDiv.remove(), 500);
+          }, 2500);
+      };
+    </script>
     <script src="{% static 'js/plugin.js' %}"></script>
     <script src="{% static 'js/scripts.js' %}"></script>
-          
+    <script src="{% static 'js/validation_js.js' %}"></script>
+
+    
     {% block script %}
     {% endblock script %}
 </body>

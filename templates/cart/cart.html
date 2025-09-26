@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
-{% load django_bootstrap5 %}
+{% load humanize %}
+{% load i18n %}
 
 {% block title %}
 Sociala/Cart Summary
@@ -14,7 +15,7 @@ Sociala/Cart Summary
                     <div class="col-lg-12">
                         <div class="card p-md-5 p-4 bg-primary-gradiant rounded-3 shadow-xss bg-pattern border-0 overflow-hidden">
                             <div class="bg-pattern-div"></div>
-                            <h2 class="display2-size display2-md-size fw-700 text-white mb-0 mt-5">Cart <span class="fw-700 ls-3 text-grey-200 font-xsssss mt-2 d-block">{{ CartCount }} PRODUCT FOUND</span></h2>
+                            <h2 class="display2-size display2-md-size fw-700 text-white mb-0 mt-5">Cart <span class="fw-700 ls-3 text-grey-200 font-xsssss mt-2 d-block">{{ CartCount }} ITEM FOUND</span></h2>
                         </div>
                     </div>
                 </div>
@@ -26,12 +27,12 @@ Sociala/Cart Summary
                                 <thead class="bg-greyblue rounded-3">
                                     <tr>
                                         <th class="border-0 p-4">&nbsp;</th>
-                                        <th class="border-0 p-4 text-left">Product</th>
-                                        <th class="border-0 p-4">Color</th>
-                                        <th class="border-0 p-4">Size</th>
-                                        <th class="border-0 p-4">Price</th>
-                                        <th class="border-0 p-4">Quantity</th>
-                                        <th class="border-0 p-4">Total</th>
+                                        <th class="border-0 p-4 text-left">{% trans 'Product' %}</th>
+                                        <th class="border-0 p-4">{% trans 'Color' %}</th>
+                                        <th class="border-0 p-4">{% trans 'Size' %}</th>
+                                        <th class="border-0 p-4">{% trans 'Price' %}</th>
+                                        <th class="border-0 p-4">{% trans 'Quantity' %}</th>
+                                        <th class="border-0 p-4">{% trans 'Total' %}</th>
                                         <th class="border-0 p-4">&nbsp;</th>
                                     </tr>
                                 </thead>
@@ -56,34 +57,41 @@ Sociala/Cart Summary
                                         <td class="product-headline text-left wide-column">
                                             {% if i.size %}
                                                 <h3>
-                                                    <a href="{% url 'size_slug' i.size.value %}" class="text-grey-900 fw-600 font-xsss">{{ i.size.value }}</a>
+                                                    <a href="/shop/?size_={{i.size.value}}" class="text-grey-900 fw-600 font-xsss">{{ i.size.value }}</a>
                                                 </h3>
                                             {% endif %}
                                         </td>
 
                                         <td class="product-p">
                                             <span class="product-price-wrapper">
-                                                <span class="money text-grey-500 fw-600 font-xsss"><span class="font-xsssss">$</span> {{ i.get_price }}</span>
+                                                <span class="money text-grey-500 fw-600 font-xsss"><span class="font-xsssss">$</span>{{ i.get_price|intcomma }}</span>
                                             </span>
                                         </td>
                                         <td class="product-quantity">
-                                            <form method="POST" class="quantity-form">
+                                            <form method="POST" class="quantity-form" action='{% url "c-b" i.product.category.slug i.product.slug i.product.pk %}'>
                                                 <div class="quantity">
                                                     {% csrf_token %}
                                                     <input readonly type='number' class="quantity-input open-font fw-600" value="{{ i.quantity }}">
                                                     <div class="dec qtybutton">
-                                                        <a href="{% url 'minus-from-cart' i.pk %}" class="minus-item" data-cartitem-id="{{ i.pk }}">-</a>
+                                                        <a style='color:black' href="{% url 'minus-from-cart' i.pk %}" class="minus-item" data-cartitem-id="{{ i.pk }}">-</a>
                                                     </div>
-                                                    <input type="hidden" name="cart_item_id" value="{{i.pk}}">
+                                                    {% if i.color %}
+                                                    <input type="hidden" name="color" value="{{i.color.id}}">
+                                                    {% endif %}                                                    
+
+                                                    {% if i.size %}
+                                                    <input type="hidden" name="size" value="{{i.size.id}}">
+                                                    {% endif %}
+                                                    
                                                     <div class="inc qtybutton">
-                                                        <button type="submit" class="btn">+</button>
+                                                        <input type="submit" name='action' value='+' class="btn">
                                                     </div>
                                                 </div>
                                             </form>
                                         </td>
                                         <td class="product-total-price">
                                             <span class="product-price-wrapper">
-                                                <span class="money fmont"><strong><span class="font-xsssss">$ </span>{{ i.get_product_price }}</strong></span>
+                                                <span class="money fmont"><strong><span class="font-xsssss">$ </span>{{ i.get_product_price|intcomma }}</strong></span>
                                             </span>
                                         </td>
                                         <td class="product-remove text-right">
@@ -92,19 +100,12 @@ Sociala/Cart Summary
                                             </a>
                                         </td>
                                         {% empty %}
-                                        <td colspan='5'>You Don't Have Products Yet</td>
+                                        <td colspan='5'>{% trans "You Don't Have Products Yet" %}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
-                        <form action="{% url 'apply-coupon' %}" method='POST'>
-                            {% csrf_token %}
-                            <div class="coupon float-left mb-2">
-                                {{couponform.code}}
-                                <button type="submit" class="bg-dark text-white fw-600 text-uppercase font-xssss border-dark border rounded-3 border-size-md d-inline-block w175 p-3 text-center ls-3">Apply Coupon</button>
-                            </div>
-                        </form>
                     </div>
                     <div class="col-lg-4">
                         <div class="checkout-payment card border-0 mb-3 bg-greyblue p-4">
@@ -116,44 +117,84 @@ Sociala/Cart Summary
                                             <tbody>
                                                 <tr>
                                                     <td class="cart-subtotal">Subtotal</td>
-                                                    <td class="text-right"><span class="subtotal-price">${{ total_price }}</span></td>
+                                                    <td class="text-right"><span class="subtotal-price">${{ total_price|intcomma }}</span></td>
                                                 </tr>
                                                 <tr>
-                                                    <td class="cart-coupon">Coupon</td>
-                                                    <td class="text-right">
-                                                        {% if request.session.applied_coupon %}
-                                                            <span class="coupon-amount">-${{ request.session.applied_coupon }}</span>
-                                                        {% else %}
-                                                            <span class="coupon-amount">$0.00</span>
-                                                        {% endif %}
-                                                    </td>
+                                                    {% if request.session.applied_coupon %}
+                                                        <td class="cart-coupon">Coupon</td>
+                                                        <td class="text-right">
+                                                            {% if request.session.applied_coupon %}
+                                                                <span class="coupon-amount">-${{ request.session.applied_coupon }}</span>
+                                                            {% else %}
+                                                                <span class="coupon-amount">$0.00</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    {% endif %}
                                                 </tr>
                                                 <tr>
                                                     <td class="cart-total">Total</td>
-                                                    <td class="text-right"><span class="cart-total-price">${{ request.session.total_price }}</span></td>
+                                                    <td class="text-right"><span class="cart-total-price">${% if request.session.total_price %}{{ request.session.total_price|intcomma}}{% else %}0{% endif %}</span></td>
                                                 </tr>
                                             </tbody>
                                         </table>
                                     </div>
                                     <div class="coupon-wrap">
-                                        <h4 class="title-17 mb-3">Coupon</h4>
-                                        <p class="text-grey-700 font-xssss">Enter your coupon code if you have one.</p>
-                                        <form method="post" action="{% url 'apply-coupon' %}" class="d-flex mt-3">
+                                        <form id='couponForm' method="post" action="{% url 'apply-coupon' %}" class="d-flex mt-3 ">
                                             {% csrf_token %}
-                                            {{couponform }}
+                                            {{ couponform.code }}
+                                            
+                                            {% if couponform.code.errors %}
+                                                <ul>
+                                                    {% for errs in couponform.code.errors %}
+                                                        <li>{{ errs }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% endif %}
+                                                
                                             <button class="btn bg-dark text-white">Apply</button>
                                         </form>
-                                    </div>
-                                    <div class="checkout-btn mt-2">
-                                        <a href="{% url 'checkout' %}" class="checkout-button btn bg-current text-white">Proceed to checkout</a>
+                                        <p class="" id="id_p"></p>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        <div class="checkout-btn mt-2">
+                            <p class="text-info" id="id_messages"></p>
+                            <a href="{% url 'checkout' %}" id='proceedToCheckout' class="checkout-button btn bg-secondary text-white w-100 h-25">{% trans 'Proceed To Checkout' %}</a>
                         </div>
                     </div>
                 </div>
             </div>               
         </div>
     </div>
+
+    <script>
+        let couponform = document.getElementById("couponForm");
+        let proceedtocheckout = document.getElementById("proceedToCheckout");
+        let id_messages = document.getElementById("id_messages");
+        let tag_message = document.getElementById("id_p");
+        let codefield = document.querySelector("[name='code']");
+        let cart_count = {{CartCount}}
+
+        proceedtocheckout.onclick = function (e) {
+            if (cart_count === 0 ) {
+                id_messages.innerHTML = "You Don't Have Orders";
+                e.preventDefault();
+            } 
+        };
+
+        couponform.onsubmit = function (e) {
+            if (codefield.value === '') {
+                tag_message.className = "text-danger";
+                tag_message.innerHTML = 'This Field is Required';
+                e.preventDefault();
+            } if (cart_count === 0 ) {
+                tag_message.className = "text-info";
+                tag_message.innerHTML = "You Don't Have Products";
+                e.preventDefault();
+
+            }
+        };
+    </script>
 
 {% endblock %}

@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load humanize %}
+{% load i18n %}
 {% load static %}
 {% block title %}
 Sociala/Order Detail
@@ -24,12 +26,12 @@ Sociala/Order Detail
                                 <thead class="bg-greyblue rounded-3">
                                     <tr>
                                         <th class="border-0 p-4">&nbsp;</th>
-                                        <th class="border-0 p-4 text-left">Product</th>
-                                        <th class="border-0 p-4">Color</th>
-                                        <th class="border-0 p-4">Size</th>
-                                        <th class="border-0 p-4">Unit Price</th>
-                                        <th class="border-0 p-4">Quantity</th>
-                                        <th class="border-0 p-4">Total</th>
+                                        <th class="border-0 p-4 text-left">{% trans 'Product' %}</th>
+                                        <th class="border-0 p-4">{% trans 'Color' %}</th>
+                                        <th class="border-0 p-4">{% trans 'Size' %}</th>
+                                        <th class="border-0 p-4">{% trans 'Unit Price' %}</th>
+                                        <th class="border-0 p-4">{% trans 'Quantity' %}</th>
+                                        <th class="border-0 p-4">{% trans 'Total' %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -46,21 +48,21 @@ Sociala/Order Detail
                                         <td class="product-headline text-left wide-column">
                                             {% if i.color %}
                                                 <p>
-                                                    <a href="{% url 'color_slug' i.color.value %}" class="btn-round-sm" style="background-color: {{i.color.value}}"></a> {% if i.color.price %} +${{i.color.price}}{% endif %}
+                                                    <a href="{% url 'color_slug' i.color.value %}" class="btn-round-sm" style="background-color: {{i.color.value}}"></a> {% if i.color.price %} +${{i.color.price|intcomma}}{% endif %}
                                                 </p>
                                             {% endif %}
                                         </td>
                                         <td class="product-headline text-left wide-column">
                                             {% if i.size %}
                                                 <h3>
-                                                    <a href="{% url 'size_slug' i.size.value %}" class="text-grey-900 fw-600 font-xsss">{{ i.size.value }}</a> {% if i.size.price %} +${{i.size.price}}{% endif %}
+                                                    <a href="{% url 'size_slug' i.size.value %}" class="text-grey-900 fw-600 font-xsss">{{ i.size.value }}</a> {% if i.size.price %} +${{i.size.price|intcomma}}{% endif %}
                                                 </h3>
                                             {% endif %}
                                         </td>
 
                                         <td class="product-p">
                                             <span class="product-price-wrapper">
-                                                <span class="money text-grey-500 fw-600 font-xsss"><span class="font-xsssss">$</span> {{ i.get_product_price }}</span>
+                                                <span class="money text-grey-500 fw-600 font-xsss"><span class="font-xsssss">$</span> {{ i.get_product_price|intcomma }}</span>
                                             </span>
                                         </td>
                                         <td class="product-quantity">
@@ -68,11 +70,11 @@ Sociala/Order Detail
                                         </td>
                                         <td class="product-total-price">
                                             <span class="product-price-wrapper">
-                                                <span class="money fmont"><strong><span class="font-xsssss">$ </span>{{ order.total }}</strong></span>
+                                                <span class="money fmont"><strong><span class="font-xsssss">$ </span>{{ order.total|intcomma }}</strong></span>
                                             </span>
                                         </td>
                                         {% empty %}
-                                        <td colspan='5'>You Don't Have Products Yet</td>
+                                        <td colspan='5'>{% trans "You Don't Have Products Yet" %}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -83,52 +85,66 @@ Sociala/Order Detail
                     <div class="col-lg-4">
                         <div class="checkout-payment card border-0 mb-3 bg-greyblue p-4">
                             <div class="cart-totals">
-                                <h4 class="mont-font fw-600 font-md mb-5">ORDER DETAILS</h4>
+                                <h4 class="mont-font fw-600 font-md mb-5">{% trans 'ORDER DETAILS' %}</h4>
                                 <div class="table-content table-responsive">
                                     <table class="table order-table">
                                         <tbody>
                                             <tr>
-                                                <td class="font-xsss pt-2 fw-600">Address</td>
+                                                <td class="font-xsss pt-2 fw-600">{% trans 'Address' %}</td>
                                                 <td class="font-xssss fw-700 text-grey-600 pt-2 text-right">{{ order.shipping_address.full_address }}</td>  
                                             </tr>
 
                                             <tr class="order-total">
-                                                <td class="font-xsss pt-2 fw-600">Total</td>
+                                                <td class="font-xsss pt-2 fw-600">{% trans 'Total' %}</td>
                                                 <td class="font-xssss fw-700 text-grey-600 pt-2 text-right">
                                                     <span class="product-price-wrapper">
-                                                        <span class="money fmont">${{ order.total }}</span>
+                                                        <span class="money fmont">${{ order.total|intcomma }}</span>
                                                     </span>
                                                 </td>
                                             </tr>
+                                            {% if order.is_ordered %}
+                                                <tr class="order-total">
+                                                    <td class="font-xsss pt-2 fw-600">{% trans 'Payment Method' %}</td>
+                                                    <td class="font-xssss fw-700 text-grey-600 pt-2 text-right">
+                                                        <span class="product-price-wrapper">
+                                                            <span class="money fmont text-success">{{ order.payment.method }}</span>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
-                        {% if order.status == 'Pending' %}
+                        {% if order.status == 'Uncomplete' %}
                             <div class="checkout-payment card border-0 mb-3 bg-greyblue p-lg-4 p-4">
-                                <form method="POST" action="{% url 'incomplete-orders' %}">
+                                <form method="POST" action="{% url 'uncomplete-orders' order.order_number %}" id="UnCompleteOrdersForm">
                                     {% csrf_token %}
                                     {% for value, name in form.fields.payment_option.choices %}
                                         <div class="payment-group mb-0">
                                             <div class="payment-radio">
                                                 <input type="radio" value="{{value}}" name="payment_option" required id="{{name}}">
                                                 <label class="payment-label fw-600 font-xsss text-grey-900" for="{{name}}">{{ name }}</label>
-                                                <input type="hidden" name="order_number" value='{{order.order_number}}'>
                                             </div>
                                         </div>
                                     {% endfor %}
-                                    <button type="submit" class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-current rounded-3 fw-600 ls-3">Complete Order</button> 
-                                    <a href='{% url "order-canceled" order.order_number %}' class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-danger rounded-3 fw-600 ls-3">Cancel Order</a>   
+                                    <p class="text-danger text-center mt-3" id="id_p"></p>
+                                    <button type="submit" class="btn w-100 p-3 font-xsss text-center text-white bg-current rounded-3 fw-600 ls-3">{% trans 'Complete Order' %}</button> 
+                                    <a href='{% url "order-canceled" order.order_number %}' class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-danger rounded-3 fw-600 ls-3">{% trans 'Cancel Order' %}</a>   
                                 </form>
                             </div>
                         {% elif order.status == 'Paid' %}
-                            <form action="{% url 'request-refund' order.order_number %}" method="POST">
+                            <form action="{% url 'request-refund' order.order_number  %}" method="POST">
                                 {% csrf_token %}
                                 <div class="checkout-payment card border-0 mb-3 bg-greyblue p-lg-4 p-4">
-                                    <button type="submit" class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-current rounded-3 fw-600 ls-3">Request a Refund</button>
+                                    <button type="submit" class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-current rounded-3 fw-600 ls-3">{% trans 'Request a Refund' %}</button>
                                 </div>
                             </form>
+                        {% elif order.status == 'Refunded' or order.status == 'Refund Requested' %}
+                            <div class="checkout-payment card border-0 mb-3 bg-greyblue p-lg-4 p-4">
+                                <h3 class="w-100 p-3 mt-3 font-xsss text-center text-white bg-secondary rounded-3 fw-600 ls-3">{{order.status}}</h3>
+                            </div>
                         {% endif %}
                     </div>
                 </div>

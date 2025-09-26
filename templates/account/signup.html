@@ -1,56 +1,101 @@
-{% extends 'account/base.html' %}
+{% extends 'base.html' %}
 {% load static %}
+{% load i18n %}
 {% block title %}
 Sociala/Signup
 {% endblock title %}
 
 {% block body %}
-    <div class="row">
+    <style>
+        input{
+            display:block;
+            width:100%;
+            padding:0.375rem 0.75rem;
+            font-size: 1rem;
+            line-height: 3;
+            color: #212529;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15 ease-in-out;
+        }
+        input:focus{
+            border-color: #86b7fe;
+            outline: 0;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25)
+        }
+    </style>
+    <div class="row mt-4">
         <div class="col-xl-5 d-none d-xl-block p-0 vh-100 bg-image-cover bg-no-repeat" style="background-image: url({% static 'images/login-bg-2.jpg' %});"></div>
         <div class="col-xl-7 vh-100 align-items-center d-flex bg-white rounded-3 overflow-hidden">
             <div class="card shadow-none border-0 ms-auto me-auto login-card">
                 <div class="card-body rounded-0 text-left">
-                    <h2 class="fw-700 display1-size display2-md-size mb-4">Create <br>your account</h2>                        
-                    <form method='POST'>
+                    <h2 class="fw-700 display1-size display2-md-size mb-4">{% trans 'Create your account' %}</h2>                        
+                    <form id='signupForm' method='POST'>
                         {% csrf_token %}
-                        {% if form.errors %}
-                            <div class="alert alert-danger">
-                                {% for field, errors in form.errors.items %}
-                                    {% for error in errors %}
-                                        <p>{{ error }}</p>
-                                    {% endfor %}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
                         <div class="form-group icon-input mb-3">
                             <i class="font-sm ti-user text-grey-500 pe-0"></i>
-                            <input type="text" name='username' class="style2-input ps-5 form-control text-grey-900 font-xsss fw-600" placeholder="Your Name">                        
+                            <input type="text" name="username" placeholder="Username" autocomplete="username" class="style2-input ps-5 form-control text-grey-900 font-xsss fw-600" autofocus minlength="1" maxlength="150" required id="id_username">
+                            {% if form.username.errors %}
+                                <ul>
+                                    {% for errs in form.username.errors %}
+                                        <li style='color:red;'>{{ errs }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
                         </div>
+
                         <div class="form-group icon-input mb-3">
-                            <i class="font-sm ti-email text-grey-500 pe-0"></i>
-                            <input type="text" name='email' class="style2-input ps-5 form-control text-grey-900 font-xsss fw-600" placeholder="Your Email Address">                        
+                            <input type="email" name="email" placeholder="Email Address" autocomplete="email" class="style2-input ps-5 form-control text-grey-900 font-xsss fw-600" maxlength="320" required id="id_email">
+                            {% if form.email.errors %}
+                                <ul>
+                                    {% for errs in form.email.errors %}
+                                        <li style='color:red;'>{{ errs }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            <i class="font-sm ti-email text-grey-500 pe-0"'></i>
                         </div>
+
                         <div class="form-group icon-input mb-3">
-                            <input type="Password" name='password1' class="style2-input ps-5 form-control text-grey-900 font-xss ls-3" placeholder="Password">
+                            <input type="password" name="password1" placeholder="Password" autocomplete="new-password" class="style2-input ps-5 form-control text-grey-900 font-xsss fw-600" aria-describedby="id_password1_helptext" required id="id_password1">
+                            {% if form.password1.errors %}
+                                <ul>
+                                    {% for errs in form.password1.errors %}
+                                        <li style='color:red;'>{{ errs }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
                             <i class="font-sm ti-lock text-grey-500 pe-0"></i>
                         </div>
-                        <div class="form-group icon-input mb-1">
-                            <input type="Password" name='password2' class="style2-input ps-5 form-control text-grey-900 font-xss ls-3" placeholder="Confirm Password">
+
+                        <div class="form-group icon-input mb-2">
+                            <input type="password" name="password2" placeholder="Confirm Password" autocomplete="new-password" class="style2-input ps-5 form-control text-grey-900 font-xsss fw-600" required id="id_password2">
+                            {% if form.password2.errors %}
+                                <ul>
+                                    {% for errs in form.password2.errors %}
+                                        <li style='color:red;'>{{ errs }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
                             <i class="font-sm ti-lock text-grey-500 pe-0"></i>
                         </div>
+                        <p class="text-danger" id="id_p"></p>
                         <div class="form-group mb-1"><button type="submit" class="form-control text-center style2-input text-white fw-600 bg-dark border-0 p-0 ">Register</button></div>
                     </form>
                         
                     <div class="col-sm-12 p-0 text-left">
-                        <h6 class="text-grey-500 font-xsss fw-500 mt-0 mb-0 lh-32">Already have account <a href="{% url 'account_login' %}" class="fw-700 ms-1">Login</a></h6>
+                        <h6 class="text-grey-500 font-xsss fw-500 mt-0 mb-0 lh-32">{% trans 'Already have account' %} <a href="{% url 'account_login' %}" class="fw-700 ms-1">Login</a></h6>
                     </div>
-                    <div class="col-sm-12 p-0 text-center mt-3 ">
-                        <h6 class="mb-0 d-inline-block bg-white fw-600 font-xsss text-grey-500 mb-4">Or, Sign up with your social account </h6>
+
+                    <div class="col-sm-12 p-0 text-center mt-4">
+                        <h6 class="mb-0 d-inline-block bg-white fw-600 font-xsss text-grey-500 mb-4">Or, Sign in with your social account </h6>
                         <div class="form-group mb-1">
                         <form method="POST" action="{% url 'google_login' %}">
                             {% csrf_token %}
                             <button type='submit' class="form-control text-left style2-input text-white fw-600 bg-facebook border-0 p-0 mb-2">
-                                <img src="{% static 'images/icon-1.png' %}" alt="icon" class="ms-2 w40 mb-1 me-5"> Sign up with Google
+                                <img src="{% static 'images/icon-1.png' %}" alt="icon" class="ms-2 w40 mb-1 me-5"> Sign in with Google
                             </button>
                         </form>
                     </div>

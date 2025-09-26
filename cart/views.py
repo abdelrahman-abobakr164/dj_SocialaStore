@@ -1,38 +1,30 @@
-from django.http import JsonResponse
 from django.shortcuts import redirect, get_object_or_404, render
 from cart.forms import VariationForm, CouponForm
 from django.utils.timezone import now
+from django.http import JsonResponse
 from django.contrib import messages
 
 from cart.models import *
 from core.models import *
-
-
-def _json_or_redirect(request, data, url, status=200):
-    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return JsonResponse(data, status=status)
-    else:
-        if not data.get("success"):
-            messages.warning(request, data.get("message", "An error occurred."))
-        return redirect(url)
+from orders.models import OrderItem
 
 
 def validiation_coupon(request, code, cart_obj):
     try:
         coupon = Coupon.objects.get(code=code)
         cart_items = CartItem.objects.filter(cart=cart_obj)
-        total_price = sum(item.get_product_price() for item in cart_items)
+        total_price = (
+            sum(item.get_product_price() for item in cart_items)
+            if cart_items
+            else request.session.get("total_price")
+        )
 
-        if cart_items.count() == 0:
-            messages.warning(request, "You Don't Have Any Item")
-            return None
-
-        elif not coupon.is_active:
-            messages.warning(request, "This Coupon Code is Not Active Yet.")
+        if cart_items.count() == 0 and "orderitem_id" not in request.session:
+            messages.warning(request, "You Don't Have Any Item.")
             return None
 
         elif coupon.amount >= total_price:
-            messages.warning(request, "Your Total Price is Less Than Coupon Amount")
+            messages.warning(request, "Your Total Price is Less Than Coupon Amount.")
             return None
 
         elif coupon.end_date and now() > coupon.end_date:
@@ -66,6 +58,7 @@ def apply_coupon(request):
                 request.session["total_price"] = float(total_price - coupon_code.amount)
 
                 request.session["applied_coupon"] = float(coupon_code.amount)
+                messages.success(request, "Your Coupon Added Succesfully!")
 
             return redirect(url)
 
@@ -73,8 +66,7 @@ def apply_coupon(request):
             return redirect(url)
 
 
-def add_to_cart(request, category_slug, product_slug, pk):
-    url = request.META.get("HTTP_REFERER")
+def add_and_buy(request, category_slug, product_slug, pk):
     product = get_object_or_404(
         Product, category__slug=category_slug, slug=product_slug, pk=pk
     )
@@ -84,22 +76,27 @@ def add_to_cart(request, category_slug, product_slug, pk):
     product_count = sum(item.quantity for item in cart_items)
 
     if request.method == "POST":
-        if product_count >= product.stock:
-            return _json_or_redirect(
-                request,
-                {
-                    "success": False,
-                    "message": "There is no Quantity available for this product",
-                },
-                url,
-            )
+        action = request.POST.get("action")
+        if not action:
+            messages.warning(request, "Don't Mess")
+            return redirect(request.META.get("HTTP_REFERER", "/"))
 
         form = VariationForm(request.POST, product=product)
-        if form.is_valid():
 
-            color_id = form.cleaned_data.get("color")
-            size_id = form.cleaned_data.get("size")
+        if not form.is_valid():
+            messages.warning(request, "Please select valid variations")
+            return redirect(request.META.get("HTTP_REFERER", "/"))
 
+        if product_count >= product.stock:
+            messages.warning(
+                request, f'Only {product.stock} Left in Stock for "{product.name}"'
+            )
+            return redirect(request.META.get("HTTP_REFERER", "/"))
+
+        color_id = request.POST.get("color")
+        size_id = request.POST.get("size")
+
+        try:
             color = (
                 Variation.objects.get(id=color_id, active=True) if color_id else None
             )
@@ -110,87 +107,66 @@ def add_to_cart(request, category_slug, product_slug, pk):
             base_price = product.discount_price or product.price
             total_price = base_price + size_price + color_price
 
-            cartitems = CartItem.objects.filter(
-                cart=cart_obj,
-                product=product,
-                color=color,
-                size=size,
-            ).first()
-
-            if cartitems:
-                cartitems.price += total_price
-                cartitems.quantity += 1
-                cartitems.save()
-            else:
-                CartItem.objects.create(
+            if action == "add_to_cart" or action == "+":
+                cartitems = CartItem.objects.filter(
                     cart=cart_obj,
                     product=product,
                     color=color,
                     size=size,
-                    price=total_price,
+                ).first()
+
+                if cartitems:
+                    cartitems.price += total_price
+                    cartitems.quantity += 1
+                    cartitems.save()
+                else:
+                    CartItem.objects.create(
+                        cart=cart_obj,
+                        product=product,
+                        color=color,
+                        size=size,
+                        price=total_price,
+                    )
+
+                messages.success(request, "Product Added To Cart!")
+                return redirect(request.META.get("HTTP_REFERER", "/"))
+
+            elif action == "buy_now":
+                orderitem = OrderItem.objects.create(
+                    user=request.user,
+                    product_id=product.id,
+                    color=color,
+                    size=size,
+                    quantity=1,
+                    product_price=total_price,
                 )
+                orderitem.save()
 
-            updated_cart_items = CartItem.objects.filter(cart=cart_obj)
-            cart_count = sum(item.quantity for item in updated_cart_items)
-            total_price = sum(item.get_product_price() for item in updated_cart_items)
+                request.session["orderitem_id"] = orderitem.id
 
-            return _json_or_redirect(
-                request,
-                {
-                    "success": True,
-                    "message": "Product Added To Cart!",
-                    "cart_count": cart_count,
-                    "total_price": float(total_price),
-                },
-                url,
-            )
-        else:
-            errors = form.errors.as_text()
-            return _json_or_redirect(
-                request,
-                {
-                    "success": False,
-                    "message": f"Form validation error: {errors}",
-                },
-                url,
-            )
+                return redirect("checkout")
 
-    # GET requests should redirect to product page
-    return redirect(url)
+        except Variation.DoesNotExist:
+            messages.warning(request, "The selected variation is not available")
+            return redirect(request.META.get("HTTP_REFERER", "/"))
+
+    return redirect(request.META.get("HTTP_REFERER", "/"))
 
 
 def remove_from_cart(request, cartitem_pk):
     cart_obj, created = Cart.objects.get_or_new(request)
     cartitems = CartItem.objects.filter(cart=cart_obj, id=cartitem_pk)
-    url = request.META.get("HTTP_REFERER")
 
     if cartitems.exists():
         cartitems.delete()
+        return redirect("cart-summary")
 
-        # Calculate updated cart count and total for response
-        updated_cart_items = CartItem.objects.filter(cart=cart_obj)
-        cart_count = sum(item.quantity for item in updated_cart_items)
-        total_price = sum(item.get_product_price() for item in updated_cart_items)
-
-        return _json_or_redirect(
-            request,
-            {
-                "success": True,
-                "message": "Item removed from cart",
-                "cart_count": cart_count,
-                "total_price": float(total_price),
-            },
-            url,
-        )
     else:
-        return _json_or_redirect(
-            request, {"success": False, "message": "Item not found in cart"}, url
-        )
+        return redirect("cart-summar")
 
 
 def minus_from_cart(request, cartitem_pk):
     cart_obj, created = Cart.objects.get_or_new(request)
-    url = request.META.get("HTTP_REFERER")
 
     try:
         cartitems = CartItem.objects.get(cart=cart_obj, pk=cartitem_pk)
@@ -200,57 +176,11 @@ def minus_from_cart(request, cartitem_pk):
             cartitems.save()
         else:
             cartitems.delete()
+            return redirect("cart-summary")
 
-        # Calculate updated cart count and total for response
-        updated_cart_items = CartItem.objects.filter(cart=cart_obj)
-        cart_count = sum(item.quantity for item in updated_cart_items)
-        total_price = sum(item.get_product_price() for item in updated_cart_items)
-
-        return _json_or_redirect(
-            request,
-            {
-                "success": True,
-                "message": "Cart updated",
-                "cart_count": cart_count,
-                "total_price": float(total_price),
-            },
-            url,
-        )
     except CartItem.DoesNotExist:
-        return _json_or_redirect(
-            request, {"success": False, "message": "Item not found in cart"}, url
-        )
+        return redirect("cart-summary")
 
 
 def cart_summary(request):
-    couponform = CouponForm()
-    if request.method == "POST":
-        cart_item_id = request.POST.get("cart_item_id")
-        if cart_item_id:
-            try:
-                cart_item = CartItem.objects.get(pk=cart_item_id)
-                size_price = (
-                    cart_item.size.price
-                    if cart_item.size and cart_item.size.price
-                    else 0
-                )
-                color_price = (
-                    cart_item.color.price
-                    if cart_item.color and cart_item.color.price
-                    else 0
-                )
-
-                total_price = (
-                    cart_item.product.discount_price
-                    or cart_item.product.price + size_price + color_price
-                )
-
-                cart_item.price += total_price
-                cart_item.quantity += 1
-                cart_item.save()
-                return redirect("cart-summary")
-
-            except CartItem.DoesNotExist:
-                return redirect("cart-summary")
-
-    return render(request, "cart/cart.html", {"couponform": couponform})
+    return render(request, "cart/cart.html", {"couponform": CouponForm()})

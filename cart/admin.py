@@ -21,7 +21,7 @@ class CartItemAdmin(admin.ModelAdmin):
         "quantity",
     ]
     list_filter = ["product", "quantity"]
-    list_editable = ['price']
+    list_editable = ["price"]
     list_per_page = 20
 
 
@@ -32,10 +32,8 @@ class CouponAdmin(admin.ModelAdmin):
         "max_uses",
         "used_count",
         "end_date",
-        "is_active",
     ]
-    list_filter = ["is_active"]
-    list_editable = ["is_active", "max_uses"]
+    list_editable = ["amount", "max_uses"]
     list_per_page = 20
 
 

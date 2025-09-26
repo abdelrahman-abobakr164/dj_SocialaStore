@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-25 14:03+0300\n"
+"POT-Creation-Date: 2025-09-21 02:15+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,13 +19,59 @@ msgstr ""
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
 "&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
+#: .\accounts\models.py:48 .\orders\models.py:152
+#: .\templates\accounts\my-account.html:43
+#: .\templates\accounts\my-address.html:43
+#: .\templates\accounts\my-address.html:143 .\templates\orders\checkout.html:59
+#: .\templates\orders\checkout.html:164
+#, fuzzy
+#| msgid "Product Name"
+msgid "First Name"
+msgstr "الاسم الاول"
+
+#: .\accounts\models.py:49 .\orders\models.py:153
+#: .\templates\accounts\my-account.html:57
+#: .\templates\accounts\my-address.html:50
+#: .\templates\accounts\my-address.html:150 .\templates\orders\checkout.html:66
+#: .\templates\orders\checkout.html:171
+#, fuzzy
+msgid "Last Name"
+msgstr "الاسم الاخير"
+
+#: .\accounts\models.py:50 .\accounts\models.py:90
+msgid "Email"
+msgstr "البريد الالكتروني"
+
+#: .\accounts\models.py:51 .\templates\accounts\my-account.html:28
+msgid "Username"
+msgstr "اسم المستخدم"
+
+#: .\accounts\models.py:52 .\orders\models.py:154
+#: .\templates\accounts\my-account.html:81
+#: .\templates\accounts\my-address.html:66
+#: .\templates\accounts\my-address.html:166 .\templates\orders\checkout.html:82
+#: .\templates\orders\checkout.html:187
+msgid "Phone Number"
+msgstr "رقم الهاتف"
+
+#: .\accounts\models.py:91
+#, fuzzy
+#| msgid "Messages:"
+msgid "Message"
+msgstr "الرسائل"
+
+#: .\cart\models.py:121 .\core\models.py:13 .\templates\cart\cart.html:33
+#: .\templates\core\shop.html:75
+msgid "Price"
+msgstr "السعر"
+
+#: .\cart\models.py:164
+msgid "Code"
+msgstr ""
+
 #: .\core\models.py:10
 msgid "Name"
 msgstr "الاسم"
-
-#: .\core\models.py:13 .\templates\core\shop.html:67
-msgid "Price"
-msgstr "السعر"
 
 #: .\core\models.py:16
 msgid "Discount Price"
@@ -36,42 +82,103 @@ msgstr "السعر الجديد"
 msgid "Description"
 msgstr "الوصف"
 
-#: .\core\models.py:27
-#, fuzzy
-#| msgid "Categories"
-msgid "Category"
-msgstr "الفئات"
-
-#: .\core\models.py:34 .\templates\core\shop.html:37
-#, fuzzy
-#| msgid "Brands"
-msgid "Brand"
-msgstr "العلامة التجارية"
-
-#: .\core\models.py:40
+#: .\core\models.py:33
 msgid "Slug"
 msgstr "العنوان"
 
-#: .\core\models.py:100
+#: .\core\models.py:90 .\templates\core\shop.html:40
 msgid "Brand Name"
 msgstr "العلامة التجارية"
 
-#: .\core\models.py:112
+#: .\core\models.py:106
 #, fuzzy
 msgid "Category Name"
 msgstr "اسم الفئة"
 
-#: .\core\models.py:143
+#: .\core\models.py:135
 msgid "Value"
 msgstr "القيمة"
 
-#: .\cozastore\settings.py:152
+#: .\core\models.py:170
+msgid "Review"
+msgstr ""
+
+#: .\cozastore\settings.py:169
 msgid "Arabic"
 msgstr "عربي"
 
-#: .\cozastore\settings.py:153
+#: .\cozastore\settings.py:170
 msgid "English"
 msgstr "انجليزي"
+
+#: .\orders\models.py:66 .\templates\cart\cart.html:35
+#: .\templates\orders\checkout.html:246 .\templates\orders\order-detail.html:34
+#: .\templates\orders\order-detail.html:98
+#: .\templates\orders\order-list.html:32 .\templates\orders\payment.html:172
+msgid "Total"
+msgstr "الاجمالي"
+
+#: .\orders\models.py:69 .\orders\models.py:136 .\orders\models.py:186
+#: .\templates\orders\order-list.html:31
+msgid "Status"
+msgstr "الحالة"
+
+#: .\orders\models.py:72 .\templates\orders\order-list.html:29
+#: .\templates\orders\refund.html:24
+msgid "Order Number"
+msgstr "رقم الطلب"
+
+#: .\orders\models.py:102 .\templates\cart\cart.html:34
+#: .\templates\orders\order-detail.html:33
+msgid "Quantity"
+msgstr "الكمية"
+
+#: .\orders\models.py:104
+#, fuzzy
+#| msgid "Product Name"
+msgid "Product Price"
+msgstr "اسم المنتج"
+
+#: .\orders\models.py:155 .\orders\models.py:184
+#: .\templates\account\email_change.html:5
+#: .\templates\account\email_change.html:9
+#: .\templates\accounts\my-account.html:73
+#: .\templates\accounts\my-address.html:59
+#: .\templates\accounts\my-address.html:159 .\templates\orders\checkout.html:75
+#: .\templates\orders\checkout.html:180
+msgid "Email Address"
+msgstr "البريد الالكتروني"
+
+#: .\orders\models.py:156 .\templates\accounts\my-address.html:75
+#: .\templates\accounts\my-address.html:175 .\templates\orders\checkout.html:91
+#: .\templates\orders\checkout.html:196
+msgid "Address1"
+msgstr "العنوان الاساسي"
+
+#: .\orders\models.py:157 .\templates\accounts\my-address.html:106
+#: .\templates\accounts\my-address.html:206
+#: .\templates\orders\checkout.html:103 .\templates\orders\checkout.html:203
+msgid "Address2"
+msgstr "العنوان الثاني"
+
+#: .\orders\models.py:158 .\templates\accounts\my-address.html:115
+#: .\templates\accounts\my-address.html:215
+#: .\templates\orders\checkout.html:112 .\templates\orders\checkout.html:212
+msgid "City"
+msgstr "المدينة"
+
+#: .\orders\models.py:159 .\templates\orders\checkout.html:119
+#: .\templates\orders\checkout.html:219
+msgid "Zip Code"
+msgstr ""
+
+#: .\orders\models.py:181
+msgid "Refund Id"
+msgstr ""
+
+#: .\orders\models.py:183
+msgid "Reason"
+msgstr "السبب"
 
 #: .\templates\account\base_reauthenticate.html:5
 #: .\templates\account\base_reauthenticate.html:9
@@ -318,11 +425,6 @@ msgstr ""
 msgid "Unknown Account"
 msgstr ""
 
-#: .\templates\account\email_change.html:5
-#: .\templates\account\email_change.html:9
-msgid "Email Address"
-msgstr ""
-
 #: .\templates\account\email_change.html:21
 #: .\templates\account\email_change.html:29
 msgid "Current email"
@@ -381,6 +483,25 @@ msgid ""
 "href=\"%(email_url)s\">issue a new email confirmation request</a>."
 msgstr ""
 
+#: .\templates\account\login.html:63
+msgid "Remember me"
+msgstr "تذكرني"
+
+#: .\templates\account\login.html:64
+#, fuzzy
+#| msgid "Enter your password:"
+msgid "Forgot your Password"
+msgstr "ادخل كلمة المرور"
+
+#: .\templates\account\login.html:72
+msgid "Dont have account"
+msgstr "لديك حساب"
+
+#: .\templates\account\logout.html:16 .\templates\account\logout.html:20
+#: .\templates\parts\navbar.html:114
+msgid "Logout"
+msgstr "تسجيل خروج"
+
 #: .\templates\account\messages\cannot_delete_primary_email.txt:2
 #, python-format
 msgid "You cannot remove your primary email address (%(email)s)."
@@ -417,11 +538,11 @@ msgstr ""
 
 #: .\templates\account\messages\password_changed.txt:2
 msgid "Password successfully changed."
-msgstr ""
+msgstr "تم تغير كلمة مرورك بنجاح"
 
 #: .\templates\account\messages\password_set.txt:2
 msgid "Password successfully set."
-msgstr ""
+msgstr "تم تغير كلمة مرورك بنجاح"
 
 #: .\templates\account\messages\primary_email_set.txt:2
 msgid "Primary email address set."
@@ -435,7 +556,7 @@ msgstr ""
 #: .\templates\account\password_set.html:9
 #: .\templates\account\password_set.html:21
 msgid "Set Password"
-msgstr ""
+msgstr "اضع كلمة مرور"
 
 #: .\templates\account\reauthenticate.html:6
 msgid "Enter your password:"
@@ -454,6 +575,14 @@ msgstr ""
 #: .\templates\account\request_login_code.html:24
 msgid "Request Code"
 msgstr "ارسال الكود"
+
+#: .\templates\account\signup.html:34
+msgid "Create your account"
+msgstr "انشئ حساب"
+
+#: .\templates\account\signup.html:89
+msgid "Already have account"
+msgstr "لديك حساب بالفعل"
 
 #: .\templates\account\signup_closed.html:5
 #: .\templates\account\signup_closed.html:9
@@ -475,7 +604,7 @@ msgstr ""
 
 #: .\templates\account\snippets\warn_no_email.html:3
 msgid "Warning:"
-msgstr ""
+msgstr "تحذير"
 
 #: .\templates\account\snippets\warn_no_email.html:3
 msgid ""
@@ -486,7 +615,7 @@ msgstr ""
 #: .\templates\account\verified_email_required.html:5
 #: .\templates\account\verified_email_required.html:9
 msgid "Verify Your Email Address"
-msgstr ""
+msgstr "تاكيدالبريد الالكتروني"
 
 #: .\templates\account\verified_email_required.html:13
 msgid ""
@@ -509,11 +638,80 @@ msgstr ""
 msgid ""
 "<strong>Note:</strong> you can still <a href=\"%(email_url)s\">change your "
 "email address</a>."
+msgstr "غير البريد الالكتروني"
+
+#: .\templates\accounts\contact-us.html:18
+msgid "Contact Us"
+msgstr "تواصل معنا"
+
+#: .\templates\accounts\my-account.html:14
+#: .\templates\accounts\my-address.html:25
+#: .\templates\accounts\settings.html:17 .\templates\parts\navbar.html:113
+msgid "Settings"
+msgstr "الاعدادات"
+
+#: .\templates\accounts\my-account.html:75
+msgid "Change"
+msgstr "تغير"
+
+#: .\templates\accounts\my-account.html:97
+#: .\templates\accounts\my-address.html:254
+msgid "Save"
+msgstr "احفظ"
+
+#: .\templates\accounts\my-account.html:98
+#, fuzzy
+#| msgid "Set Password"
+msgid "Forgot Password"
+msgstr "نسيت كلمة المرور"
+
+#: .\templates\accounts\my-address.html:35 .\templates\orders\checkout.html:54
+msgid "Shipping Address"
+msgstr "عنوان التوصيل"
+
+#: .\templates\accounts\my-address.html:122
+#: .\templates\accounts\my-address.html:222
+msgid "ZipCode"
 msgstr ""
+
+#: .\templates\accounts\my-address.html:135
+#: .\templates\orders\checkout.html:142
+msgid "Billing Address"
+msgstr ""
+
+#: .\templates\accounts\settings.html:18
+msgid "Genaral"
+msgstr "عام"
+
+#: .\templates\accounts\settings.html:20
+#, fuzzy
+#| msgid "Address Information"
+msgid "Address Informations"
+msgstr "معلومات العنوان"
+
+#: .\templates\accounts\settings.html:21 .\templates\orders\order-list.html:16
+msgid "Orders"
+msgstr "الطلبات"
+
+#: .\templates\accounts\settings.html:24
+msgid "Account"
+msgstr "الحساب"
+
+#: .\templates\accounts\settings.html:26
+#, fuzzy
+#| msgid "Acount Information"
+msgid "Acount Informations"
+msgstr "معلومات الحساب"
+
+#: .\templates\accounts\settings.html:27
+#, fuzzy
+#| msgid "Set Password"
+msgid "Password"
+msgstr "اضع كلمة مرور"
 
 #: .\templates\allauth\layouts\base.html:18
 msgid "Messages:"
-msgstr ""
+msgstr "الرسائل"
 
 #: .\templates\allauth\layouts\base.html:25
 msgid "Menu:"
@@ -541,33 +739,311 @@ msgstr "تسجيل خروج"
 msgid "Sign Up"
 msgstr "انشاء حساب"
 
-#: .\templates\core\index.html:25
+#: .\templates\cart\cart.html:30 .\templates\orders\checkout.html:243
+#: .\templates\orders\order-detail.html:29 .\templates\orders\payment.html:169
+#: .\templates\wishlist\wish.html:29
+#, fuzzy
+#| msgid "Product Name"
+msgid "Product"
+msgstr "اسم المنتج"
+
+#: .\templates\cart\cart.html:31 .\templates\orders\checkout.html:244
+#: .\templates\orders\order-detail.html:30 .\templates\orders\payment.html:170
+#, fuzzy
+#| msgid "Colors"
+msgid "Color"
+msgstr "الالوان"
+
+#: .\templates\cart\cart.html:32 .\templates\orders\checkout.html:245
+#: .\templates\orders\order-detail.html:31 .\templates\orders\payment.html:171
+#, fuzzy
+#| msgid "Sizes"
+msgid "Size"
+msgstr "المقاسات"
+
+#: .\templates\cart\cart.html:96 .\templates\orders\order-detail.html:77
+#: .\templates\wishlist\wish.html:71
+msgid "You Don't Have Products Yet"
+msgstr "ليس لديك منتجات بعد"
+
+#: .\templates\cart\cart.html:156
+msgid "Proceed To Checkout"
+msgstr "اكمل عملية الشراء"
+
+#: .\templates\core\detail.html:119 .\templates\core\shop.html:64
+msgid "Colors"
+msgstr "الالوان"
+
+#: .\templates\core\detail.html:133 .\templates\core\shop.html:53
+msgid "Sizes"
+msgstr "المقاسات"
+
+#: .\templates\core\detail.html:149
+msgid "Add to cart"
+msgstr "اضف الي العربة"
+
+#: .\templates\core\detail.html:167 .\templates\orders\payment.html:215
+#: .\templates\orders\payment.html:219
+msgid "Buy Now"
+msgstr "شراء"
+
+#: .\templates\core\detail.html:174
+#, fuzzy
+#| msgid "Categories"
+msgid "Category"
+msgstr "الفئات"
+
+#: .\templates\core\detail.html:182
+msgid "Reviews"
+msgstr "الاراء"
+
+#: .\templates\core\detail.html:187
+#, fuzzy
+msgid "Product Description"
+msgstr "الوصف"
+
+#: .\templates\core\detail.html:218
+msgid "Leave a review"
+msgstr "اترك رئيك"
+
+#: .\templates\core\detail.html:223
+msgid "Your Rating"
+msgstr "تقيمك"
+
+#: .\templates\core\detail.html:239
+msgid "Your Review"
+msgstr "رئيك"
+
+#: .\templates\core\detail.html:247
+msgid "You Must Buy This Product"
+msgstr "عليك ان تشتري المنتج"
+
+#: .\templates\core\index.html:25 .\templates\core\index.html:26
 msgid "TRENDING"
 msgstr "الشائع"
+
+#: .\templates\core\index.html:25 .\templates\core\index.html:26
+msgid "New Arrival"
+msgstr "الجديد"
 
 #: .\templates\core\index.html:27
 msgid "Shop Now"
 msgstr "تسوق حالا"
 
-#: .\templates\core\shop.html:17
+#: .\templates\core\index.html:38
+msgid "Bestseller Products"
+msgstr "الاكثر مبيعا"
+
+#: .\templates\core\shop.html:19
 msgid "Shop"
 msgstr "المتجر"
 
-#: .\templates\core\shop.html:17
-msgid "PRODUCT FOUND"
-msgstr "منتجات"
+#: .\templates\core\shop.html:19
+#, fuzzy
+#| msgid "PRODUCT FOUND"
+msgid "PRODUCTS FOUND"
+msgstr "من المنتجات تم العثور عليها"
 
-#: .\templates\core\shop.html:26
+#: .\templates\core\shop.html:28
 msgid "Categories"
 msgstr "الفئات"
 
-#: .\templates\core\shop.html:47
-msgid "Sizes"
-msgstr "المقاسات"
+#: .\templates\core\shop.html:97
+msgid "New To Old"
+msgstr "من الاحدث الي الاقدم"
 
-#: .\templates\core\shop.html:56
-msgid "Colors"
-msgstr "الالوان"
+#: .\templates\core\shop.html:98
+msgid "Old To New"
+msgstr "من الاقدم الي الاحدث"
+
+#: .\templates\core\shop.html:99
+msgid "High &gt; Low"
+msgstr "من الاغلي الي الاقتصادي"
+
+#: .\templates\core\shop.html:100
+msgid "Low &gt; High"
+msgstr "من الاقتصادي الي الاغلي"
+
+#: .\templates\orders\checkout.html:30
+msgid "Checkout"
+msgstr "اكمال عملية الدفع"
+
+#: .\templates\orders\checkout.html:238 .\templates\orders\payment.html:164
+msgid "Order Details"
+msgstr "تفاصيل المنتج"
+
+#: .\templates\orders\checkout.html:272
+msgid "Subtotal"
+msgstr ""
+
+#: .\templates\orders\checkout.html:278 .\templates\orders\payment.html:194
+msgid "Coupon"
+msgstr ""
+
+#: .\templates\orders\checkout.html:284 .\templates\orders\payment.html:200
+msgid "Order Total"
+msgstr "اجمالي الطلب"
+
+#: .\templates\orders\checkout.html:303
+msgid "CashOnDelivery"
+msgstr "الدفع عند الاستلام"
+
+#: .\templates\orders\checkout.html:307
+msgid "Place Order"
+msgstr "تاكيد الطلب"
+
+#: .\templates\orders\failed.html:12
+msgid "Your Order is Failed"
+msgstr "لقد فشل الطلب"
+
+#: .\templates\orders\failed.html:13
+msgid "COMPLETE YOUR ORDER"
+msgstr "اكمل الطلب"
+
+#: .\templates\orders\order-canceled.html:12
+msgid "Are You Sure To Cancel This Order"
+msgstr "هل انت متاكد من انك تريد الغاء هذا اللب"
+
+#: .\templates\orders\order-canceled.html:15 .\templates\orders\refund.html:30
+msgid "Cancel"
+msgstr "الغاء"
+
+#: .\templates\orders\order-canceled.html:16
+msgid "Yes"
+msgstr "نعم"
+
+#: .\templates\orders\order-detail.html:32
+#, fuzzy
+#| msgid "Discount Price"
+msgid "Unit Price"
+msgstr "سعر المنتج"
+
+#: .\templates\orders\order-detail.html:88
+msgid "ORDER DETAILS"
+msgstr "تفاصيل المنتج"
+
+#: .\templates\orders\order-detail.html:93
+#: .\templates\orders\order-list.html:30
+msgid "Address"
+msgstr "العنوان"
+
+#: .\templates\orders\order-detail.html:107 .\templates\orders\payment.html:205
+msgid "Payment Method"
+msgstr "طريقة الدفع"
+
+#: .\templates\orders\order-detail.html:133
+msgid "Complete Order"
+msgstr "اكمل الطلب"
+
+#: .\templates\orders\order-detail.html:134
+msgid "Cancel Order"
+msgstr "الغاء الطلب"
+
+#: .\templates\orders\order-detail.html:141
+#, fuzzy
+#| msgid "Request Code"
+msgid "Request a Refund"
+msgstr "ارسال الكود"
+
+#: .\templates\orders\order-list.html:16
+#, fuzzy
+#| msgid "PRODUCT FOUND"
+msgid "ORDER FOUND"
+msgstr "من الطلبات تم العثور عليها"
+
+#: .\templates\orders\order-list.html:33
+msgid "Created at"
+msgstr ""
+
+#: .\templates\orders\order-list.html:70
+msgid "Uncomplete"
+msgstr "غير مكتمل"
+
+#: .\templates\orders\order-list.html:75
+msgid "You Don't Have Orders Yet"
+msgstr "ليس لديك طلبات بعد"
+
+#: .\templates\orders\refund.html:18
+msgid "Refund"
+msgstr ""
+
+#: .\templates\orders\refund.html:23
+msgid "Are you sure you want to Refund this order"
+msgstr "هل انت متاكد من انك تريد استرجاع هذا الطلب"
+
+#: .\templates\orders\refund.html:28
+msgid "All Fields are Required"
+msgstr "كل الحقول مطلوبة"
+
+#: .\templates\orders\refund.html:29
+msgid "Order Number does not match"
+msgstr "رقم الطلب ليس متطابق"
+
+#: .\templates\orders\refund.html:31
+#, fuzzy
+#| msgid "Request Code"
+msgid "Request"
+msgstr "ارسال الكود"
+
+#: .\templates\orders\success.html:12
+msgid "Thank You for Your Purchase"
+msgstr "شكرا لك لعملية شرائك"
+
+#: .\templates\orders\success.html:13
+msgid "We Will Process Your Order Soon"
+msgstr "سنبدا بتحضير طلبك"
+
+#: .\templates\orders\success.html:14
+msgid "Show Order Details"
+msgstr "اظهر تفاصيل الطلب"
+
+#: .\templates\parts\navbar.html:21
+msgid "Start typing to search..."
+msgstr "عن ماذا تبحث"
+
+#: .\templates\parts\navbar.html:31
+msgid "Store"
+msgstr "المتجر"
+
+#: .\templates\parts\navbar.html:34
+msgid "Home"
+msgstr ""
+
+#: .\templates\parts\navbar.html:37
+msgid "Contact-us"
+msgstr "تواصل معنا"
+
+#: .\templates\parts\navbar.html:83
+msgid "Wishlist"
+msgstr "المفضلة"
+
+#: .\templates\parts\navbar.html:94
+msgid "Shopping Cart"
+msgstr "عربة التسوق"
+
+#: .\templates\parts\navbar.html:111
+msgid "Hello"
+msgstr "مرحبا"
+
+#: .\templates\parts\navbar.html:113
+msgid "settings"
+msgstr "الاعدادات"
+
+#: .\templates\parts\navbar.html:114
+msgid "logout"
+msgstr "تسجيل الخروج"
+
+#: .\templates\parts\navbar.html:119 .\templates\parts\navbar.html:120
+msgid "Login"
+msgstr "تسجيل الدخول"
+
+#: .\templates\parts\navbar.html:122 .\templates\socialaccount\signup.html:5
+msgid "Signup"
+msgstr "انشاء حساب"
+
+#: .\templates\parts\navbar.html:123
+msgid "Register"
+msgstr "انشاء حساب"
 
 #: .\templates\socialaccount\connections.html:5
 #: .\templates\socialaccount\connections.html:9
@@ -644,11 +1120,7 @@ msgstr ""
 
 #: .\templates\socialaccount\messages\account_disconnected.txt:2
 msgid "The third-party account has been disconnected."
-msgstr ""
-
-#: .\templates\socialaccount\signup.html:5
-msgid "Signup"
-msgstr "انشاء حساب"
+`msgstr ""
 
 #: .\templates\socialaccount\signup.html:12
 #, python-format
@@ -661,5 +1133,7 @@ msgstr ""
 msgid "Or use a third-party"
 msgstr ""
 
-#~ msgid "Product Name"
-#~ msgstr "اسم المنتج"
+#, fuzzy
+#~| msgid "Brands"
+#~ msgid "Brand"
+#~ msgstr "العلامة التجارية"

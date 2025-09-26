@@ -1,47 +1,28 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import redirect, render, get_object_or_404
+from django.core.paginator import EmptyPage, PageNotAnInteger
 from django.core.paginator import Paginator
 from django.db.models import Prefetch, Q
 from django.http import JsonResponse
+from django.contrib import messages
+from decimal import Decimal
+
 from cart.forms import VariationForm
 from orders.models import OrderItem
 from core.forms import ReviewForm
-from decimal import Decimal
 from core.models import *
 
 
 def index(request):
-    products = Product.objects.order_by("-created_at")
-
-    paginator = Paginator(
-        products,
-        1,
-        error_messages={
-            "no_results": "No products found on this page",
-            "invalid_page": "Invalid page number",
-            "page_not_an_integer": "Page number must be an integer",
-            "empty_page": "This page is empty",
-        },
-    )
-
-    page = request.GET.get("p", 1)
-    try:
-        page_obj = paginator.get_page(page)
-    except (ValueError, TypeError):
-        page_obj = paginator.get_page(1)
-
     if "recently_products" in request.session:
-        recently_products_cat = products.filter(
+        recently_products_cat = Product.objects.filter(
             category__name__in=request.session["recently_products"]
         )
-
     else:
         recently_products_cat = []
 
-    context = {
-        "products": page_obj,
-        "recently_viewed": recently_products_cat,
-    }
-    return render(request, "core/index.html", context)
+    return render(
+        request, "core/index.html", {"recently_viewed": recently_products_cat}
+    )
 
 
 def product_detail(request, category_slug, slug, pk):
@@ -101,7 +82,6 @@ def product_review(request, category_slug, slug, pk):
                     product=product,
                     defaults={
                         "rating": form.cleaned_data.get("rating"),
-                        "subject": form.cleaned_data.get("subject"),
                         "review": form.cleaned_data.get("review"),
                     },
                 )
@@ -115,8 +95,17 @@ def product_review(request, category_slug, slug, pk):
     )
 
 
-def shop(request, category=None, brand=None, color=None, size=None, page=0):
-    products = Product.objects.all()
+def shop(request, color=None):
+    products = Product.objects.all().order_by("-created_at")
+
+    selected_categories = request.GET.getlist("category_")
+    selected_brands = request.GET.getlist("brand_")
+    selected_size = request.GET.getlist("size_")
+    sort_by = request.GET.get("sort_by")
+    Pfrom = request.GET.get("from", 0)
+    Pto = request.GET.get("to", 0)
+    page = request.GET.get("page")
+    search = request.GET.get("query")
 
     if color:
         color_variations = Variation.objects.filter(
@@ -134,83 +123,90 @@ def shop(request, category=None, brand=None, color=None, size=None, page=0):
                 variations__active=True,
             )
             .distinct()
-        )
+        ).order_by("-created_at")
 
-    if size:
-        size_variations = Variation.objects.filter(key="size", value=size, active=True)
-        products = (
-            Product.objects.prefetch_related(
-                Prefetch(
-                    "variations", queryset=size_variations, to_attr="size_variations"
-                )
-            )
-            .filter(
-                variations__key="size",
-                variations__value=size,
-                variations__active=True,
-            )
-            .distinct()
-        )
+    if selected_size:
+        for i in selected_size:
+            sizies_query = Variation.objects.filter(key="size", value=i, active=True)
+            if sizies_query.exists():
+                products = (
+                    Product.objects.prefetch_related(
+                        Prefetch(
+                            "variations", queryset=sizies_query, to_attr="sizies_query"
+                        )
+                    )
+                    .filter(
+                        variations__key="size",
+                        variations__value=i,
+                        variations__active=True,
+                    )
+                    .distinct()
+                ).order_by("-created_at")
 
-    if category:
-        products = products.filter(category__slug=category)
+    if selected_categories:
+        queryset = Q()
+        for i in selected_categories:
+            queryset |= Q(category__name=i)
+        products = Product.objects.filter(queryset).order_by("-created_at")
 
-    if brand:
-        products = products.filter(brand__slug=brand)
+    if selected_brands:
+        queryset = Q()
+        for i in selected_brands:
+            queryset |= Q(brand__name=i)
+        products = Product.objects.filter(queryset).order_by("-created_at")
 
-    search = request.GET.get("s")
-    Pfrom = request.GET.get("from", 0.00)
-    Pto = request.GET.get("to", 0.00)
+    if sort_by:
+        if sort_by == "price-descending":
+            products = Product.objects.order_by("-price")
+        elif sort_by == "price-ascending":
+            products = Product.objects.order_by("price")
+        elif sort_by == "date-ascending":
+            products = Product.objects.order_by("created_at")
+        elif sort_by == "date-descending":
+            products = Product.objects.order_by("-created_at")
 
-    if Pfrom:
-        Pfrom = Decimal(Pfrom)
+    if Pfrom or Pto:
+        products = Product.objects.filter(
+            Q(price__gte=Decimal(Pfrom) if Pfrom else Q())
+            & Q(price__lte=Decimal(Pto) if Pto else Q())
+            | Q(discount_price__gte=Decimal(Pfrom) if Pfrom else Q())
+            & Q(discount_price__lte=Decimal(Pto) if Pto else Q())
+        ).order_by("-created_at")
 
-    if Pto:
-        Pto = Decimal(Pto)
-
-    products = products.filter(
-        Q(price__gte=Pfrom) | Q(discount_price__gte=Pfrom) if Pfrom else Q(),
-        Q(price__lte=Pto) | Q(discount_price__lte=Pfrom) if Pto else Q(),
-    )
+    paginator = Paginator(products, 1)
 
     if search:
         products = products.filter(
             (Q(name__icontains=search) | Q(category__name__icontains=search))
-        )
+        ).order_by("-created_at")
+        paginator = Paginator(products, len(products))
 
-    paginator = Paginator(
-        products,
-        1,
-        error_messages={
-            "no_results": "No products found on this page",
-            "invalid_page": "Invalid page number",
-            "page_not_an_integer": "Page number must be an integer",
-            "empty_page": "This page is empty",
-        },
-    )
-
-    page_number = request.GET.get("p", 1)
     try:
-        page_obj = paginator.get_page(page_number)
-    except (ValueError, TypeError):
+        page_obj = paginator.get_page(page)
+    except ZeroDivisionError:
+        messages.warning(request, "Invalid Filter")
+        return redirect("shop")
+    except PageNotAnInteger:
         page_obj = paginator.get_page(1)
+    except EmptyPage:
+        page_obj = paginator.get_page(paginator.num_pages)
 
-    return render(
-        request,
-        "core/shop.html",
-        {
-            "products": page_obj,
-            "current_filters": {
-                "category": category,
-                "brand": brand,
-                "color": color,
-                "size": size,
-                "search": search,
-                "price_from": Pfrom,
-                "price_to": Pto,
-            },
-        },
-    )
+    current_page = page_obj.number
+    total_pages = paginator.num_pages
+    group_size = 3
+    group_start = ((current_page - 1) // group_size) * group_size + 1
+    group_end = min(group_start + group_size - 1, total_pages)
+    custom_page_range = range(group_start, group_end + 1)
+    context = {
+        "page_obj": page_obj,
+        "custom_page_range": custom_page_range,
+        "sort_by": sort_by,
+        "selected_size": selected_size,
+        "selected_categories": selected_categories,
+        "selected_brands": selected_brands,
+    }
+
+    return render(request, "core/shop.html", context)
 
 
 def handler_404(request, exception):

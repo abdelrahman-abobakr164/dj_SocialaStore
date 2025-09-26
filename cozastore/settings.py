@@ -21,11 +21,7 @@ if ENVIRONMENT == "development":
 else:
     DEBUG = False
 
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    "eager-badly-crayfish.ngrok-free.app",
-]
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
 CSRF_TRUSTED_ORIGINS = ["https://eager-badly-crayfish.ngrok-free.app"]
 
@@ -48,16 +44,16 @@ INSTALLED_APPS = [
     "wishlist",
     "cart",
     "orders",
-    "django_bootstrap5",
+    "rest_framework",
     "phonenumber_field",
-    "debug_toolbar",
+    "django.contrib.humanize",
 ]
 
 JAZZMIN_SETTINGS = {
     "site_title": "Sociala Admin",
     "site_header": "Sociala",
     "site_brand": "Sociala",
-    "site_logo": "/images/favicon.png",
+    "site_logo": "images/favicon.png",
     "welcome_sign": "Welcome to the Sociala Admin",
     "copyright": "Sociala",
     "search_model": ["accounts.User"],
@@ -74,8 +70,12 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.locale.LocaleMiddleware",
+]
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+    "localhost",
 ]
 
 ROOT_URLCONF = "cozastore.urls"
@@ -117,17 +117,24 @@ SOCIALACCOUNT_PROVIDERS = {
 
 AUTH_USER_MODEL = "accounts.User"
 
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("DB_NAME"),
-        "USER": env("DB_USER"),
-        "PASSWORD": env("DB_PASSWORD"),
-        "HOST": env("DB_HOST"),
-        "PORT": env("DB_PORT"),
+if ENVIRONMENT == "development":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": env("DB_NAME"),
+            "USER": env("DB_USER"),
+            "PASSWORD": env("DB_PASSWORD"),
+            "HOST": env("DB_HOST"),
+            "PORT": env("DB_PORT"),
+        }
+    }
 
 SITE_ID = 1
 
@@ -198,6 +205,10 @@ ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = "/accounts/login/"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/en/store"
 ACCOUNT_USERNAME_BLACKLIST = [
     "admin",
+    "demo",
+    "fake",
+    "test",
+    "user",
     "boda",
     "administrator",
     "moderator",
@@ -208,7 +219,10 @@ ACCOUNT_USERNAME_BLACKLIST = [
     "root",
 ]
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+if ENVIRONMENT == "development":
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
@@ -220,3 +234,30 @@ ACCOUNT_EMAIL_SUBJECT_PREFIX = ""
 PHONENUMBER_DEFAULT_REGION = "EG"
 PHONENUMBER_DB_FORMAT = "E164"
 PHONENUMBER_DEFAULT_FORMAT = "INTERNATIONAL"
+
+
+CELERY_BROKER_URL = env("REDIS_URL")
+CELERY_RESULT_BACKEND = env("REDIS_URL")
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "Africa/Cairo"
+CELERY_ENABLE_UTC = False
+
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_BROKER_CONNECTION_RETRY = True
+CELERY_BROKER_CONNECTION_MAX_RETRIES = 10
+
+CELERY_TASK_ALWAYS_EAGER = False
+CELERY_TASK_EAGER_PROPAGATES = True
+CELERY_TASK_IGNORE_RESULT = True
+CELERY_TASK_STORE_EAGER_RESULT = False
+CELERY_TASK_TRACK_STARTED = False
+CELERY_TASK_TIME_LIMIT = 30 * 60
+
+# Additional Celery settings for better error handling
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000

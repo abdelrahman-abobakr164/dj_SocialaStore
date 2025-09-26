@@ -47,13 +47,16 @@ class RefundForm(forms.Form):
                 "class": "form-control mb-3",
                 "autocomplete": "off",
                 "id": "id_order_number",
-                'placeholder':'Copy The Order Number Here',
+                "placeholder": "Copy The Order Number Here",
             }
         ),
     )
 
     email = forms.EmailField(
-        required=True, widget=forms.EmailInput(attrs={"class": "form-control mb-3"})
+        required=True,
+        widget=forms.EmailInput(
+            attrs={"class": "form-control mb-3", "placeholder": "Email Address"}
+        ),
     )
 
     image = forms.ImageField(
@@ -62,9 +65,8 @@ class RefundForm(forms.Form):
 
     reason = forms.ChoiceField(
         choices=[
-            ("damaged", "Damaged Item"),
-            ("not_received", "Item Not Received"),
-            ("wrong_item", "Wrong Item Delivered"),
+            ("Damaged Item", "Damaged Item"),
+            ("Wrong Item Delivered", "Wrong Item Delivered"),
             ("other", "Other"),
         ],
         required=True,

@@ -1,11 +1,23 @@
 {% extends 'base.html' %}
+{% load humanize %}
+{% load i18n %}
 {% load static %}
 {% block title %}
 Siciala/Checkout
 {% endblock title %}
 
 {% block body %}
-
+    <style>
+        #suggestions li{
+            list-style: none;
+            cursor: pointer;
+            padding: 5px;
+            border-bottom: 1px solid #ccc;
+        }
+        #suggestions li:hover{
+            background-color: #f0f0f0;
+        }
+    </style>
     <!-- main content -->
     <div class="container bg-white" style='margin-top: 60px'>
         <div class="row">
@@ -15,14 +27,14 @@ Siciala/Checkout
                     <div class="col-lg-12 mb-3">
                         <div class="card p-lg-5 p-4 bg-primary-gradiant rounded-3 shadow-xss bg-pattern border-0 overflow-hidden">
                             <div class="bg-pattern-div"></div>
-                            <h2 class="display2-size display2-md-size fw-700 text-white mb-0 mt-0">Checkout  </h2>
+                            <h2 class="display2-size display2-md-size fw-700 text-white mb-0 mt-0">{% trans 'Checkout' %}</h2>
                         </div>
                     </div>                                 
                 </div>
 
                 <div class="row">
-                    <div class="col-sm-12">
-                        <div class="card bg-greyblue border-0 p-2 mb-5">
+                    <div class="col-sm-12" >
+                        <div class="card bg-greyblue border-0 p-2 mb-5" >
                             <form action="{% url 'apply-coupon' %}" id='coupon_info' method='POST'>
                                 {% csrf_token %}
                                 <div class="coupon float-left mb-2">
@@ -30,27 +42,29 @@ Siciala/Checkout
                                     <button type="submit" class="bg-dark text-white fw-600 text-uppercase font-xssss border-dark border rounded-3 border-size-md d-inline-block w175 p-3 text-center ls-3">Apply Coupon</button>
                                 </div>
                             </form>
+                            <p class="" id="id_pcoupon"></p>
+
                         </div>
                     </div>
 
                     <div class="col-xl-6 col-lg-6">
-                        <form class='mb-3' method="POST">
+                        <form class='mb-3' method="POST" id='checkout_shipping_billingForm'>
                             {% csrf_token %}
 
-                            <h4 class="mont-font fw-600 font-md mb-lg-5 mb-5">Shipping address</h4>
+                            <h4 class="mont-font fw-600 font-md mb-lg-5 mb-5">{% trans 'Shipping Address' %}</h4>
                             <div id='shiping-content' class="page-title">
                                 <div class="row">
                                     <div class="col-lg-6 mb-3">
                                         <div class="form-gorup">
-                                            <label class="mont-font fw-600 font-xssss">First Name</label>
-                                            <input class="form-control" type="text" name='shipping_first_name' placeholder="Abderahman">
+                                            <label class="mont-font fw-600 font-xssss">{% trans 'First Name' %}</label>
+                                            <input class="form-control" type="text" name='shipping_first_name' placeholder="John">
                                         </div>        
                                     </div>
 
                                     <div class="col-lg-6 mb-3">
                                         <div class="form-gorup">
-                                            <label class="mont-font fw-600 font-xssss">Last Name</label>
-                                            <input class="form-control" type="text" name='shipping_last_name' placeholder="Abobakr">
+                                            <label class="mont-font fw-600 font-xssss">{% trans 'Last Name' %}</label>
+                                            <input class="form-control" type="text" name='shipping_last_name' placeholder="Doe">
                                         </div>        
                                     </div>
                                 </div>
@@ -58,15 +72,15 @@ Siciala/Checkout
                                 <div class="row">
                                     <div class="col-lg-6 mb-3">
                                         <div class="form-gorup">
-                                            <label class="mont-font fw-600 font-xssss">Email</label>
-                                            <input class="form-control" type="email" name='shipping_email' placeholder="example@email.com">
+                                            <label class="mont-font fw-600 font-xssss">{% trans 'Email Address' %}</label>
+                                            <input class="form-control" type="email" name='shipping_email' placeholder="Email Address">
                                         </div>        
                                     </div>
 
                                     <div class="col-lg-6 mb-3">
                                         <div class="form-gorup">
-                                            <label class="mont-font fw-600 font-xssss">Phone</label>
-                                            <input class="form-control" type="tel" name='shipping_phone' placeholder="+123 456 789">
+                                            <label class="mont-font fw-600 font-xssss">{% trans 'Phone Number' %}</label>
+                                            <input class="form-control" type="tel" name='shipping_phone' placeholder="+11111111111">
                                         </div>        
                                     </div>
                                 </div>
@@ -74,15 +88,20 @@ Siciala/Checkout
                                 <div class="row">
                                     <div class="col-lg-12 mb-3">
                                         <div class="form-gorup">
-                                            <label class="mont-font fw-600 font-xssss">Address1</label>
-                                            <input class="form-control" type="text" name='shipping_address1' placeholder="123 Street">
+                                            <label class="mont-font fw-600 font-xssss">{% trans 'Address1' %}</label>
+                                            <div style="position: relative; flex: 1;">
+                                                <input class="form-control" type="text" id='shipping_address1' name='shipping_address1' placeholder="Address1">
+                                                <ul id="suggestions" style="position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 1000; background-color: #fff; border: 1px solid #ccc; margin: 0; padding: 0; list-style: none; max-height: 220px; overflow-y: auto; display: none;"></ul>
+                                            </div>
+                                            <input type="hidden" id="lat" name="latitude">
+                                            <input type="hidden" id="lng" name="longitude">
                                         </div>        
                                     </div>
 
                                     <div class="col-lg-12 mb-3">
                                         <div class="form-gorup">
-                                            <label class="mont-font fw-600 font-xssss">Address2</label>
-                                            <input class="form-control" type="text" name='shipping_address2' placeholder="123 Street (Optional)">
+                                            <label class="mont-font fw-600 font-xssss">{% trans 'Address2' %}</label>
+                                            <input class="form-control" type="text" name='shipping_address2' placeholder="Address2 (Optional)">
                                         </div>        
                                     </div>
                                 </div>
@@ -90,15 +109,15 @@ Siciala/Checkout
                                 <div class="row">
                                     <div class="col-lg-6 mb-3">
                                         <div class="form-gorup">
-                                            <label class="mont-font fw-600 font-xssss">Twon / City</label>
-                                            <input class="form-control" type="text" name='shipping_city' placeholder="Cairo">
+                                            <label class="mont-font fw-600 font-xssss">{% trans 'City' %}</label>
+                                            <input class="form-control" type="text" name='shipping_city' placeholder="City">
                                         </div>        
                                     </div>
 
                                     <div class="col-lg-6 mb-3">
                                         <div class="form-gorup">
-                                            <label class="mont-font fw-600 font-xssss">Postcode</label>
-                                            <input class="form-control" type="text" name='shipping_zip' placeholder="123">
+                                            <label class="mont-font fw-600 font-xssss">{% trans 'Zip Code' %}</label>
+                                            <input class="form-control" type="text" name='shipping_zip' placeholder="PostCode (Optional)">
                                         </div>        
                                     </div>
                                 </div>
@@ -119,90 +138,95 @@ Siciala/Checkout
                                     </div>
                                 </div>
                             </div>
-
-                            <div id="billing-address" class="page-title">
-                                <h4 class="mont-font fw-600 font-md mb-lg-5 mb-5">Billing address</h4>
-                                <div class="row">
-                                    <div class="col-lg-6 mb-3">
-                                        <div class="form-gorup">
-                                            <label class="mont-font fw-600 font-xssss">First Name</label>
-                                            <input class="form-control" type="text" name='billing_first_name' placeholder="Abderahman">
-                                        </div>        
-                                    </div>
-
-                                    <div class="col-lg-6 mb-3">
-                                        <div class="form-gorup">
-                                            <label class="mont-font fw-600 font-xssss">Last Name</label>
-                                            <input class="form-control" type="text" name='billing_last_name' placeholder="Abobakr">
-                                        </div>        
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-lg-6 mb-3">
-                                        <div class="form-gorup">
-                                            <label class="mont-font fw-600 font-xssss">Email</label>
-                                            <input class="form-control" type="email" name='billing_email' placeholder="example@email.com">
-                                        </div>        
-                                    </div>
-
-                                    <div class="col-lg-6 mb-3">
-                                        <div class="form-gorup">
-                                            <label class="mont-font fw-600 font-xssss">Phone</label>
-                                            <input class="form-control" type="tel" name='billing_phone' placeholder="+123 456 789">
-                                        </div>        
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-lg-12 mb-3">
-                                        <div class="form-gorup">
-                                            <label class="mont-font fw-600 font-xssss">Address1</label>
-                                            <input class="form-control" type="text" name='billing_address1' placeholder="123 Street">
-                                        </div>        
-                                    </div>
-
-                                    <div class="col-lg-12 mb-3">
-                                        <div class="form-gorup">
-                                            <label class="mont-font fw-600 font-xssss">Address2</label>
-                                            <input class="form-control" type="text" name='billing_address2' placeholder="123 Street (Optional)">
-                                        </div>        
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-lg-6 mb-3">
-                                        <div class="form-gorup">
-                                            <label class="mont-font fw-600 font-xssss">Twon / City</label>
-                                            <input class="form-control" type="text" name='billing_city' placeholder="Cairo">
-                                        </div>        
-                                    </div>
-
-                                    <div class="col-lg-6 mb-3">
-                                        <div class="form-gorup">
-                                            <label class="mont-font fw-600 font-xssss">Postcode</label>
-                                            <input class="form-control" type="text" name='billing_zip' placeholder="123">
-                                        </div>        
-                                    </div>
-                                </div>
-                            </div>
+                            
+                            <h4 class="mont-font fw-600 font-md mb-lg-5 mb-5 mt-4">{% trans 'Billing Address' %}</h4>
                             <div class="row">
                                 <div class="col-lg-12 mb-3">
                                     {% if default_billing_address %}
                                         {% for billing in default_billing_address %}
-                                        <div class="form-check text-left mb-2">
-                                            <input class="form-check-input mt-2" id='use_default_billing_{{billing.id}}' value='{{billing.id}}' type="radio" name='use_default_billing'>
-                                            <label class="pt--1 form-check-label fw-600 font-xsss text-grey-700" for="use_default_billing_{{billing.id}}">Use Default Billing Address: {{ billing.full_address }}</label>
-                                        </div>
+                                            <div class="form-check text-left mb-2">
+                                                <input class="form-check-input mt-2" id='use_default_billing_{{billing.id}}' value='{{billing.id}}' type="radio" name='use_default_billing'>
+                                                <label class="pt--1 form-check-label fw-600 font-xsss text-grey-700" for="use_default_billing_{{billing.id}}">Use Default Billing Address: {{ billing.full_address }}</label>
+                                            </div>
                                         {% endfor %}
                                     {% endif %}
                                     <div class="form-check text-left mb-2">
-                                        <input class="form-check-input mt-2" id='set_default_billing' type="checkbox" name='set_default_billing'>
-                                        <label class="pt--1 form-check-label fw-600 font-xsss text-grey-700" for="set_default_billing">Set as Default Billing Address</label>
-                                    </div>
-                                    <div class="form-check text-left mb-2">
                                         <input class="form-check-input mt-2" id='same_shipping_address' type="checkbox" name='same_shipping_address'>
                                         <label class="pt--1 form-check-label fw-600 font-xsss text-grey-700" for="same_shipping_address">Same Shipping Address</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="billing-address" class="page-title mt-3">
+                                
+                                <div class="row">
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">{% trans 'First Name' %}</label>
+                                            <input class="form-control" type="text" name='billing_first_name' placeholder="John">
+                                        </div>        
+                                    </div>
+
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">{% trans 'Last Name' %}</label>
+                                            <input class="form-control" type="text" name='billing_last_name' placeholder="Doe">
+                                        </div>        
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">{% trans 'Email Address' %}</label>
+                                            <input class="form-control" type="email" name='billing_email' placeholder="Email Address">
+                                        </div>        
+                                    </div>
+
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">{% trans 'Phone Number' %}</label>
+                                            <input class="form-control" type="tel" name='billing_phone' placeholder="+1111111111">
+                                        </div>        
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-12 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">{% trans 'Address1' %}</label>
+                                            <input class="form-control" type="text" name='billing_address1' placeholder="address1">
+                                        </div>        
+                                    </div>
+
+                                    <div class="col-lg-12 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">{% trans 'Address2' %}</label>
+                                            <input class="form-control" type="text" name='billing_address2' placeholder="address2 (Optional)">
+                                        </div>        
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">{% trans 'City' %}</label>
+                                            <input class="form-control" type="text" name='billing_city' placeholder="City">
+                                        </div>        
+                                    </div>
+
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="form-gorup">
+                                            <label class="mont-font fw-600 font-xssss">{% trans 'Zip Code' %}</label>
+                                            <input class="form-control" type="text" name='billing_zip' placeholder="Postcode (Optional)">
+                                        </div>        
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row"> 
+                                <div class="col-lg-12 mb-3">
+                                    <div class="form-check text-left mb-2">
+                                        <input class="form-check-input mt-2" id='set_default_billing' type="checkbox" name='set_default_billing'>
+                                        <label class="pt--1 form-check-label fw-600 font-xsss text-grey-700" for="set_default_billing">Set as Default Billing Address</label>
                                     </div>
                                 </div>
                             </div>
@@ -211,49 +235,56 @@ Siciala/Checkout
                     <!-- Right Side -->
                     <div class="col-xl-5 offset-xl-1 col-lg-6">
                         <div class="order-details">
-                            <h4 class="mont-font fw-600 font-md mb-5">Order Details</h4>
+                            <h4 class="mont-font fw-600 font-md mb-5">{% trans 'Order Details' %}</h4>
                             <div class="table-content table-responsive mb-5 card border-0 bg-greyblue p-lg-5 p-4">
                             <table class="table order-table order-table-2 mb-0">
                                 <thead>
                                     <tr>
-                                        <th class="border-0">Product</th>
-                                        <th class="border-0">Color</th>
-                                        <th class="border-0">Size</th>
-                                        <th class="border-0">Total</th>
+                                        <th class="border-0">{% trans 'Product' %}</th>
+                                        <th class="border-0">{% trans 'Color' %}</th>
+                                        <th class="border-0">{% trans 'Size' %}</th>
+                                        <th class="border-0">{% trans 'Total' %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                {% for i in cartitems %}
-                                    <tr>
-                                        <td class="text-grey-500 fw-500 font-xsss">{{ i.product.name }}
-                                            <strong><span>✕</span>{{ i.quantity }}</strong>
-                                        </td>
-                                        <td class="text-grey-500 fw-500 font-xsss">
-                                            <p class="btn-round-sm" style="background-color: {{i.color.value}}"></p>
-                                        </td>
-                                        <td class="text-grey-500 fw-500 font-xsss">{{ i.size.value }}</td>
-                                        <td class="text-grey-500 fw-500 font-xsss">${{ i.get_product_price }}</td>
-                                    </tr>
-                                {% endfor %}
+                                    
+                                {% if cartitems %}
+                                    {% for i in cartitems %}
+                                    {% endfor %}
+                                {% else %}
+                                    {% for i in BuyNow  %}
+                                        <tr>
+                                            <td class="text-grey-500 fw-500 font-xsss">{{ i.product.name }}
+                                                <strong><span>✕</span>{{ i.quantity }}</strong>
+                                            </td>
+                                            <td class="text-grey-500 fw-500 font-xsss">
+                                                <p class="btn-round-sm" style="background-color: {{i.color.value}}"></p>
+                                            </td>
+                                            <td class="text-grey-500 fw-500 font-xsss">{{ i.size.value }}</td>
+                                            <td class="text-grey-500 fw-500 font-xsss">${{ i.get_product_price|intcomma }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% endif %}
 
                                 </tbody>
                                 <tfoot>
                                     <tr class="cart-subtotal">
-                                        <th>Subtotal</th>
-                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700">${{ total_price }}</td>
+                                        <th>{% trans 'Subtotal' %}</th>
+                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700">${{ total_price|intcomma }}</td>
                                     </tr>
                                     
                                     {% if request.session.applied_coupon %}
-                                    <tr class="order-total">
-                                        <th>Coupon</th>
-                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{ request.session.applied_coupon }}0</span></td>
-                                    </tr>
+                                        <tr class="order-total">
+                                            <th>{% trans 'Coupon' %}</th>
+                                            <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{ request.session.applied_coupon|intcomma }}</span></td>
+                                        </tr>
                                     {% endif %}
 
                                     <tr class="order-total">
-                                        <th>Order Total</th>
-                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{request.session.total_price}}0</span></td>
+                                        <th>{% trans 'Order Total' %}</th>
+                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{request.session.total_price|intcomma}}</span></td>
                                     </tr>
+
                                 </tfoot>
                             </table>
                         </div>
@@ -261,7 +292,7 @@ Siciala/Checkout
                             
                             <div class="payment-group mb-0">
                                 <div class="payment-radio">
-                                    <input type="radio" {% if last_payment.method == 'Stripe' %} checked {% endif %} value="Stripe" name="payment_option" id="Stripe">
+                                    <input type="radio" {% if last_payment.method == 'Stripe' %}  {% endif %} value="Stripe" name="payment_option" id="Stripe">
                                     <label class="payment-label fw-600 font-xsss text-grey-900" for="Stripe">Stripe</label>
                                 </div>
                             </div>
@@ -269,10 +300,11 @@ Siciala/Checkout
                             <div class="payment-group mb-0">
                                 <div class="payment-radio">
                                     <input type="radio" {% if last_payment.method == 'CashOnDelivery' %} checked {% endif %} value="CashOnDelivery" name="payment_option" id="CashOnDelivery">
-                                    <label class="payment-label fw-600 font-xsss text-grey-900" for="CashOnDelivery">CashOnDelivery</label>
+                                    <label class="payment-label fw-600 font-xsss text-grey-900" for="CashOnDelivery">{% trans 'CashOnDelivery' %}</label>
                                 </div>
                             </div>
-                            <button type="submit" class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-current rounded-3 fw-600 ls-3">Place Order</button>    
+                            <p class="text-danger text-center mt-3 " id="id_p"></p>
+                            <button type="submit" class="btn w-100 p-3font-xsss text-center text-white bg-current rounded-3 fw-600 ls-3">{% trans 'Place Order' %}</button>    
                         </form>
                         </div>
                     </div>
@@ -280,15 +312,79 @@ Siciala/Checkout
             </div>               
         </div>
     </div>
+    
+    <script>
+        let couponform = document.getElementById("coupon_info");
+        let coupon_message = document.getElementById("id_pcoupon");
+        let codefield = document.querySelector("[name='code']");
+        let cart_count = {{CartCount}}
+        let BuyNowCount = {{request.session.orderitem_id}}
+        couponform.onsubmit = function (e) {
+            if (codefield.value === '') {
+                coupon_message.className = "text-danger";
+                coupon_message.innerHTML = 'This Field is Required';
+                e.preventDefault();
+            } if (cart_count === 0 && BuyNowCount.value === '') {
+                coupon_message.className = "text-info";
+                coupon_message.innerHTML = "You Don't Have Products";
+                e.preventDefault();
 
+            }
+        };
+    </script>
 {% endblock body %}
 
 {% block script %}
-    <script>
 
+    <script>
+        const API_KEY = "pk.77f7b5a811e3a1a53fb30c6366af93e6"; 
+        const shippingaddressInput = document.getElementById("shipping_address1");
+        const suggestions = document.getElementById("suggestions");
+
+
+        async function fetchSuggestions(query) {
+            const url = `https://us1.locationiq.com/v1/autocomplete?key=${API_KEY}&q=${encodeURIComponent(query)}&limit=5&countrycodes=eg`; 
+            const res = await fetch(url);
+            return res.json();
+        }
+
+        shippingaddressInput.addEventListener("input", async () => {
+            const query = shippingaddressInput.value;
+            if (query.length < 3) {
+                suggestions.innerHTML = "";
+                suggestions.style.display = "none";
+                return;
+            }
+
+            const results = await fetchSuggestions(query);
+            suggestions.innerHTML = "";
+            results.forEach(place => {
+                const li = document.createElement("li");
+                li.textContent = place.display_name;
+                li.style.cursor = "pointer";
+                li.onclick = () => {
+                    shippingaddressInput.value = place.display_name;
+                    document.getElementById("lat").value = place.lat;
+                    document.getElementById("lng").value = place.lon;
+                    suggestions.innerHTML = "";
+                    suggestions.style.display = "none";
+                };
+                suggestions.appendChild(li);
+            });
+            suggestions.style.display = results.length ? "block" : "none";
+        });
+        
+        document.addEventListener("click", (event) => {
+            if (!suggestions.contains(event.target) && event.target !== shippingaddressInput) {
+                suggestions.innerHTML = "";
+                suggestions.style.display = "none";
+            }
+        });
+    </script>
+
+    <script>
         const useDefaultShippingRadios = document.querySelectorAll('[name="use_default_shipping"]');
         const ShippingFieldscardElementContainer = document.getElementById("shiping-content");
-        
         const SameShippingCheckbox = document.getElementById("same_shipping_address");
         const useDefaultbillingCheckbox = document.querySelectorAll("[name='use_default_billing']");
         const billingfiledsElementContainer = document.getElementById("billing-address");
@@ -296,10 +392,8 @@ Siciala/Checkout
         useDefaultShippingRadios.forEach((radio) => {
             radio.addEventListener("change", (event) => {
                 if (event.target.checked) {
-                    // Hide Card Element when using default shipping
                     ShippingFieldscardElementContainer.style.display = "none";
                 } else {
-                    // Show Card Element when not using default shipping
                     ShippingFieldscardElementContainer.style.display = "block";
                 }
             });
@@ -308,10 +402,8 @@ Siciala/Checkout
         useDefaultbillingCheckbox.forEach((radio) => {
             radio.addEventListener("change", (event) => {
                 if (event.target.checked) {
-                    // Hide Card Element when using default card
                     billingfiledsElementContainer.style.display = "none";
                 } else {
-                    // Show Card Element when not using default card
                     billingfiledsElementContainer.style.display = "block";
                 }
             });

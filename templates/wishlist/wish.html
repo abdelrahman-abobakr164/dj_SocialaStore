@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load humanize %}
+{% load i18n %}
 {% load static %}
 {% block title %}
 Sociala/Wishlist
@@ -24,50 +26,52 @@ Sociala/Wishlist
                                 <thead class="bg-greyblue rounded-3">
                                     <tr>
                                         <th class="border-0 p-4">&nbsp;</th>
-                                        <th class="border-0 p-4 text-left">Product</th>
+                                        <th class="border-0 p-4 text-left">{% trans 'Product' %}</th>
                                         <th class="border-0 p-4">Price</th>
                                         <th class="border-0 p-4">&nbsp;</th>
                                         <th class="border-0 p-4">&nbsp;</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for i in wishies %}
-                                    <tr>
-                                        <td class="product-thumbnail text-left ps-0">
-                                            <img src="{{ i.product.img.url }}" alt="Product Thumnail" class="w75 rounded-3">
-                                        </td>
-                                        <td class="product-headline text-left wide-column">
-                                            <h3>
-                                                <a href="{{ i.product.get_absolute_url }}" class="text-grey-900 fw-600 font-xsss">{{ i.product.name }}</a>
-                                            </h3>
-                                        </td>
-                                        <td class="product-p">
-                                            <span class="product-price-wrapper">
-                                                <span class="money text-grey-500 fw-600 font-xsss"><span class="font-xsssss">$</span> 
-                                                {% if i.product.discount_price %}
-                                                {{ i.product.price }} <p style='color:red'>{{ i.product.discount_percentage }}</p></span>
+                                    {% for item in wishies %}
+                                        {% for i in item.product.all %}
+                                            <tr>
+                                                <td class="product-thumbnail text-left ps-0">
+                                                    <img src="{{ i.img.url }}" alt="Product Thumnail" class="w75 rounded-3">
+                                                </td>
+                                                <td class="product-headline text-left wide-column">
+                                                    <h3>
+                                                        <a href="{{ i.get_absolute_url }}" class="text-grey-900 fw-600 font-xsss">{{ i.name }}</a>
+                                                    </h3>
+                                                </td>
+                                                <td class="product-p">
+                                                    <span class="product-price-wrapper">
+                                                        <span class="money text-grey-500 fw-600 font-xsss"><span class="font-xsssss">$</span> 
+                                                        {% if i.discount_price %}
+                                                        {{ i.price|intcomma }} <p style='color:red'>{{ i.discount_percentage }}</p></span>
+                                                        {% else %}
+                                                            {{ i.price|intcomma }}</span>
+                                                        {% endif %}
+                                                    </span>
+                                                </td>
+                                                
+                                                {% if not i.variations.all %}
+                                                    <td>
+                                                        <form action="{{ i.product.add_to_cart_url }}" method="POST">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="size">
+                                                            <input type="hidden" name="color">
+                                                            <button type='submit' class="inc btn qtybutton"><i class='ti-plus'></i></button>
+                                                        </form>
+                                                    </td>
                                                 {% else %}
-                                                    {{ i.product.price }}</span>
+                                                    <td></td>
                                                 {% endif %}
-                                            </span>
-                                        </td>
-                                        
-                                        {% if not i.product.variations.all %}
-                                            <td>
-                                                <form action="{{ i.product.add_to_cart_url }}" method="POST">
-                                                    {% csrf_token %}
-                                                    <input type="hidden" name="size">
-                                                    <input type="hidden" name="color">
-                                                    <button type='submit' class="inc btn qtybutton"><i class='ti-plus'></i></button>
-                                                </form>
-                                            </td>
-                                        {% else %}
-                                            <td></td>
-                                        {% endif %}
-                                        <td class="product-remove text-right"><a href="{% url 'remove' i.product.category.slug i.product.slug i.product.pk  %}"><i class="ti-trash font-xs text-grey-500"></i></a></td>
-                                        {% empty %}
-                                        <td colspan='5'>You Don't Have Products Yet</td>
-                                    </tr>
+                                                <td class="product-remove text-right"><a href="{% url 'remove' i.category.slug i.slug i.pk  %}"><i class="ti-trash font-xs text-grey-500"></i></a></td>
+                                                {% empty %}
+                                                <td colspan='5'>{% trans "You Don't Have Products Yet" %}</td>
+                                            </tr>
+                                        {% endfor %}
                                     {% endfor %}
                                 </tbody>
                             </table>

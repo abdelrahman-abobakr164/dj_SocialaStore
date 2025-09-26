@@ -1,0 +1,343 @@
+{% extends 'base.html' %} 
+{% load i18n %}
+
+{% block title %} Sociala/Address Information {% endblock title %} 
+
+{% block body %}
+<style>
+  #suggestions li {
+    list-style: none;
+    cursor: pointer;
+    padding: 5px;
+    border-bottom: 1px solid #ccc;
+  }
+  #suggestions li:hover {
+    background-color: #f0f0f0;
+  }
+</style>
+
+<div class="container theme-dark-bg" style="margin-top: 70px">
+  <div class="card w-100 border-0 bg-white shadow-xs p-0 mb-4">
+    <div class="card-body p-4 w-100 bg-current border-0 d-flex rounded-3">
+      <a href="{% url 'settings' %}" class="d-inline-block mt-2"
+        ><i class="ti-arrow-left font-sm text-white"></i
+      ></a>
+      <h4 class="font-xs text-white fw-600 ms-4 mb-0 mt-2">{% trans 'Settings' %}</h4>
+    </div>
+    <form method="POST" id="addressForm">
+      {% csrf_token %}
+      <div class="row">
+        <!-- Shipping Address -->
+        <div class="col-6">
+          <div class="row justify-content-center mt-5">
+            <div class="col-lg-4 text-center">
+              <h1 class="fw-700 font-sm text-grey-900 mt-3 mb-5">
+                {% trans 'Shipping Address' %}
+              </h1>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-6 mb-3">
+              <div class="form-group">
+                <label class="mont-font fw-600 font-xsss">{% trans 'First Name' %}*</label>
+                {{shipping.first_name}}
+              </div>
+            </div>
+
+            <div class="col-lg-6 mb-3">
+              <div class="form-group">
+                <label class="mont-font fw-600 font-xsss">{% trans 'Last Name' %}*</label>
+                {{shipping.last_name}}
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-6 mb-3">
+              <div class="form-group">
+                <label class="mont-font fw-600 font-xsss">{% trans 'Email Address' %}*</label>
+                {{shipping.email}}
+              </div>
+            </div>
+
+            <div class="col-lg-6 mb-3">
+              <div class="form-group">
+                <label class="mont-font fw-600 font-xsss">{% trans 'Phone Number' %}*</label>
+                {{shipping.phone}}
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-12 mb-3">
+              <div class="form-group">
+                <label class="mont-font fw-600 font-xsss">{% trans 'Address1' %}*</label>
+                <div style="position: relative; flex: 1">
+                  {{shipping.address1}}
+                  <ul
+                    id="suggestions"
+                    style="
+                      position: absolute;
+                      top: calc(100% + 4px);
+                      left: 0;
+                      right: 0;
+                      z-index: 1000;
+                      background-color: #fff;
+                      border: 1px solid #ccc;
+                      margin: 0;
+                      padding: 0;
+                      list-style: none;
+                      max-height: 220px;
+                      overflow-y: auto;
+                      display: none;
+                    "
+                  ></ul>
+                </div>
+                <input type="hidden" id="lat" name="latitude" />
+                <input type="hidden" id="lng" name="longitude" />
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-12 mb-3">
+              <div class="form-group">
+                <label class="mont-font fw-600 font-xsss">{% trans 'Address2' %}</label>
+                {{shipping.address2}}
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-lg-6 mb-3">
+              <div class="form-group">
+                <label class="mont-font fw-600 font-xsss">{% trans 'City' %}*</label>
+                {{shipping.city}}
+              </div>
+            </div>
+
+            <div class="col-lg-6 mb-3">
+              <div class="form-group">
+                <label class="mont-font fw-600 font-xsss">{% trans 'ZipCode' %}</label>
+                {{shipping.zipcode}}
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- End Shipping Address -->
+
+        <!-- Billing Address -->
+        <div class="col-6">
+          <div class="row justify-content-center mt-5">
+            <div class="col-lg-4 text-center">
+              <h1 class="fw-700 font-sm text-grey-900 mt-3 mb-5">
+                {% trans 'Billing Address' %}
+              </h1>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-6 mb-3">
+              <div class="form-group">
+                <label class="mont-font fw-600 font-xsss">{% trans 'First Name' %}*</label>
+                {{billing.first_name}}
+              </div>
+            </div>
+
+            <div class="col-lg-6 mb-3">
+              <div class="form-group">
+                <label class="mont-font fw-600 font-xsss">{% trans 'Last Name' %}*</label>
+                {{billing.last_name}}
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-6 mb-3">
+              <div class="form-group">
+                <label class="mont-font fw-600 font-xsss">{% trans 'Email Address' %}*</label>
+                {{billing.email}}
+              </div>
+            </div>
+
+            <div class="col-lg-6 mb-3">
+              <div class="form-group">
+                <label class="mont-font fw-600 font-xsss">{% trans 'Phone Number' %}*</label>
+                {{billing.phone}}
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-12 mb-3">
+              <div class="form-group">
+                <label class="mont-font fw-600 font-xsss">{% trans 'Address1' %}*</label>
+                <div style="position: relative; flex: 1">
+                  {{billing.address1}}
+                  <ul
+                    id="suggestions"
+                    style="
+                      position: absolute;
+                      top: calc(100% + 4px);
+                      left: 0;
+                      right: 0;
+                      z-index: 1000;
+                      background-color: #fff;
+                      border: 1px solid #ccc;
+                      margin: 0;
+                      padding: 0;
+                      list-style: none;
+                      max-height: 220px;
+                      overflow-y: auto;
+                      display: none;
+                    "
+                  ></ul>
+                </div>
+                <input type="hidden" id="lat" name="latitude" />
+                <input type="hidden" id="lng" name="longitude" />
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-12 mb-3">
+              <div class="form-group">
+                <label class="mont-font fw-600 font-xsss">{% trans 'Address2' %}</label>
+                {{billing.address2}}
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-lg-6 mb-3">
+              <div class="form-group">
+                <label class="mont-font fw-600 font-xsss">{% trans 'City' %}*</label>
+                {{billing.city}}
+              </div>
+            </div>
+
+            <div class="col-lg-6 mb-3">
+              <div class="form-group">
+                <label class="mont-font fw-600 font-xsss">{% trans 'ZipCode' %}</label>
+                {{billing.zipcode}}
+              </div>
+            </div>
+          </div>
+
+          <div class="form-check text-left mb-2">
+            <input
+              class="form-check-input mt-2"
+              id="same_shipping_address"
+              type="checkbox"
+              name="same_shipping_address"
+            />
+            <label
+              class="pt--1 form-check-label fw-600 font-xsss text-grey-700"
+              for="same_shipping_address"
+              >Same Shipping Address</label
+            >
+          </div>
+          <!-- End Billing Address -->
+        </div>
+      </div>
+
+      <hr />
+
+      <div class="row">
+        <div class="col-lg-12 mb-0">
+            <p class="text-danger text-center" id="id_p"></p>
+          <button
+            type="submit"
+            class="btn bg-dark text-center text-white font-xsss fw-600 p-3 w175 rounded-3 w-100"
+          >
+            {% trans 'Save' %}</button
+          ><br />
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %} 
+
+{% block script %}
+<script>
+  const API_KEY = "pk.77f7b5a811e3a1a53fb30c6366af93e6";
+  const shippingaddressInput = document.getElementById("id_shipping-address1");
+  const suggestions = document.getElementById("suggestions");
+
+  async function fetchSuggestions(query) {
+    const url = `https://us1.locationiq.com/v1/autocomplete?key=${API_KEY}&q=${encodeURIComponent(
+      query
+    )}&limit=5&countrycodes=eg`;
+    const res = await fetch(url);
+    return res.json();
+  }
+
+  shippingaddressInput.addEventListener("input", async () => {
+    const query = shippingaddressInput.value;
+    if (query.length < 3) {
+      suggestions.innerHTML = "";
+      suggestions.style.display = "none";
+      return;
+    }
+
+    const results = await fetchSuggestions(query);
+    suggestions.innerHTML = "";
+    results.forEach((place) => {
+      const li = document.createElement("li");
+      li.textContent = place.display_name;
+      li.style.cursor = "pointer";
+      li.onclick = () => {
+        shippingaddressInput.value = place.display_name;
+        document.getElementById("lat").value = place.lat;
+        document.getElementById("lng").value = place.lon;
+        suggestions.innerHTML = "";
+        suggestions.style.display = "none";
+      };
+      suggestions.appendChild(li);
+    });
+    suggestions.style.display = results.length ? "block" : "none";
+  });
+
+  document.addEventListener("click", (event) => {
+    if (
+      !suggestions.contains(event.target) &&
+      event.target !== shippingaddressInput
+    ) {
+      suggestions.innerHTML = "";
+      suggestions.style.display = "none";
+    }
+  });
+
+  document
+    .getElementById("same_shipping_address")
+    .addEventListener("change", function () {
+      if (this.checked) {
+        const fields = [
+          "first_name",
+          "last_name",
+          "email",
+          "phone",
+          "address1",
+          "address2",
+          "city",
+          "zipcode",
+        ];
+        fields.forEach(function (field) {
+          let shippingFields = document.querySelector(
+            `[name ="shipping-${field}"]`
+          );
+          let billingFields = document.querySelector(
+            `[name ="billing-${field}"]`
+          );
+          if (shippingFields && billingFields) {
+            billingFields.value = shippingFields.value;
+          }
+        });
+      }
+    });
+</script>
+
+{% endblock script %}

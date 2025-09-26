@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}
+Sociala/Account Information
+{% endblock title %}
+
+{% block body %}
+
+    <div class="container theme-dark-bg" style='margin-top:70px'>
+        <div class="middle-wrap">
+            <div class="card w-100 border-0 bg-white shadow-xs p-0 mb-4">
+                <div class="card-body p-4 w-100 bg-current border-0 d-flex rounded-3">
+                    <a href='{% url "settings" %}' class="d-inline-block mt-2"><i class="ti-arrow-left font-sm text-white"></i></a>
+                    <h4 class="font-xs text-white fw-600 ms-4 mb-0 mt-2">{% trans 'Settings' %}</h4>
+                </div>
+                <div class="card-body p-lg-5 p-4 w-100 border-0 ">
+                <div class="row justify-content-center">
+                    <div class="col-lg-4 text-center">
+                        <h1 class="fw-700 font-sm text-grey-900 mt-3 mb-5">{{ request.user.username }}</h1>
+                    </div>
+                </div>
+
+                <form method="POST" id='myaccountForm'>
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-lg-12 mb-3">
+                            <div class="form-group">
+                                <label for='id_username' class="mont-font fw-600 font-xsss">{% trans 'Username' %}</label>
+                                {{form.username}}
+                                {% if form.username.errors %}
+                                    <ul>
+                                        {% for errs in form.username.errors %}
+                                            <li class='text-danger'> {{errs}} </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>        
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-6 mb-3">
+                            <div class="form-group">
+                                <label for='id_first_name' class="mont-font fw-600 font-xsss">{% trans 'First Name' %}</label>
+                                {{form.first_name}}
+                                {% if form.first_name.errors %}
+                                    <ul>
+                                        {% for errs in form.first_name.errors %}
+                                            <li class='text-danger'> {{errs}} </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>        
+                        </div>
+
+                        <div class="col-lg-6 mb-3">
+                            <div class="form-group">
+                                <label for='id_last_name' class="mont-font fw-600 font-xsss">{% trans 'Last Name' %}</label>
+                                {{form.last_name}}
+                                {% if form.last_name.errors %}
+                                    <ul>
+                                        {% for errs in form.last_name.errors %}
+                                            <li class='text-danger'> {{errs}} </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-lg-6 mb-3">
+                            <div class="form-group">
+                                <label class="mont-font fw-600 font-xsss">{% trans 'Email Address' %}</label>
+                                <input disabled value='{{request.user.email}}' class="form-control" placeholder='Email Address'>
+                                <a href="{% url 'account_email' %}" class='fw-600 font-xsss mt-1'>{% trans 'Change' %}?</a>
+                            </div>        
+                        </div>
+
+                        <div class="col-lg-6 mb-3">
+                            <div class="form-group">
+                                <label for='id_phone' class="mont-font fw-600 font-xsss">{% trans 'Phone Number' %}</label>
+                                {{form.phone}}
+                                {% if form.phone.errors %}
+                                    <ul>
+                                        {% for errs in form.phone.errors %}
+                                            <li class='text-danger'> {{errs}} </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>        
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <p class="text-danger" id="id_p"></p>
+                        <div class="mb-0 d-flex">
+                            <button type="submit" class="btn bg-current text-center text-white font-xsss fw-600 p-3 w175 rounded-3 d-inline-block">{% trans 'Save' %}</button><br>
+                            <a style='margin-left:auto' href="{% url 'account_reset_password' %}">{% trans 'Forgot Password' %}?</a>
+                        </div>
+                    </div>
+                </form>
+                </div>
+            </div>
+        </div>
+    </div>
+        
+{% endblock %}
+
+

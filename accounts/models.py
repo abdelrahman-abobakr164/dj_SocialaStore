@@ -5,6 +5,7 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 from phonenumber_field.modelfields import PhoneNumberField
+from django.utils.translation import gettext_lazy as _
 
 # Create your models here.
 
@@ -44,11 +45,11 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    first_name = models.CharField(max_length=150, null=True, blank=True)
-    last_name = models.CharField(max_length=150, null=True, blank=True)
-    email = models.EmailField(max_length=254, unique=True)
-    username = models.CharField(max_length=150, unique=True)
-    phone = PhoneNumberField(region="EG", default="+20", null=True, blank=True)
+    first_name = models.CharField(_("First Name"), max_length=150, null=True, blank=True)
+    last_name = models.CharField(_("Last Name"), max_length=150, null=True, blank=True)
+    email = models.EmailField(_("Email"), max_length=254, unique=True)
+    username = models.CharField(_("Username"), max_length=150, unique=True)
+    phone = PhoneNumberField(_("Phone Number"), region="EG", default="+20", null=True, blank=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -86,8 +87,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class Contact(models.Model):
-    email = models.EmailField(max_length=250)
-    message = models.TextField()
+    email = models.EmailField(_("Email"), max_length=250)
+    message = models.TextField(_("Message"))
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

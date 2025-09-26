@@ -56,7 +56,7 @@ class AddressAdmin(admin.ModelAdmin):
     list_filter = ["user", "email"]
     search_fields = ["user", "email"]
     list_display_links = ["user"]
-    list_editable = ["default"]
+    list_editable = ["default", "address_type"]
     list_per_page = 20
 
 
@@ -84,23 +84,22 @@ class RefundAdmin(admin.ModelAdmin):
 
     def approve_refund(self, request, queryset):
         for refund in queryset.filter(status="PENDING"):
-            try:
-                self.message_user(
-                    request, f"Refund {refund.id} APPROVED Process Successed."
-                )
-                refund.status = "APPROVED"
-                refund.save()
-            except Exception as e:
-                self.message_user(request, f"Error processing {e}")
+            if refund.payment.method == "Stripe":
+                try:
+                    refund.process_refund(refund.payment.payment_id)
+                    self.message_user(request, f"Refund APPROVED.")
+
+                except Exception as e:
+                    self.message_user(request, f"Error processing {e}")
+            else:
+                self.message_user(request, "The Payment Method Should be Stripe")
 
     def decline_refund(self, request, queryset):
         for refund in queryset.filter(status="PENDING"):
             try:
-                self.message_user(
-                    request, f"Refund {refund.id} DECLINED Process Successed."
-                )
                 refund.status = "DECLINED"
                 refund.save()
+                self.message_user(request, f"Refund DECLINED.")
             except Exception as e:
                 self.message_user(request, f"Error processing {e}")
 

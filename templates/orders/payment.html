@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
+{% load humanize %}
+{% load i18n %}
 {% load static %}
 {% block title %}
-Siciala/Payment - {{ payment_option }}
+Siciala/OrderConfirmation
 {% endblock title %}
 
 {% block body %}
@@ -14,7 +16,7 @@ Siciala/Payment - {{ payment_option }}
                     <div class="col-lg-12 mb-3">
                         <div class="card p-lg-5 p-4 bg-primary-gradiant rounded-3 shadow-xss bg-pattern border-0 overflow-hidden">
                             <div class="bg-pattern-div"></div>
-                            <h2 class="display2-size display2-md-size fw-700 text-white mb-0 mt-0">Payment - {{ payment_option }}</h2>
+                            <h2 class="display2-size display2-md-size fw-700 text-white mb-0 mt-0">Order Confirmation</h2>
                         </div>
                     </div>                                 
                 </div>
@@ -159,15 +161,15 @@ Siciala/Payment - {{ payment_option }}
                     <!-- Right Side -->
                     <div class="col-xl-6 offset-xl-1 col-lg-6">
                         <div class="order-details">
-                            <h4 class="mont-font fw-600 font-md mb-5">Order Details</h4>
+                            <h4 class="mont-font fw-600 font-md mb-5">{% trans 'Order Details' %}</h4>
                             <div class="table-content table-responsive mb-5 card border-0 bg-greyblue p-lg-5 p-4">
                             <table class="table order-table order-table-2 mb-0">
                                 <thead>
                                     <tr>
-                                        <th class="border-0">Product</th>
-                                        <th class="border-0">Color</th>
-                                        <th class="border-0">Size</th>
-                                        <th class="border-0">Total</th>
+                                        <th class="border-0">{% trans 'Product' %}</th>
+                                        <th class="border-0">{% trans 'Color' %}</th>
+                                        <th class="border-0">{% trans 'Size' %}</th>
+                                        <th class="border-0">{% trans 'Total' %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -180,7 +182,7 @@ Siciala/Payment - {{ payment_option }}
                                             <p class="btn-round-sm" style="background-color: {{i.color.value}}"></p>
                                         </td>
                                         <td class="text-grey-500 fw-500 font-xsss">{{ i.size.value }}</td>
-                                        <td class="text-grey-500 fw-500 font-xsss">${{ i.get_product_price }}</td>
+                                        <td class="text-grey-500 fw-500 font-xsss">${{ i.get_product_price|intcomma }}</td>
                                     </tr>
                                 {% endfor %}
 
@@ -189,27 +191,32 @@ Siciala/Payment - {{ payment_option }}
                                     
                                     {% if request.session.applied_coupon %}
                                     <tr class="order-total">
-                                        <th>Order Total</th>
-                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{ request.session.applied_coupon }}0</span></td>
+                                        <th>{% trans 'Coupon' %}</th>
+                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{ request.session.applied_coupon|intcomma }}</span></td>
                                     </tr>
                                     {% endif %}
 
                                     <tr class="order-total">
-                                        <th>Order Total</th>
-                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{order.total}}</span></td>
+                                        <th>{% trans 'Order Total' %}</th>
+                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{order.total|intcomma}}</span></td>
+                                    </tr>
+
+                                    <tr class="order-total">
+                                        <th>{% trans 'Payment Method' %}</th>
+                                        <td colspan='3' class="text-right text-success font-xsss fw-700"><span class="order-total-ammount">{{ payment_option }}</span></td>
                                     </tr>
                                 </tfoot>
                             </table>
                         </div>
 
-                        <div class="checkout-payment card border-0 mb-3 bg-greyblue p-lg-4 p-4">
+                        <div class="checkout-payment card border-0 mb-3 bg-greyblue p-lg-4">
                             {% if payment_option == 'Stripe' %}
                                 <script src="https://js.stripe.com/v3/"></script>
-                                <button id="checkout-button" type="submit" class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-current rounded-3 fw-600 ls-3">Buy Now ${{ order.total }}</button>    
+                                <button id="checkout-button" type="submit" class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-current rounded-3 fw-600 ls-3">{% trans 'Buy Now' %} ${{ order.total }}</button>    
                             {% elif payment_option == 'CashOnDelivery' %}
                                 <form method="POST">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-current rounded-3 fw-600 ls-3">Buy Now ${{ order.total }}</button>    
+                                    <button type="submit" class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-current rounded-3 fw-600 ls-3">{% trans 'Buy Now' %} ${{ order.total }}</button>    
                                 </form>
                             {% endif %}
                         </div>
@@ -225,12 +232,12 @@ Siciala/Payment - {{ payment_option }}
 {% block script %}
     {% if payment_option == "Stripe" %}
         <script type="text/javascript">
-            // Your public Stripe key
-            var stripe = Stripe('{{ stripe_public_key }}');  // Replace with your public key
+            var stripe = Stripe('{{ stripe_public_key }}');  
         
-            // The function to create the checkout session
+            const lang = window.location.pathname.split("/")[1]; 
+            
             function createCheckoutSession() {
-                fetch('/orders/create_checkout_session/{{order.order_number}}/', {
+                fetch(`/${lang}/orders/create_checkout_session/{{order.order_number}}/`, {
                     method: 'POST',
                 })
                 .then(function (response) {
@@ -241,7 +248,6 @@ Siciala/Payment - {{ payment_option }}
                 })
                 .then(function (result) {
                     if (result.error) {
-                        // If redirect fails, show an error to the user
                         alert(result.error.message);
                     }
                 })

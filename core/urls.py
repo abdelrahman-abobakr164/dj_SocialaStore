@@ -1,15 +1,13 @@
 from django.urls import path
 from .views import *
-
+from core.api import *
 
 urlpatterns = [
+    path("api-list/", product_api, name="api"),
+    path("api-detail/<str:id>/", productdetail_api, name="api-detail"),
     path("store/", index, name="store"),
     path("shop/", shop, name="shop"),
-    path("shop/category/<category>/", shop, name="cat_slug"),
-    path("page/<int:page>/", shop, name="product_list_paginated"),
-    path("shop/brand/<brand>/", shop, name="brand_slug"),
-    path("shop/color/<color>/", shop, name="color_slug"),
-    path("shop/size/<size>/", shop, name="size_slug"),
+    path("shop/color/<str:color>/", shop, name="color_slug"),
     path(
         "cat/<category_slug>/<str:slug>/<str:pk>/",
         product_detail,

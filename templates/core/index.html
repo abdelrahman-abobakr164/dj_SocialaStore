@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
+{% load humanize %}
 
 {% block title %}
 Sociala
@@ -16,14 +17,14 @@ Sociala
                     <div class="col-lg-12">
                         <div class="banner-wrapper bg-greylight overflow-hidden rounded-3">
                             <div class="banner-slider owl-carousel owl-theme dot-style2 owl-nav-link link-style3 overflow-hidden">
-                                {% for cat in categories %}
+                                {% for cat in SliderCategories %}
                                     <div class="owl-items style1 d-flex align-items-center bg-lightblue" >
                                         <div class="row">
                                             <div class="col-lg-6 p-lg-5 ps-5 pe-5 pt-4" style="padding-right: 20px !important;">
                                                 <div class="card w-100 border-0 ps-lg-5 ps-0 bg-transparent bg-transparent-card">
-                                                    <h4 class="font-xssss text-danger ls-3 fw-700 ms-0 mt-4 mb-3">{% trans 'TRENDING' %}</h4>
-                                                    <h2 class="fw-300 display2-size display2-md-size lh-2 text-grey-900">New Arrival {{cat.name}} <br> <b class="fw-700">Collection</b></h2>
-                                                    <a href="{{cat.slug}}" class="fw-700 text-white rounded-xl bg-primary-gradiant font-xsssss text-uppercase ls-3 lh-30 mt-0 text-center d-inline-block p-2 w150">{% trans 'Shop Now' %}</a>
+                                                    <h4 class="font-xssss text-danger ls-3 fw-700 ms-0 mt-4 mb-3">{% if trending %} {% trans 'TRENDING' %} {% else %} {% trans 'New Arrival' %} {% endif %}</h4>
+                                                    <h2 class="fw-300 display2-size display2-md-size lh-2 text-grey-900">{% if trending == False %} {% trans 'New Arrival' %} {% else %} {% trans 'TRENDING' %} {% endif %} <br> <i>{{cat.name}}</i> <br> <b class="fw-700">Collection</b></h2>
+                                                    <a href="/shop/?category_={{cat.name}}" class="fw-700 text-white rounded-xl bg-primary-gradiant font-xsssss text-uppercase ls-3 lh-30 mt-0 text-center d-inline-block p-2 w150">{% trans 'Shop Now' %}</a>
                                                 </div>
                                             </div>
                                             <div class="col-lg-6"><img src="{{ cat.image.url }}" alt="image" class="img-fluid p-md-5 p-4"></div>
@@ -33,36 +34,38 @@ Sociala
                             </div>
                         </div>
                     </div>
-                
-                    {% for i in products %}
-                        <div class="col-lg-4 col-md-6">
-                            <div class="card w-100 border-0 mt-4">
-                                <div class="card-image w-100 p-0 text-center bg-greylight rounded-3 mb-2">
-                                    <a href="{{ i.get_absolute_url }}"><img src="{{ i.img.url }}" alt="product-image" class="w-100 mt-0 mb-0 p-5"></a>
-                                </div>
-                                <div class="card-body w-100 p-0 text-center">
-                                    <div class="star w-100 d-block text-left mt-0 text-center">
-                                        {% for rat in i.products.all %}
-                                            {% for stars in '12345' %}
-                                                {% if rat.rating >= forloop.counter %}
-                                                    <img src="{% static 'images/star.png' %}" alt="star" class="w15">
-                                                {% else %}
-                                                    <img src="{% static 'images/star-disable.png' %}" alt="star" class="w15">
-                                                {% endif %}
-                                            {% endfor %}
-                                        {% endfor %}
+                    {% if trending_products %}
+                        <h1 style='margin-top:50px'>{% trans 'Bestseller Products' %}</h1>
+                        {% for i in trending_products %}
+                            <div class="col-lg-4 col-md-6">
+                                <div class="card w-100 border-0 mt-4">
+                                    <div class="card-image w-100 p-0 text-center bg-greylight rounded-3 mb-2">
+                                        <a href="{{ i.get_absolute_url }}"><img src="{{ i.img.url }}" alt="product-image" class="w-100 mt-0 mb-0 p-5"></a>
                                     </div>
-                                    <h2 class="mt-1 mb-1"><a href="{{ i.get_absolute_url }}" class="text-black fw-700 font-xsss lh-26">{{ i.name }}</a></h2>
-                                    {% if i.discount_percentage %}
-                                        <h6 class="font-xsss fw-600 text-grey-500 ls-2">${{i.discount_price}}</h6>
-                                        <h6 class="font-xsss fw-600 text-danger ls-2">{{i.discount_percentage}}</h6>
-                                    {% else %}
-                                        <h6 class="font-xsss fw-600 text-grey-500 ls-2">${{i.price}}</h6>
-                                    {% endif %}
-                                </div>                                
+                                    <div class="card-body w-100 p-0 text-center">
+                                        <div class="star w-100 d-block text-left mt-0 text-center">
+                                            {% for rat in i.products.all %}
+                                                {% for stars in '12345' %}
+                                                    {% if rat.rating >= forloop.counter %}
+                                                        <img src="{% static 'images/star.png' %}" alt="star" class="w15">
+                                                    {% else %}
+                                                        <img src="{% static 'images/star-disable.png' %}" alt="star" class="w15">
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </div>
+                                        <h2 class="mt-1 mb-1"><a href="{{ i.get_absolute_url }}" class="text-black fw-700 font-xsss lh-26">{{ i.name }}</a></h2>
+                                        {% if i.discount_percentage %}
+                                            <h6 class="font-xsss fw-600 text-grey-500 ls-2">${{i.discount_price|intcomma}}</h6>
+                                            <h6 class="font-xsss fw-600 text-danger ls-2">{{i.discount_percentage}}</h6>
+                                        {% else %}
+                                            <h6 class="font-xsss fw-600 text-grey-500 ls-2">${{i.price|intcomma}}</h6>
+                                        {% endif %}
+                                    </div>                                
+                                </div>
                             </div>
-                        </div>
-                    {% endfor %}
+                        {% endfor %}
+                    {% endif %}
                     
                     {% if recently_viewed %}
                         <h1 style='margin-top:50px'>Products For Your Recently</h1>
@@ -86,39 +89,18 @@ Sociala
                                         </div>
                                         <h2 class="mt-1 mb-1"><a href="{{ i.get_absolute_url }}" class="text-black fw-700 font-xsss lh-26">{{ i.name }}</a></h2>
                                         {% if i.discount_percentage %}
-                                            <h6 class="font-xsss fw-600 text-grey-500 ls-2">${{i.discount_price}}</h6>
-                                            <h6 class="font-xsss fw-600 text-danger ls-2">% {{i.discount_percentage}}</h6>
+                                            <h6 class="font-xsss fw-600 text-grey-500 ls-2">${{i.discount_price|intcomma}}</h6>
+                                            <h6 class="font-xsss fw-600 text-danger ls-2">{{i.discount_percentage}}</h6>
                                         {% else %}
-                                            <h6 class="font-xsss fw-600 text-grey-500 ls-2">${{i.price}}</h6>
+                                            <h6 class="font-xsss fw-600 text-grey-500 ls-2">${{i.price|intcomma}}</h6>
                                         {% endif %}
                                     </div>                                
                                 </div>
                             </div>
                         {% endfor %}
                     {% endif %}
-
-
                 </div>
 
-                {% if products.has_other_pages %}
-                    <div class="col-12 mb-5">
-                        <nav>
-                        <ul class="pagination justify-content-center">
-                        {% if products.has_previous %}
-                        <li><a href="?p={{products.previous_page_number}}"><span class="ti-angle-left"></span></span></a></li>
-                        {% endif %} 
-
-                        {% for i in products.paginator.page_range %}
-                         <li style='text-decoration: {% if i >= products.number %} none {% else %} line-through {% endif %}'  class="page-item me-3 ms-3"><a href="?p={{i}}">{{i}}</a></li>
-                        {% endfor %}
-                        
-                        {% if products.has_next %}
-                        <li><a href="?p={{products.next_page_number}}"><span class="ti-angle-right"></span></a></li>
-                        {% endif %}
-                        </ul>
-                        </nav>
-                    </div>
-                {% endif %}
             </div>     
         </div>
     </div>

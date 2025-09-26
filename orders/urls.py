@@ -5,14 +5,9 @@ from . import views
 urlpatterns = [
     path("checkout/", views.checkout, name="checkout"),
     path("order-list/", views.order_list, name="order-list"),
-    path("incomplete-orders/", views.incomplete_orders, name="incomplete-orders"),
-    path("webhook/", views.stripe_webhook, name="stripe_webhook"),
-    path("refund/<uuid:order_number>/", views.refund_payment, name="refund"),
-    path(
-        "request-refund/<uuid:order_number>/",
-        views.request_refund,
-        name="request-refund",
-    ),
+    path("uncomplete-orders/<uuid:order_number>", views.uncomplete_orders, name="uncomplete-orders"),
+    # path("buy-now/<int:id>/<str:slug>/", views.buy_now, name="buy-now"),
+    path("canceled/<uuid:order_number>/", views.order_canceled, name="order-canceled"),
     path("success/<uuid:order_number>/", views.success, name="success"),
     path("failed/<uuid:order_number>/", views.failed, name="failed"),
     path(
@@ -25,6 +20,15 @@ urlpatterns = [
         views.payment,
         name="payment",
     ),
-    path("canceled/<uuid:order_number>/", views.order_canceled, name="order-canceled"),
+    path(
+        "request-refund/<uuid:order_number>/",
+        views.request_refund,
+        name="request-refund",
+    ),
+    path(
+        "refund/<uuid:refund_number>/<uuid:order_number>/",
+        views.refund_payment,
+        name="refund",
+    ),
     path("<uuid:order_number>/", views.order_detail, name="order-detail"),
 ]

@@ -1,8 +1,8 @@
 from django.db import models
 from django.conf import settings
 from core.models import Product, Variation
+from django.utils.translation import gettext_lazy as _
 
-# Create your models here.
 
 
 class CartManager(models.Manager):
@@ -118,7 +118,7 @@ class CartItem(models.Model):
         null=True,
         blank=True,
     )
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(_("Price"), max_digits=10, decimal_places=2)
 
     def __str__(self):
         return str(self.id)
@@ -161,12 +161,11 @@ class CartItem(models.Model):
 
 
 class Coupon(models.Model):
-    code = models.CharField(max_length=10, unique=True)
+    code = models.CharField(_("Code"), max_length=10, unique=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     max_uses = models.PositiveIntegerField(blank=True, null=True)
     used_count = models.PositiveIntegerField(default=0, editable=False)
     end_date = models.DateTimeField()
-    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.code} - (${self.amount})"

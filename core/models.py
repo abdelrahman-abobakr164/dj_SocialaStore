@@ -4,25 +4,25 @@ from accounts.models import User
 from django.db.models import Avg
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
-from django.conf import settings
 
 
 class Product(models.Model):
     name = models.CharField(max_length=150, verbose_name=_("Name"))
     img = models.ImageField(upload_to="Product_img")
     price = models.DecimalField(
-        max_digits=10, decimal_places=2, verbose_name=_("Price")
+        max_digits=10, decimal_places=0, verbose_name=_("Price")
     )
     discount_price = models.DecimalField(
         _("Discount Price"),
         max_digits=10,
-        decimal_places=2,
+        decimal_places=0,
         null=True,
         blank=True,
         help_text="This Is A New price",
     )
     description = models.TextField(_("Description"), null=True, blank=True)
     stock = models.IntegerField()
+    bestseller = models.PositiveIntegerField(default=0)
     category = models.ForeignKey(
         "Category", on_delete=models.SET_NULL, null=True, related_name="categories"
     )
@@ -65,7 +65,7 @@ class Product(models.Model):
 
     def add_to_cart_url(self):
         return reverse(
-            "add-to-cart",
+            "c-b",
             kwargs={
                 "category_slug": self.category.slug,
                 "product_slug": self.slug,
@@ -84,9 +84,6 @@ class Product(models.Model):
         if reviews["average"] is not None:
             avg = sum(reviews["average"])
         return avg
-
-    class Meta:
-        ordering = ["-created_at"]
 
 
 class Brand(models.Model):
@@ -112,9 +109,6 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
-
-    def get_absolute_url(self):
-        return reverse("cat_slug", kwargs={"category": self.slug})
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name_ar, allow_unicode=True)
@@ -153,6 +147,9 @@ class Variation(models.Model):
     def __str__(self):
         return f"{self.product.name} - {self.value}"
 
+    class Meta:
+        ordering = ("product__name",)
+
     def save(self, *args, **kwargs):
         self.value = self.value.capitalize()
         return super(Variation, self).save(*args, **kwargs)
@@ -173,15 +170,14 @@ class Review(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="products"
     )
-    subject = models.CharField(max_length=50, blank=True)
-    review = models.TextField(max_length=300, blank=True)
+    review = models.TextField(_("Review"), max_length=300, blank=True)
     rating = models.FloatField()
     status = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.subject
+        return self.product.name
 
     class Meta:
         ordering = ("-updated_at",)

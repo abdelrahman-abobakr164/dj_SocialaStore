@@ -5,7 +5,7 @@ from .models import Wishlist
 
 
 class WishlistAdmin(admin.ModelAdmin):
-    list_display = ["user", "product"]
+    list_display = ["id", "user"]
     list_filter = ["user"]
     list_per_page = 20
 
