@@ -4,7 +4,6 @@ from core.models import Product, Variation
 from django.utils.translation import gettext_lazy as _
 
 
-
 class CartManager(models.Manager):
     def get_or_new(self, request):
 

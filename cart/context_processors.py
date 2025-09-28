@@ -12,7 +12,11 @@ def CartHandling(request):
         WishCount = 0
         total_price = 0
 
-        if "orders" not in request.path and "orderitem_id" in request.session:
+        if (
+            "orders" not in request.path
+            and "accounts" not in request.path
+            and "orderitem_id" in request.session
+        ):
             OrderItem.objects.filter(id=request.session.get("orderitem_id")).delete()
             del request.session["orderitem_id"]
 

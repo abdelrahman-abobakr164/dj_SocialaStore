@@ -33,7 +33,7 @@ Sociala/Shop
                                             {% for cat in categories %}
                                                 <li>
                                                     <input type="checkbox" onclick="this.form.submit()" {% if cat.name in selected_categories %} checked {% endif %} value='{{cat.name}}' name="category_" id="cat-{{cat.id}} ">
-                                                    <label for="cat-{{cat.id}} ">{{cat.name}} </label> <br>
+                                                    <label for="{{cat.id}} " class="custom-control-label small-size fw-600 text-grey-800 font-xssss">{{cat.name}} </label> <span class="float-right fw-600 text-grey-600 font-xssss mt-1"> {{cat.categories.count}}</span>
                                                 </li>
                                             {% endfor %}
                                         </ul>
@@ -46,7 +46,7 @@ Sociala/Shop
                                         {% for brand in brands %}
                                             <li class="me-0">
                                                 <input type="checkbox" name="brand_" id="{{brand.id}}" value='{{brand.name}}' onclick="this.form.submit()" {% if brand.name in selected_brands %} checked {% endif %}>
-                                                <label for="{{brand.id}} ">{{brand.name}} </label> <br>
+                                                <label for="{{brand.id}} " class="custom-control-label small-size fw-600 text-grey-800 font-xssss">{{brand.name}} </label> <span class="float-right fw-600 text-grey-600 font-xssss mt-1"> {{brand.brands.count}}</span>
                                             </li>
                                         {% endfor %}
                                     </ul>
@@ -56,11 +56,12 @@ Sociala/Shop
                                         <div class="form-group mb-0">
                                             <label for="Search" class="fw-600 text-grey-900 font-xsss">{% trans 'Sizes' %}</label>
                                         </div>
+
                                         <ul class="list-inline">
                                             {% for size in size_variations %}
                                                 <li class="me-0">
                                                     <input onclick='this.form.submit()' {% if size in selected_size %} checked {% endif %} type="checkbox" name="size_" id="size-{{size}}" value='{{ size }}'>
-                                                    <label for="size-{{size}}">{{size}} </label> <br>
+                                                    <label class="custom-control-label small-size fw-600 text-grey-800 font-xssss" for="size-{{size}}">{{size}} </label>
                                                 </li>
                                             {% endfor %}
                                         </ul> 
@@ -84,8 +85,9 @@ Sociala/Shop
                                     <div class="form-group mt-3 mb-0">
                                         <div class="row">
                                             <div class="col-sm-12">
-                                                    <input type="number" onchange='this.form.submit()' class='form-control' id='from' name="from" step='0.1' min='1' placeholder='From 1'>
-                                                    <input type="number" onchange='this.form.submit()' class='form-control mt-2' id='to' name="to" step='0.1' min='1' placeholder='To 99999'>
+                                                    <input type="number" class='form-control' id='from' name="from" step='0.1' min='1' placeholder='From 1'>
+                                                    <input type="number" class='form-control mt-2' id='to' name="to" step='0.1' min='1' placeholder='To 99999'>
+                                                    <input type="submit" value="Submit" class='btn btn-success w-100 mt-2'>
                                                 </form>
                                             </div>
                                         </div>

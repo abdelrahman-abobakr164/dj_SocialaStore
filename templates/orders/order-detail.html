@@ -55,7 +55,7 @@ Sociala/Order Detail
                                         <td class="product-headline text-left wide-column">
                                             {% if i.size %}
                                                 <h3>
-                                                    <a href="{% url 'size_slug' i.size.value %}" class="text-grey-900 fw-600 font-xsss">{{ i.size.value }}</a> {% if i.size.price %} +${{i.size.price|intcomma}}{% endif %}
+                                                    <a href="/shop/?size_={{i.size.value}}" class="text-grey-900 fw-600 font-xsss">{{ i.size.value }}</a> {% if i.size.price %} +${{i.size.price|intcomma}}{% endif %}
                                                 </h3>
                                             {% endif %}
                                         </td>
@@ -134,7 +134,7 @@ Sociala/Order Detail
                                     <a href='{% url "order-canceled" order.order_number %}' class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-danger rounded-3 fw-600 ls-3">{% trans 'Cancel Order' %}</a>   
                                 </form>
                             </div>
-                        {% elif order.status == 'Paid' %}
+                        {% elif order.status == 'Paid' and order.payment.method == 'Stripe' %}
                             <form action="{% url 'request-refund' order.order_number  %}" method="POST">
                                 {% csrf_token %}
                                 <div class="checkout-payment card border-0 mb-3 bg-greyblue p-lg-4 p-4">

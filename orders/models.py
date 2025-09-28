@@ -80,7 +80,9 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True
+    )
     order = models.ForeignKey(
         Order, on_delete=models.CASCADE, related_name="items", null=True
     )
@@ -151,7 +153,9 @@ class Address(models.Model):
     )
     first_name = models.CharField(_("First Name"), max_length=50)
     last_name = models.CharField(_("Last Name"), max_length=50)
-    phone = PhoneNumberField(_("Phone Number"), )
+    phone = PhoneNumberField(
+        _("Phone Number"),
+    )
     email = models.EmailField(_("Email Address"), max_length=254)
     address1 = models.CharField(_("Address1"), max_length=200)
     address2 = models.CharField(_("Address2"), max_length=200, blank=True, null=True)
@@ -178,12 +182,16 @@ class Refund(models.Model):
     payment = models.ForeignKey(
         Payment, on_delete=models.CASCADE, related_name="refunds", null=True
     )
-    refund_id = models.CharField(_("Refund Id"),  max_length=255, blank=True, null=True)
+    refund_id = models.CharField(_("Refund Id"), max_length=255, blank=True, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    reason = models.CharField(_("Reason"), max_length=100, choices=REFUND_REASON_CHOICES)
+    reason = models.CharField(
+        _("Reason"), max_length=100, choices=REFUND_REASON_CHOICES
+    )
     email = models.EmailField(_("Email Address"), max_length=250)
     image = models.ImageField(upload_to="RefundImage")
-    status = models.CharField(_("Status"), max_length=20, choices=REFUND_CHOICES, default="PENDING")
+    status = models.CharField(
+        _("Status"), max_length=20, choices=REFUND_CHOICES, default="PENDING"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

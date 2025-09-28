@@ -248,23 +248,27 @@ Siciala/Checkout
                                 </thead>
                                 <tbody>
                                     
-                                {% if cartitems %}
-                                    {% for i in cartitems %}
+                                {% comment %} {% if cartitems %} {% endcomment %}
+                                    {% comment %} {% for i in cartitems %}
                                     {% endfor %}
-                                {% else %}
-                                    {% for i in BuyNow  %}
+                                {% else %} {% endcomment %}
+                                    {% for i in BuyNow|default:cartitems  %}
                                         <tr>
                                             <td class="text-grey-500 fw-500 font-xsss">{{ i.product.name }}
-                                                <strong><span>✕</span>{{ i.quantity }}</strong>
+                                                <strong><span>x</span> {{ i.quantity }}</strong>
                                             </td>
                                             <td class="text-grey-500 fw-500 font-xsss">
-                                                <p class="btn-round-sm" style="background-color: {{i.color.value}}"></p>
+                                                {% if i.color.value %}
+                                                    <p class="btn-round-sm d-inline-block" style="background-color: {{ i.color.value }}; width: 25px; height: 25px;" title="{{ i.color.value }}"></p>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
                                             </td>
-                                            <td class="text-grey-500 fw-500 font-xsss">{{ i.size.value }}</td>
+                                            <td class="text-grey-500 fw-500 font-xsss">{{ i.size.value|default:"-" }}</td>
                                             <td class="text-grey-500 fw-500 font-xsss">${{ i.get_product_price|intcomma }}</td>
                                         </tr>
                                     {% endfor %}
-                                {% endif %}
+                                {% comment %} {% endif %} {% endcomment %}
 
                                 </tbody>
                                 <tfoot>

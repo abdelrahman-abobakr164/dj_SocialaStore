@@ -144,16 +144,14 @@ def shop(request, color=None):
                 ).order_by("-created_at")
 
     if selected_categories:
-        queryset = Q()
-        for i in selected_categories:
-            queryset |= Q(category__name=i)
-        products = Product.objects.filter(queryset).order_by("-created_at")
+        products = Product.objects.filter(
+            Q(category__name__in=selected_categories)
+        ).order_by("-created_at")
 
     if selected_brands:
-        queryset = Q()
-        for i in selected_brands:
-            queryset |= Q(brand__name=i)
-        products = Product.objects.filter(queryset).order_by("-created_at")
+        products = Product.objects.filter(Q(brand__name__in=selected_brands)).order_by(
+            "-created_at"
+        )
 
     if sort_by:
         if sort_by == "price-descending":
@@ -166,20 +164,25 @@ def shop(request, color=None):
             products = Product.objects.order_by("-created_at")
 
     if Pfrom or Pto:
-        products = Product.objects.filter(
-            Q(price__gte=Decimal(Pfrom) if Pfrom else Q())
-            & Q(price__lte=Decimal(Pto) if Pto else Q())
-            | Q(discount_price__gte=Decimal(Pfrom) if Pfrom else Q())
-            & Q(discount_price__lte=Decimal(Pto) if Pto else Q())
-        ).order_by("-created_at")
+        price_query = Q()
+        if Pfrom:
+            price_query &= Q(price__gte=Decimal(Pfrom)) | Q(
+                discount_price__gte=Decimal(Pfrom)
+            )
 
-    paginator = Paginator(products, 1)
+        if Pto:
+            price_query &= Q(price__lte=Decimal(Pto)) | Q(
+                discount_price__lte=Decimal(Pto)
+            )
+
+        products = products.filter(price_query)
 
     if search:
         products = products.filter(
             (Q(name__icontains=search) | Q(category__name__icontains=search))
         ).order_by("-created_at")
-        paginator = Paginator(products, len(products))
+
+    paginator = Paginator(products, 1)
 
     try:
         page_obj = paginator.get_page(page)

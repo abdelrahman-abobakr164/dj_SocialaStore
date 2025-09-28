@@ -133,7 +133,7 @@ def add_and_buy(request, category_slug, product_slug, pk):
 
             elif action == "buy_now":
                 orderitem = OrderItem.objects.create(
-                    user=request.user,
+                    user=request.user if request.user.is_authenticated else None,
                     product_id=product.id,
                     color=color,
                     size=size,
@@ -141,10 +141,12 @@ def add_and_buy(request, category_slug, product_slug, pk):
                     product_price=total_price,
                 )
                 orderitem.save()
-
                 request.session["orderitem_id"] = orderitem.id
 
-                return redirect("checkout")
+                if request.user.is_authenticated:
+                    return redirect("checkout")
+                else:
+                    return redirect("/accounts/login/?next=/orders/checkout/")
 
         except Variation.DoesNotExist:
             messages.warning(request, "The selected variation is not available")
