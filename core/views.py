@@ -102,8 +102,8 @@ def shop(request, color=None):
     selected_brands = request.GET.getlist("brand_")
     selected_size = request.GET.getlist("size_")
     sort_by = request.GET.get("sort_by")
-    Pfrom = request.GET.get("from", 0)
-    Pto = request.GET.get("to", 0)
+    min_price = request.GET.get("min_price")
+    max_price = request.GET.get("max_price")
     page = request.GET.get("page")
     search = request.GET.get("query")
 
@@ -163,16 +163,16 @@ def shop(request, color=None):
         elif sort_by == "date-descending":
             products = Product.objects.order_by("-created_at")
 
-    if Pfrom or Pto:
+    if min_price or max_price:
         price_query = Q()
-        if Pfrom:
-            price_query &= Q(price__gte=Decimal(Pfrom)) | Q(
-                discount_price__gte=Decimal(Pfrom)
+        if min_price:
+            price_query &= Q(price__gte=Decimal(min_price)) | Q(
+                discount_price__gte=Decimal(min_price)
             )
 
-        if Pto:
-            price_query &= Q(price__lte=Decimal(Pto)) | Q(
-                discount_price__lte=Decimal(Pto)
+        if max_price:
+            price_query &= Q(price__lte=Decimal(max_price)) | Q(
+                discount_price__lte=Decimal(max_price)
             )
 
         products = products.filter(price_query)
@@ -200,6 +200,7 @@ def shop(request, color=None):
     group_start = ((current_page - 1) // group_size) * group_size + 1
     group_end = min(group_start + group_size - 1, total_pages)
     custom_page_range = range(group_start, group_end + 1)
+
     context = {
         "page_obj": page_obj,
         "custom_page_range": custom_page_range,
