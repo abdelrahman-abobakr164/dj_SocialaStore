@@ -204,6 +204,8 @@ def shop(request, color=None):
     context = {
         "page_obj": page_obj,
         "custom_page_range": custom_page_range,
+        "group_end": group_end,
+        "total_pages": total_pages,
         "sort_by": sort_by,
         "selected_size": selected_size,
         "selected_categories": selected_categories,
