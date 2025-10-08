@@ -139,12 +139,12 @@ Sociala/Shop
                                 {% endif %} 
                                 
                                 {% for i in custom_page_range %}
-                                    <li style='text-decoration: {% if i >= page_obj.number %} none {% else %} line-through {% endif %}' class="page-item me-3 ms-3"><a href="?page={{i}}">{{i}}</a></li>
+                                    <li style='text-decoration: {% if i >= page_obj.number %} none {% else %} line-through {% endif %}' class="page-item me-3 ms-3"><a href="?{% query_string request page=i %}">{{i}}</a></li>
                                 {% endfor %}
                                 
                                 {% if group_end < total_pages %}
                                     <li><span>...</span></li>
-                                    <li class='ms-3'><a href="?page={{total_pages}}">{{total_pages}}</a></li>
+                                    <li class='ms-3'><a href="?{% query_string request page=total_pages %}">{{total_pages}}</a></li>
                                 {% endif %}
 
                                 {% if page_obj.has_next %}
