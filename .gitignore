@@ -30,6 +30,8 @@ celerybeat.pid
 *.swp
 *.swo
 
+*.mo
+
 Thumbs.db
 .DS_Store
 
