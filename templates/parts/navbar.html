@@ -16,9 +16,16 @@
 
             <div class="col-md-4 d-none d-md-block">
                 <form action="{% url 'shop' %}" class="header-search">
+                    
+                {% for key, value in request.GET.items %}
+                    {% if key != 'query' %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endif %}
+                {% endfor %}
+                        
                     <div class="form-group mb-0 icon-input position-relative">
                         <i class="feather-search font-sm text-grey-400 position-absolute" style="top: 50%; left: 15px; transform: translateY(-50%); z-index: 2;"></i>
-                        <input type="search" name='query' placeholder="{% trans 'Start typing to search...' %}" 
+                        <input type="search" name='query' value='{{request.GET.query}}' placeholder="{% trans 'Start typing to search...' %}" 
                                class="form-control bg-grey border-0 lh-32 pt-2 pb-2 ps-5 pe-3 font-xssss fw-500 rounded-xl theme-dark-bg" 
                                style="padding-left: 45px;">
                     </div>

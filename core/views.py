@@ -4,6 +4,7 @@ from django.core.paginator import Paginator
 from django.db.models import Prefetch, Q
 from django.http import JsonResponse
 from django.contrib import messages
+from django.http import QueryDict
 from decimal import Decimal
 
 from cart.forms import VariationForm
@@ -107,6 +108,18 @@ def shop(request, color=None):
     page = request.GET.get("page")
     search = request.GET.get("query")
 
+    params = request.GET.copy()
+    clean_params = QueryDict(mutable=True)
+    for key, value in params.items():
+        if value and value.strip():
+            clean_params[key] = value
+
+    if len(clean_params) != len(params):
+        if clean_params:
+            return redirect(f"{request.path}?{clean_params.urlencode()}")
+        else:
+            return redirect(request.path)
+
     if color:
         color_variations = Variation.objects.filter(
             key="color", value=color, active=True
@@ -125,7 +138,7 @@ def shop(request, color=None):
             .distinct()
         ).order_by("-created_at")
 
-    if selected_size:
+    if clean_params.get("size_"):
         for i in selected_size:
             sizies_query = Variation.objects.filter(key="size", value=i, active=True)
             if sizies_query.exists():
@@ -143,17 +156,17 @@ def shop(request, color=None):
                     .distinct()
                 ).order_by("-created_at")
 
-    if selected_categories:
+    if clean_params.get("category_"):
         products = Product.objects.filter(
             Q(category__name__in=selected_categories)
         ).order_by("-created_at")
 
-    if selected_brands:
+    if clean_params.get("brand_"):
         products = Product.objects.filter(Q(brand__name__in=selected_brands)).order_by(
             "-created_at"
         )
 
-    if sort_by:
+    if clean_params.get("sort_by"):
         if sort_by == "price-descending":
             products = Product.objects.order_by("-price")
         elif sort_by == "price-ascending":
@@ -163,7 +176,7 @@ def shop(request, color=None):
         elif sort_by == "date-descending":
             products = Product.objects.order_by("-created_at")
 
-    if min_price or max_price:
+    if clean_params.get("min_price") or clean_params.get("max_price"):
         price_query = Q()
         if min_price:
             price_query &= Q(price__gte=Decimal(min_price)) | Q(
@@ -177,10 +190,11 @@ def shop(request, color=None):
 
         products = products.filter(price_query)
 
-    if search:
+    if clean_params.get("query"):
         products = products.filter(
             (Q(name__icontains=search) | Q(category__name__icontains=search))
         ).order_by("-created_at")
+        
 
     paginator = Paginator(products, 1)
 
