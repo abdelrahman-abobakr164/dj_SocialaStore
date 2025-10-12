@@ -296,6 +296,13 @@ Siciala/Checkout
                             
                             <div class="payment-group mb-0">
                                 <div class="payment-radio">
+                                    <input type="radio" {% if last_payment.method == 'PayPal' %}  {% endif %} value="PayPal" name="payment_option" id="PayPal">
+                                    <label class="payment-label fw-600 font-xsss text-grey-900" for="PayPal">PayPal</label>
+                                </div>
+                            </div>
+                            
+                            <div class="payment-group mb-0">
+                                <div class="payment-radio">
                                     <input type="radio" {% if last_payment.method == 'Stripe' %}  {% endif %} value="Stripe" name="payment_option" id="Stripe">
                                     <label class="payment-label fw-600 font-xsss text-grey-900" for="Stripe">Stripe</label>
                                 </div>

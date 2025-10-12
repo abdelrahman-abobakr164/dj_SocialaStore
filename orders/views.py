@@ -1,22 +1,45 @@
 from django.shortcuts import get_object_or_404, render, redirect
+from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
 from orders.forms import RefundForm, CheckoutForm
 from django.contrib import messages
 from django.conf import settings
+import requests
 import logging
+import json
 
-from cart.forms import CouponForm
 from orders.tasks import send_mails_to_clients
+from cart.forms import CouponForm
 from core.models import Product
 from orders.models import *
 from cart.models import *
-
+import paypalrestsdk
 import stripe
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 logger = logging.getLogger(__name__)
+
+
+def get_paypal_access_token():
+    url = f"{settings.PAYPAL_BASE_URL}/v1/oauth2/token"
+    headers = {
+        "Accept": "application/json",
+        "Accept-Language": "en_US",
+    }
+    data = {"grant_type": "client_credentials"}
+
+    response = requests.post(
+        url,
+        headers=headers,
+        data=data,
+        auth=(settings.PAYPAL_CLIENT_ID, settings.PAYPAL_CLIENT_SECRET),
+    )
+
+    if response.status_code == 200:
+        return response.json()["access_token"]
+    return None
 
 
 def is_valid_form(values):
@@ -25,46 +48,6 @@ def is_valid_form(values):
         if field == "":
             valid = False
     return valid
-
-
-# @login_required(login_url="account_login")
-# def buy_now(request, id, slug):
-#     product = get_object_or_404(Product, id=id, slug=slug)
-
-#     if request.method == "POST":
-#         form = VariationForm(request.POST, product=product)
-#         if form.is_valid():
-
-#             color_id = form.cleaned_data.get("color")
-#             size_id = form.cleaned_data.get("size")
-
-#             color = (
-#                 Variation.objects.get(id=color_id, active=True) if color_id else None
-#             )
-#             size = Variation.objects.get(id=size_id, active=True) if size_id else None
-
-#             size_price = size.price if size and size.price else 0
-#             color_price = color.price if color and color.price else 0
-#             base_price = product.discount_price or product.price
-#             total_price = base_price + size_price + color_price
-#             orderitem = OrderItem.objects.create(
-#                 user=request.user,
-#                 product_id=product.id,
-#                 color=color,
-#                 size=size,
-#                 quantity=1,
-#                 product_price=total_price,
-#             )
-#             orderitem.save()
-
-#             request.session["orderitem_id"] = orderitem.id
-#             return redirect("checkout")
-
-#         messages.error(request, "Please Choose Variation")
-#         return redirect(request.META.get("HTTP_REFERER"))
-#     return redirect(
-#         "product-detail", category_slug=product.category.slug, slug=slug, pk=id
-#     )
 
 
 @login_required(login_url="account_login")
@@ -265,6 +248,12 @@ def checkout(request):
                     order_number=order.order_number,
                 )
 
+            elif payment_option == "PayPal":
+                return redirect(
+                    "payment",
+                    payment_option="PayPal",
+                    order_number=order.order_number,
+                )
             elif payment_option == "CashOnDelivery":
                 return redirect(
                     "payment",
@@ -297,7 +286,7 @@ def payment(request, payment_option, order_number):
         messages.warning(request, "You Don't Have an Order")
         return redirect("shop")
 
-    if payment_option not in ["Stripe", "CashOnDelivery"]:
+    if payment_option not in ["Stripe", "CashOnDelivery", "PayPal"]:
         messages.error(request, "Not Supported Payment Option")
 
     order_obj = get_object_or_404(Order, order_number=order_number)
@@ -331,7 +320,7 @@ def payment(request, payment_option, order_number):
         order_obj.save()
 
         send_mails_to_clients.delay(
-            "COD Payment Confirmation",
+            f"COD Payment Confirmation {order_obj.total}",
             f"Payment of ${order_obj.total} was successful, Order id ({order_obj.order_number}).",
             request.user.email,
         )
@@ -342,9 +331,140 @@ def payment(request, payment_option, order_number):
         "order": order_obj,
         "payment_option": payment_option,
         "stripe_public_key": settings.STRIPE_PUBLISHABLE_KEY,
+        "paypal_client_id": settings.PAYPAL_CLIENT_ID,
     }
 
     return render(request, "orders/payment.html", context)
+
+
+@login_required
+@require_http_methods(["POST"])
+def create_paypal_order(request, order_number):
+    order = get_object_or_404(Order, order_number=order_number, user=request.user)
+
+    if order.is_ordered:
+        return JsonResponse({"error": "Order already paid"}, status=400)
+
+    access_token = get_paypal_access_token()
+    if not access_token:
+        return JsonResponse({"error": "Failed to authenticate with PayPal"}, status=500)
+
+    items = []
+    for item in order.items.all():
+        items.append(
+            {
+                "name": item.product.name[:127],
+                "unit_amount": {
+                    "currency_code": "USD",
+                    "value": str(item.product_price),
+                },
+                "quantity": str(item.quantity),
+            }
+        )
+
+    url = f"{settings.PAYPAL_BASE_URL}/v2/checkout/orders"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {access_token}",
+    }
+
+    payload = {
+        "intent": "CAPTURE",
+        "purchase_units": [
+            {
+                "reference_id": str(order.order_number),
+                "description": f"Order #{order.order_number}",
+                "amount": {
+                    "currency_code": "USD",
+                    "value": str(order.total),
+                    "breakdown": {
+                        "item_total": {
+                            "currency_code": "USD",
+                            "value": str(order.total),
+                        }
+                    },
+                },
+                "items": items,
+            }
+        ],
+        "application_context": {
+            "brand_name": "Your Store Name",
+            "landing_page": "BILLING",
+            "user_action": "PAY_NOW",
+            "return_url": f"{settings.SITE_URL}/payment/success/{order.order_number}",
+            "cancel_url": f"{settings.SITE_URL}/payment/failed/{order.order_number}",
+        },
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
+
+    if response.status_code == 201:
+        return JsonResponse(response.json())
+    else:
+        return JsonResponse(
+            {"error": "Failed to create PayPal order", "details": response.json()},
+            status=500,
+        )
+
+
+@login_required
+@require_http_methods(["POST"])
+def capture_paypal_order(request, order_number):
+    order = get_object_or_404(Order, order_number=order_number, user=request.user)
+    try:
+        data = json.loads(request.body)
+        paypal_order_id = data.get("orderID")
+        order_data = data.get("orderData", {})
+    except Exception as e:
+        return JsonResponse(
+            {"status": "error", "message": f"Invalid request: {str(e)}"}, status=400
+        )
+
+    if not paypal_order_id:
+        return JsonResponse(
+            {"status": "error", "message": "Missing PayPal order ID"}, status=400
+        )
+
+    if order_data and order_data.get("status") == "COMPLETED":
+        order.is_ordered = True
+        order.status = "Pending"
+        order.save()
+
+        try:
+            capture_id = order_data["purchase_units"][0]["payments"]["captures"][0][
+                "id"
+            ]
+        except (KeyError, IndexError, TypeError):
+            capture_id = paypal_order_id
+
+        Payment.objects.update_or_create(
+            order=order,
+            defaults={
+                "user": request.user,
+                "payment_id": capture_id,
+                "status": True,
+                "amount": order.total,
+                "method": "PayPal",
+            },
+        )
+
+        send_mails_to_clients.delay(
+            f"PayPal Payment Confirmation {order.total}",
+            f"Thank you for your purchase. Your order ID is {order_number}.",
+            order.user.email,
+        )
+
+        return JsonResponse(
+            {"status": "success", "message": "Payment completed successfully"}
+        )
+    else:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Payment not completed or order data missing",
+            },
+            status=400,
+        )
 
 
 @csrf_exempt
@@ -433,8 +553,8 @@ def stripe_webhook(request):
             )
 
             send_mails_to_clients.delay(
-                "Stripe Payment",
-                f"Thank you for your payment. Your order ID is {order_number}.",
+                f"Stripe Payment Confirmation {order.total}",
+                f"Thank you for your purchase. Your order ID is {order_number}.",
                 order.user.email,
             )
 
@@ -548,7 +668,7 @@ def uncomplete_orders(request, order_number):
                 request, "You Must To Select One Of This Fields, Don't Mess"
             )
             return redirect(url)
-        elif payment_option not in ["Stripe", "CashOnDelivery"]:
+        elif payment_option not in ["Stripe", "CashOnDelivery", "PayPal"]:
             messages.error(request, "Wrong Payment Option, Don't Mess")
             return redirect(url)
         else:

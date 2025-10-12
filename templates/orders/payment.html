@@ -213,6 +213,17 @@ Siciala/OrderConfirmation
                             {% if payment_option == 'Stripe' %}
                                 <script src="https://js.stripe.com/v3/"></script>
                                 <button id="checkout-button" type="submit" class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-current rounded-3 fw-600 ls-3">{% trans 'Buy Now' %} ${{ order.total }}</button>    
+                                <div class="mt-3 text-center">
+                                    <small class="text-muted">Secure payment powered by Stripe</small>
+                                </div>
+                            {% elif payment_option == 'PayPal' %}
+                                <div id="paypal-button-container"></div>
+                                <div id="loading" style="display: none; text-align: center; padding: 20px;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2">Processing payment...</p>
+                                </div>
                             {% elif payment_option == 'CashOnDelivery' %}
                                 <form method="POST">
                                     {% csrf_token %}
@@ -262,6 +273,98 @@ Siciala/OrderConfirmation
                 e.preventDefault();
                 createCheckoutSession();
             });
+        </script>
+    {% elif payment_option == 'PayPal' %}
+        <script src="https://www.paypal.com/sdk/js?client-id={{paypal_client_id}}&currency=USD&disable-funding=paylater,venmo"></script>
+        <script>
+            paypal.Buttons({
+                createOrder: function(data, actions) {
+                    return actions.order.create({
+                        purchase_units: [{
+                            reference_id: "{{ order.order_number }}",
+                            description: "Order #{{ order.order_number }}",
+                            amount: {
+                                currency_code: "USD",
+                                value: "{{ order.total }}",
+                                breakdown: {
+                                    item_total: {
+                                        currency_code: "USD",
+                                        value: "{{ order.total }}"
+                                    }
+                                }
+                            },
+                            items: [
+                                {% for item in order.items.all %}
+                                {
+                                    name: "{{ item.product.name|slice:':127'|escapejs }}",
+                                    unit_amount: {
+                                        currency_code: "USD",
+                                        value: "{{ item.product_price }}"
+                                    },
+                                    quantity: "{{ item.quantity }}"
+                                }{% if not forloop.last %},{% endif %}
+                                {% endfor %}
+                            ]
+                        }],
+                        application_context: {
+                            brand_name: "SocialaStore",
+                            landing_page: "BILLING",
+                            user_action: "PAY_NOW"
+                        }
+                    });
+                },
+                
+                onApprove: async function(data, actions) {
+                    try {
+                        document.getElementById('paypal-button-container').style.display = 'none';
+                        document.getElementById('loading').style.display = 'block';
+                        
+                        const orderData = await actions.order.capture();
+                        
+                        const response = await fetch("{% url 'paypal_capture_order' order.order_number %}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({
+                                orderID: data.orderID,
+                                orderData: orderData
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.status === 'success') {
+                            window.location.href = "{% url 'success' order.order_number %}";
+                        } else {
+                            throw new Error(result.message || 'Payment processing failed');
+                        }
+                    } catch (error) {
+                        console.error('Payment error:', error);
+                        alert('Payment failed: ' + error.message);
+                        document.getElementById('loading').style.display = 'none';
+                        document.getElementById('paypal-button-container').style.display = 'block';
+                    }
+                },
+                
+                onError: function(err) {
+                    console.error('PayPal Error:', err);
+                    alert('An error occurred during payment processing. Please try again.');
+                },
+                
+                onCancel: function(data) {
+                    console.log('Payment cancelled by user');
+                },
+                
+                style: {
+                    layout: 'vertical',
+                    color: 'blue',
+                    shape: 'pill',
+                    label: 'paypal',
+                    height: 45
+                }
+            }).render('#paypal-button-container');
         </script>
     {% endif %}
 

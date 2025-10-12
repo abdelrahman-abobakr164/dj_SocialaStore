@@ -2,6 +2,7 @@ from django import forms
 from phonenumber_field.formfields import PhoneNumberField
 
 PAYMENT_CHOICES = (
+    ("PayPal", "PayPal"),
     ("Stripe", "Stripe"),
     ("CashOnDelivery", "CashOnDelivery"),
 )

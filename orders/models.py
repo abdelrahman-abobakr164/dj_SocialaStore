@@ -18,6 +18,7 @@ ADDRESS_CHOICES = (
 
 
 PAYMENT_METHODS = (
+    ("PayPal", "PayPal"),
     ("Stripe", "Stripe"),
     ("CashOnDelivery", "CashOnDelivery"),
 )

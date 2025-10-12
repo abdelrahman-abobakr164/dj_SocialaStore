@@ -1,12 +1,24 @@
 from pathlib import Path
 from environ import Env
-import os
+import paypalrestsdk
 
 env = Env()
 Env.read_env()
 ENVIRONMENT = env("ENVIRONMENT", default="production")
 
+PAYPAL_CLIENT_ID = env("PAYPAL_CLIENT_ID")
+PAYPAL_CLIENT_SECRET = env("PAYPAL_CLIENT_SECRET")
+PAYPAL_MODE = env("PAYPAL_MODE")
+PAYPAL_BASE_URL = 'https://api-m.sandbox.paypal.com'
+SITE_URL = "https://eager-badly-crayfish.ngrok-free.app"
 
+paypalrestsdk.configure(
+    {
+        "mode": PAYPAL_MODE,
+        "client_id": PAYPAL_CLIENT_ID,
+        "client_secret": PAYPAL_CLIENT_SECRET,
+    }
+)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -21,7 +33,11 @@ if ENVIRONMENT == "development":
 else:
     DEBUG = False
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "eager-badly-crayfish.ngrok-free.app",
+]
 
 CSRF_TRUSTED_ORIGINS = ["https://eager-badly-crayfish.ngrok-free.app"]
 
@@ -221,10 +237,7 @@ ACCOUNT_USERNAME_BLACKLIST = [
     "root",
 ]
 
-if ENVIRONMENT == "development":
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-else:
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
