@@ -2,9 +2,21 @@ from pathlib import Path
 from environ import Env
 import paypalrestsdk
 
+
 env = Env()
 Env.read_env()
 ENVIRONMENT = env("ENVIRONMENT", default="production")
+
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+
+SECRET_KEY = env("SECRET_KEY")
+
+STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY")
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY")
 
 PAYPAL_CLIENT_ID = env("PAYPAL_CLIENT_ID")
 PAYPAL_CLIENT_SECRET = env("PAYPAL_CLIENT_SECRET")
@@ -19,15 +31,6 @@ paypalrestsdk.configure(
         "client_secret": PAYPAL_CLIENT_SECRET,
     }
 )
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-SECRET_KEY = env("SECRET_KEY")
-STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY")
-STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY")
-
 if ENVIRONMENT == "development":
     DEBUG = True
 else:

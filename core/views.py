@@ -194,8 +194,6 @@ def shop(request, color=None):
         products = products.filter(
             (Q(name__icontains=search) | Q(category__name__icontains=search))
         ).order_by("-created_at")
-        
-
     paginator = Paginator(products, 1)
 
     try:
