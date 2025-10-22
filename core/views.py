@@ -1,7 +1,10 @@
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core.paginator import EmptyPage, PageNotAnInteger
+from django.views.decorators.vary import vary_on_cookie
+from django.views.decorators.cache import cache_page
 from django.core.paginator import Paginator
 from django.db.models import Prefetch, Q
+from django.core.cache import cache
 from django.http import JsonResponse
 from django.contrib import messages
 from django.http import QueryDict
@@ -26,7 +29,10 @@ def index(request):
     )
 
 
+@cache_page(60 * 15)
+@vary_on_cookie
 def product_detail(request, category_slug, slug, pk):
+    product_cache = f"product_"
     product = get_object_or_404(Product, category__slug=category_slug, slug=slug, pk=pk)
 
     form = ReviewForm()
@@ -96,6 +102,7 @@ def product_review(request, category_slug, slug, pk):
     )
 
 
+@cache_page(60 * 15)
 def shop(request, color=None):
     products = Product.objects.all().order_by("-created_at")
 
