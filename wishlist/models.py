@@ -87,9 +87,13 @@ class WishManager(models.Manager):
 
 class Wishlist(models.Model):
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        db_index=True,
     )
-    product = models.ManyToManyField(Product, blank=True)
+    product = models.ManyToManyField(Product, related_name="pwish", blank=True)
 
     objects = WishManager()
 

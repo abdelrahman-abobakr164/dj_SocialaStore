@@ -248,10 +248,6 @@ Siciala/Checkout
                                 </thead>
                                 <tbody>
                                     
-                                {% comment %} {% if cartitems %} {% endcomment %}
-                                    {% comment %} {% for i in cartitems %}
-                                    {% endfor %}
-                                {% else %} {% endcomment %}
                                     {% for i in BuyNow|default:cartitems  %}
                                         <tr>
                                             <td class="text-grey-500 fw-500 font-xsss">{{ i.product.name }}
@@ -268,7 +264,6 @@ Siciala/Checkout
                                             <td class="text-grey-500 fw-500 font-xsss">${{ i.get_product_price|intcomma }}</td>
                                         </tr>
                                     {% endfor %}
-                                {% comment %} {% endif %} {% endcomment %}
 
                                 </tbody>
                                 <tfoot>

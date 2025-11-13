@@ -1,27 +1,24 @@
 from pathlib import Path
-from environ import Env
 import paypalrestsdk
-
-
-env = Env()
-Env.read_env()
-ENVIRONMENT = env("ENVIRONMENT", default="production")
+import environ
+import os
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+env = environ.Env()
 
-SECRET_KEY = env("SECRET_KEY")
 
-STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY")
-STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY")
+SECRET_KEY = env("SECRET_KEY", default="")
+STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY", default="")
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
 
-PAYPAL_CLIENT_ID = env("PAYPAL_CLIENT_ID")
-PAYPAL_CLIENT_SECRET = env("PAYPAL_CLIENT_SECRET")
-PAYPAL_MODE = env("PAYPAL_MODE")
-PAYPAL_BASE_URL = 'https://api-m.sandbox.paypal.com'
+PAYPAL_CLIENT_ID = env("PAYPAL_CLIENT_ID", default="")
+PAYPAL_CLIENT_SECRET = env("PAYPAL_CLIENT_SECRET", default="")
+PAYPAL_MODE = "sandbox"
+PAYPAL_BASE_URL = "https://api-m.sandbox.paypal.com"
 SITE_URL = "https://eager-badly-crayfish.ngrok-free.app"
 
 paypalrestsdk.configure(
@@ -31,10 +28,8 @@ paypalrestsdk.configure(
         "client_secret": PAYPAL_CLIENT_SECRET,
     }
 )
-if ENVIRONMENT == "development":
-    DEBUG = True
-else:
-    DEBUG = False
+
+DEBUG = env.bool("DEBUG", default=True)
 
 ALLOWED_HOSTS = [
     "localhost",
@@ -63,11 +58,27 @@ INSTALLED_APPS = [
     "wishlist",
     "cart",
     "orders",
+    "debug_toolbar",
     "rest_framework",
     "phonenumber_field",
     "django.contrib.humanize",
 ]
-
+DEBUG_TOOLBAR_PANELS = [
+    "debug_toolbar.panels.history.HistoryPanel",
+    "debug_toolbar.panels.versions.VersionsPanel",
+    "debug_toolbar.panels.timer.TimerPanel",
+    "debug_toolbar.panels.settings.SettingsPanel",
+    "debug_toolbar.panels.headers.HeadersPanel",
+    "debug_toolbar.panels.request.RequestPanel",
+    "debug_toolbar.panels.sql.SQLPanel",
+    "debug_toolbar.panels.staticfiles.StaticFilesPanel",
+    "debug_toolbar.panels.templates.TemplatesPanel",
+    "debug_toolbar.panels.alerts.AlertsPanel",
+    "debug_toolbar.panels.cache.CachePanel",
+    "debug_toolbar.panels.signals.SignalsPanel",
+    "debug_toolbar.panels.redirects.RedirectsPanel",
+    "debug_toolbar.panels.profiling.ProfilingPanel",
+]
 JAZZMIN_SETTINGS = {
     "site_title": "Sociala Admin",
     "site_header": "Sociala",
@@ -90,6 +101,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
     "django.middleware.locale.LocaleMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 INTERNAL_IPS = [
@@ -136,24 +148,23 @@ SOCIALACCOUNT_PROVIDERS = {
 
 AUTH_USER_MODEL = "accounts.User"
 
-if ENVIRONMENT == "development":
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": env("DB_NAME"),
-            "USER": env("DB_USER"),
-            "PASSWORD": env("DB_PASSWORD"),
-            "HOST": env("DB_HOST"),
-            "PORT": env("DB_PORT"),
-        }
-    }
+}
+# else:
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": env("DB_NAME", default=""),
+#         "USER": env("DB_USER", default=""),
+#         "PASSWORD": env("DB_PASSWORD", default=""),
+#         "HOST": env("DB_HOST", default=""),
+#         "PORT": env("DB_PORT", default=""),
+#     }
+# }
 
 SITE_ID = 1
 
@@ -220,8 +231,6 @@ ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_NOTIFICATIONS = True
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
-ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 5
-ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 300
 ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = "/accounts/login/"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/en/store"
 ACCOUNT_USERNAME_BLACKLIST = [
@@ -240,13 +249,13 @@ ACCOUNT_USERNAME_BLACKLIST = [
     "root",
 ]
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = env("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
-DEFAULT_FROM_EMAIL = f'Sociala {env("EMAIL_HOST_USER")}'
+EMAIL_HOST = env("EMAIL_HOST", default="smtp.gmail.com")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+DEFAULT_FROM_EMAIL = f'Sociala {env("EMAIL_HOST_USER", default="")}'
 ACCOUNT_EMAIL_SUBJECT_PREFIX = ""
 
 PHONENUMBER_DEFAULT_REGION = "EG"
@@ -254,8 +263,8 @@ PHONENUMBER_DB_FORMAT = "E164"
 PHONENUMBER_DEFAULT_FORMAT = "INTERNATIONAL"
 
 
-CELERY_BROKER_URL = env("REDIS_URL")
-CELERY_RESULT_BACKEND = env("REDIS_URL")
+CELERY_BROKER_URL = env("REDIS_URL", default="")
+CELERY_RESULT_BACKEND = env("REDIS_URL", default="")
 
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"

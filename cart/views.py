@@ -1,7 +1,6 @@
 from django.shortcuts import redirect, get_object_or_404, render
 from cart.forms import VariationForm, CouponForm
 from django.utils.timezone import now
-from django.http import JsonResponse
 from django.contrib import messages
 
 from cart.models import *

@@ -216,9 +216,8 @@ Sociala/{{ product }}
 
                     <div class="col-md-6">
                         <h4 class="mb-4">{% trans 'Leave a review' %}</h4>
-                        <form id='review-form' method='POST' action='{{ product.review_url }}'>
+                        <form method='POST' action='{{ product.review_url }}'>
                             {% csrf_token %}
-                            <input type="hidden" name="product_id" id='product_id' value='{{ product_id }}'>
                             <div class="d-flex my-3">
                                 <p class="mb-0 mr-2">{% trans 'Your Rating' %} * :</p>
                                 <fieldset class="rating">
@@ -376,73 +375,6 @@ Sociala/{{ product }}
                     thumbItemClass: 'owl-thumb-item',
                     navText: ["<i class='ti-angle-left icon-nav'></i>","<i class='ti-angle-right icon-nav'></i>"],
                 });
-        });
-
-        $(document).ready(function() {
-            // Function to create a temporary message
-            function showTempMessage(message, isSuccess = true) {
-                const messageDiv = $('<div>').addClass(`alert ${isSuccess ? 'alert-success' : 'alert-danger'}`)
-                    .text(message)
-                    .css({
-                        'position': 'fixed',
-                        'top': '20px',
-                        'right': '20px',
-                        'z-index': '9999',
-                        'min-width': '250px',
-                        'opacity': '0',
-                        'transition': 'opacity 0.5s'
-                    })
-                    .appendTo('body');
-
-                setTimeout(() => messageDiv.css('opacity', '1'), 100);
-
-                setTimeout(() => {
-                    messageDiv.css('opacity', '0');
-                    setTimeout(() => messageDiv.remove(), 500);
-                }, 3000);
-            }
-
-            $('#review-form').on('submit', function(e) {
-                e.preventDefault();
-
-                const form = $(this);
-                const formData = form.serialize();
-                const url = form.attr('action');
-                const submitButton = form.find('button[type="submit"]');
-
-                // Disable the submit button
-                submitButton.prop('disabled', true).text('Submitting...');
-
-                $.ajax({
-                    type: 'POST',
-                    url: url,
-                    data: formData,
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            showTempMessage('Thank you for your review!');
-                            form[0].reset();
-
-                            if (response.review) {
-                                appendNewReview(response.review);
-                            }
-                        } else {
-                            showTempMessage(response.error || 'There was an error submitting your review.', false);
-                        }
-                    },
-                    error: function(xhr) {
-                        let errorMsg = 'There was an error submitting your review. Please try again.';
-                        if (xhr.responseJSON && xhr.responseJSON.error) {
-                            errorMsg = xhr.responseJSON.error;
-                        }
-                        showTempMessage(errorMsg, false);
-                        console.error(xhr.status + ": " + xhr.responseText);
-                    },
-                    complete: function() {
-                        submitButton.prop('disabled', false).text('Leave Your Review');
-                    }
-                });
-            });
         });
 
     </script>

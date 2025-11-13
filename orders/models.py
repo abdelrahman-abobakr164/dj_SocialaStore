@@ -1,7 +1,7 @@
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils.translation import gettext_lazy as _
 from core.models import Product, Variation
-from stripe.error import StripeError
+from stripe import StripeError
 from django.conf import settings
 from django.db import models
 import stripe
@@ -50,7 +50,9 @@ REFUND_CHOICES = [
 
 
 class Order(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, db_index=True
+    )
     shipping_address = models.ForeignKey(
         "Address",
         related_name="shipping_address",
@@ -82,7 +84,7 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, db_index=True
     )
     order = models.ForeignKey(
         Order, on_delete=models.CASCADE, related_name="items", null=True
@@ -130,7 +132,7 @@ class OrderItem(models.Model):
 
 class Payment(models.Model):
     order = models.OneToOneField(
-        Order, on_delete=models.CASCADE, related_name="payment"
+        Order, on_delete=models.CASCADE, related_name="payment", db_index=True
     )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True
@@ -151,6 +153,7 @@ class Address(models.Model):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
+        db_index=True,
     )
     first_name = models.CharField(_("First Name"), max_length=50)
     last_name = models.CharField(_("Last Name"), max_length=50)
@@ -177,7 +180,10 @@ class Address(models.Model):
 class Refund(models.Model):
 
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="refunds"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="refunds",
+        db_index=True,
     )
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="refunds")
     payment = models.ForeignKey(

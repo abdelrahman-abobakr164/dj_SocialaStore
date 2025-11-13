@@ -652,7 +652,7 @@ def order_detail(request, order_number):
 
 @login_required(login_url="account_login")
 def order_list(request):
-    orders = Order.objects.filter(user=request.user)
+    orders = Order.objects.filter(user=request.user).prefetch_related("refunds")
     return render(request, "orders/order-list.html", {"orders": orders})
 
 

@@ -1,11 +1,8 @@
 from django.shortcuts import redirect, render, get_object_or_404
 from django.core.paginator import EmptyPage, PageNotAnInteger
-from django.views.decorators.vary import vary_on_cookie
 from django.views.decorators.cache import cache_page
 from django.core.paginator import Paginator
 from django.db.models import Prefetch, Q
-from django.core.cache import cache
-from django.http import JsonResponse
 from django.contrib import messages
 from django.http import QueryDict
 from decimal import Decimal
@@ -17,12 +14,11 @@ from core.models import *
 
 
 def index(request):
+    recently_products_cat = []
     if "recently_products" in request.session:
-        recently_products_cat = Product.objects.filter(
+        recently_products_cat = Product.objects.select_related("category").filter(
             category__name__in=request.session["recently_products"]
         )
-    else:
-        recently_products_cat = []
 
     return render(
         request, "core/index.html", {"recently_viewed": recently_products_cat}
@@ -30,81 +26,10 @@ def index(request):
 
 
 @cache_page(60 * 15)
-@vary_on_cookie
-def product_detail(request, category_slug, slug, pk):
-    product_cache = f"product_"
-    product = get_object_or_404(Product, category__slug=category_slug, slug=slug, pk=pk)
-
-    form = ReviewForm()
-    varform = VariationForm(product=product)
-    filter_products = Product.objects.filter(
-        category__name=product.category.name
-    ).exclude(pk=pk)
-
-    if request.user.is_authenticated:
-        orderitem = OrderItem.objects.filter(user=request.user, product=product)
-    else:
-        orderitem = None
-
-    if "recently_products" in request.session:
-        if product.category.name in request.session["recently_products"]:
-            request.session["recently_products"].remove(product.category.name)
-
-        recent_view = Product.objects.filter(
-            category__name__in=request.session["recently_products"]
-        )
-
-        request.session["recently_products"].append(product.category.name)
-
-        if len(request.session["recently_products"]) > 4:
-            request.session["recently_products"].pop(0)
-
-    else:
-        request.session["recently_products"] = [product.category.name]
-        recent_view = []
-
-    request.session.modified = True
-
-    context = {
-        "product": product,
-        "products": filter_products,
-        "form": form,
-        "varform": varform,
-        "orderitem": orderitem,
-    }
-
-    return render(request, "core/detail.html", context)
-
-
-def product_review(request, category_slug, slug, pk):
-    product = get_object_or_404(Product, category__slug=category_slug, slug=slug, pk=pk)
-
-    if request.method == "POST":
-        try:
-            form = ReviewForm(request.POST)
-
-            if form.is_valid():
-                Review.objects.update_or_create(
-                    user=request.user,
-                    product=product,
-                    defaults={
-                        "rating": form.cleaned_data.get("rating"),
-                        "review": form.cleaned_data.get("review"),
-                    },
-                )
-
-                return JsonResponse({"success": True})
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)}, status=400)
-
-    return JsonResponse(
-        {"success": False, "error": "Please Fill in The Required Fields"}, status=400
-    )
-
-
-@cache_page(60 * 15)
 def shop(request, color=None):
-    products = Product.objects.all().order_by("-created_at")
+    products = Product.objects.select_related("category", "brand").order_by(
+        "-created_at"
+    )
 
     selected_categories = request.GET.getlist("category_")
     selected_brands = request.GET.getlist("brand_")
@@ -232,6 +157,79 @@ def shop(request, color=None):
     }
 
     return render(request, "core/shop.html", context)
+
+
+def product_detail(request, category_slug, slug, pk):
+    product = (
+        Product.objects.select_related("category", "brand")
+        .prefetch_related("gallary", "products")
+        .get(category__slug=category_slug, slug=slug, pk=pk)
+    )
+    form = ReviewForm()
+    varform = VariationForm(product=product)
+    filter_products = Product.objects.filter(
+        category__name=product.category.name
+    ).exclude(pk=pk)
+
+    if request.user.is_authenticated:
+        orderitem = OrderItem.objects.filter(user=request.user, product=product)
+    else:
+        orderitem = None
+
+    if "recently_products" in request.session:
+        if product.category.name in request.session["recently_products"]:
+            request.session["recently_products"].remove(product.category.name)
+
+        request.session["recently_products"].append(product.category.name)
+
+        if len(request.session["recently_products"]) > 4:
+            request.session["recently_products"].pop(0)
+
+    else:
+        request.session["recently_products"] = [product.category.name]
+
+    request.session.modified = True
+
+    context = {
+        "product": product,
+        "products": filter_products,
+        "form": form,
+        "varform": varform,
+        "orderitem": orderitem,
+    }
+
+    return render(request, "core/detail.html", context)
+
+
+def product_review(request, category_slug, slug, pk):
+    product = get_object_or_404(
+        Product.objects.select_related("category").only("category__slug"),
+        category__slug=category_slug,
+        slug=slug,
+        pk=pk,
+    )
+    url = request.META.get("HTTP_REFERER")
+    if request.method == "POST":
+        try:
+            form = ReviewForm(request.POST)
+
+            if form.is_valid():
+                Review.objects.update_or_create(
+                    user=request.user,
+                    product=product,
+                    defaults={
+                        "rating": form.cleaned_data.get("rating"),
+                        "review": form.cleaned_data.get("review"),
+                    },
+                )
+                return redirect(url)
+            else:
+                messages.error(request, f"Please Fill in The Required Fields")
+                return redirect(url)
+        except Exception as e:
+            messages.error(request, f"{e}")
+            return redirect(url)
+    return redirect("product-detail", product.category.slug, product.slug, product.pk)
 
 
 def handler_404(request, exception):
