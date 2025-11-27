@@ -173,7 +173,7 @@ Siciala/OrderConfirmation
                                     </tr>
                                 </thead>
                                 <tbody>
-                                {% for i in order.items.all %}
+                                {% for i in order_items %}
                                     <tr>
                                         <td class="text-grey-500 fw-500 font-xsss">{{ i.product.name }}
                                             <strong><span>✕</span>{{ i.quantity }}</strong>

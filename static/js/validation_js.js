@@ -178,8 +178,8 @@ if (CheckoutShippingBillingForm) {
         e.preventDefault();
       }
     } else {
-      if (payment_optionfield[0].checked === false && payment_optionfield[1].checked === false ) {
-        pmessage.innerHTML = "Fill in The Required Fields from else";
+      if (payment_optionfield[0].checked === false && payment_optionfield[1].checked === false && payment_optionfield[2].checked == false) {
+        pmessage.innerHTML = "Fill in The Required Fields";
         e.preventDefault();
       }
     }

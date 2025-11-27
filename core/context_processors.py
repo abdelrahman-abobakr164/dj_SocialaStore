@@ -24,17 +24,17 @@ def navbar(request):
         brands = Brand.objects.all()
         color_variations = list(
             set(
-                Variation.objects.filter(key="color", active=True)
-                .select_related("product")
-                .values_list("value", flat=True)
+                Variation.objects.filter(key="color", active=True).values_list(
+                    "value", flat=True
+                )
             )
         )
 
         size_variations = list(
             set(
-                Variation.objects.filter(key="size", active=True)
-                .select_related("product")
-                .values_list("value", flat=True)
+                Variation.objects.filter(key="size", active=True).values_list(
+                    "value", flat=True
+                )
             )
         )
 

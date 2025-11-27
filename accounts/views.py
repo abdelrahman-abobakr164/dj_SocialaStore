@@ -22,11 +22,11 @@ def my_account(request):
         form = UserForm(request.POST, instance=user)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Your Information Has Been Updated Successfully!')
+            messages.success(request, "Your Information Has Been Updated Successfully!")
             return redirect("my-account")
     else:
         form = UserForm(instance=user)
-    return render(request, "accounts/my-account.html", {"profile": user, 'form':form})
+    return render(request, "accounts/my-account.html", {"profile": user, "form": form})
 
 
 @login_required
@@ -74,10 +74,6 @@ def my_address(request):
                 )
 
             else:
-                Address.objects.filter(
-                    user=request.user, address_type="Billing", default=True
-                ).update(default=False)
-
                 billing_obj = BillingForm.save(commit=False)
                 billing_obj.user = request.user
                 billing_obj.default = True
@@ -87,7 +83,7 @@ def my_address(request):
             messages.error(request, f"Error.")
             return redirect("my-address")
 
-        messages.success(request, "Your Address were Saved Successfully!")
+        messages.success(request, "Your Address was Saved Successfully!")
         return redirect("my-address")
 
     return render(

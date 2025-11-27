@@ -35,7 +35,7 @@ Sociala/Order Detail
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for i in order.items.all %}
+                                    {% for i in order_items %}
                                     <tr>
                                         <td class="product-thumbnail text-left ps-0">
                                             <img src="{{ i.product.img.url }}" alt="Product Thumnail" class="w75 rounded-3">
@@ -134,7 +134,7 @@ Sociala/Order Detail
                                     <a href='{% url "order-canceled" order.order_number %}' class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-danger rounded-3 fw-600 ls-3">{% trans 'Cancel Order' %}</a>   
                                 </form>
                             </div>
-                        {% elif order.status == 'Paid' and order.payment.method != 'CashOnDelivery'  %}
+                        {% elif 'Paid' or 'Delivered'  in order.status and order.payment.method == 'Stripe'  %}
                             <form action="{% url 'request-refund' order.order_number  %}" method="POST">
                                 {% csrf_token %}
                                 <div class="checkout-payment card border-0 mb-3 bg-greyblue p-lg-4 p-4">

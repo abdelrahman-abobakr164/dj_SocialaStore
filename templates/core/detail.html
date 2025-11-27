@@ -240,7 +240,7 @@ Sociala/{{ product }}
                             </div>
 
                             <div class="form-group mb-0">
-                                {% if orderitem.exists %}
+                                {% if orderitem %}
                                     <button type="submit" class="btn btn-primary px-3">Leave Your Review</button>
                                 {% else %}
                                     <p class="text-primary px-3">{% trans 'You Must Buy This Product' %}.</p>

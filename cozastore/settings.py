@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "django.contrib.humanize",
 ]
+
 DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.history.HistoryPanel",
     "debug_toolbar.panels.versions.VersionsPanel",
@@ -79,6 +80,7 @@ DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.redirects.RedirectsPanel",
     "debug_toolbar.panels.profiling.ProfilingPanel",
 ]
+
 JAZZMIN_SETTINGS = {
     "site_title": "Sociala Admin",
     "site_header": "Sociala",

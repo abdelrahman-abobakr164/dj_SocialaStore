@@ -289,10 +289,14 @@ def payment(request, payment_option, order_number):
     if payment_option not in ["Stripe", "CashOnDelivery", "PayPal"]:
         messages.error(request, "Not Supported Payment Option")
 
-    order_obj = get_object_or_404(Order, order_number=order_number)
+    order_obj = Order.objects.select_related("shipping_address", "billing_address").get(
+        order_number=order_number
+    )
+    order_items = OrderItem.objects.filter(
+        order=order_obj, user=request.user
+    ).select_related("product", "color", "size")
     request.session["order_id"] = str(order_obj.order_number)
 
-    orderitems = OrderItem.objects.filter(order=order_obj)
 
     if payment_option == "CashOnDelivery" and request.method == "POST":
         Payment.objects.create(
@@ -303,7 +307,7 @@ def payment(request, payment_option, order_number):
             method="CashOnDelivery",
         )
 
-        for item in orderitems:
+        for item in order_items:
             product = Product.objects.get(id=item.product.id)
             product.stock -= item.quantity
             product.bestseller += 1
@@ -329,6 +333,7 @@ def payment(request, payment_option, order_number):
 
     context = {
         "order": order_obj,
+        "order_items": order_items,
         "payment_option": payment_option,
         "stripe_public_key": settings.STRIPE_PUBLISHABLE_KEY,
         "paypal_client_id": settings.PAYPAL_CLIENT_ID,
@@ -472,7 +477,9 @@ def create_checkout_session(request, order_number):
     if request.method == "POST":
         try:
             order = Order.objects.get(order_number=order_number, is_ordered=False)
-            order_items = OrderItem.objects.filter(order=order)
+            order_items = OrderItem.objects.filter(order=order).select_related(
+                "product"
+            )
 
             session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
@@ -585,7 +592,9 @@ def request_refund(request, order_number):
 @login_required(login_url="account_login")
 def refund_payment(request, refund_number, order_number):
     forms = RefundForm()
-    order = get_object_or_404(Order, order_number=order_number)
+    order = get_object_or_404(
+        Order, order_number=order_number, status__in=["Paid", "Delivered"]
+    )
     payment = get_object_or_404(Payment, order=order)
 
     if Refund.objects.filter(order=order).exists():
@@ -593,12 +602,10 @@ def refund_payment(request, refund_number, order_number):
         return redirect("order-detail", order_number=order_number)
 
     if payment.method == "Stripe":
-
         if request.method == "POST":
             form = RefundForm(request.POST, request.FILES)
             if form.is_valid():
 
-                payment = get_object_or_404(Payment, order=order)
                 refund_model = Refund.objects.create(
                     user=request.user,
                     order=order,
@@ -645,14 +652,32 @@ def failed(request, order_number):
 
 @login_required(login_url="account_login")
 def order_detail(request, order_number):
-    order = get_object_or_404(Order, order_number=order_number)
+    order = (
+        Order.objects.select_related("shipping_address")
+        .prefetch_related("payment")
+        .get(order_number=order_number)
+    )
+    order_items = OrderItem.objects.filter(
+        order=order, user=request.user
+    ).select_related("product", "color", "size")
+
     form = CheckoutForm()
-    return render(request, "orders/order-detail.html", {"order": order, "form": form})
+
+    context = {
+        "order": order,
+        "form": form,
+        "order_items": order_items,
+    }
+    return render(request, "orders/order-detail.html", context)
 
 
 @login_required(login_url="account_login")
 def order_list(request):
-    orders = Order.objects.filter(user=request.user).prefetch_related("refunds")
+    orders = (
+        Order.objects.filter(user=request.user)
+        .select_related("shipping_address")
+        .prefetch_related("refunds")
+    )
     return render(request, "orders/order-list.html", {"orders": orders})
 
 

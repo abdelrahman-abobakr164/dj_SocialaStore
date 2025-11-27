@@ -31,15 +31,6 @@ def shop(request, color=None):
         "-created_at"
     )
 
-    selected_categories = request.GET.getlist("category_")
-    selected_brands = request.GET.getlist("brand_")
-    selected_size = request.GET.getlist("size_")
-    sort_by = request.GET.get("sort_by")
-    min_price = request.GET.get("min_price")
-    max_price = request.GET.get("max_price")
-    page = request.GET.get("page")
-    search = request.GET.get("query")
-
     params = request.GET.copy()
     clean_params = QueryDict(mutable=True)
     for key, value in params.items():
@@ -51,6 +42,15 @@ def shop(request, color=None):
             return redirect(f"{request.path}?{clean_params.urlencode()}")
         else:
             return redirect(request.path)
+
+    selected_categories = clean_params.getlist(key="category_")
+    selected_brands = clean_params.getlist("brand_")
+    selected_size = clean_params.getlist("size_")
+    sort_by = clean_params.get("sort_by")
+    min_price = clean_params.get("min_price")
+    max_price = clean_params.get("max_price")
+    search = clean_params.get("query")
+    page = request.GET.get("page")
 
     if color:
         color_variations = Variation.objects.filter(
@@ -70,7 +70,7 @@ def shop(request, color=None):
             .distinct()
         ).order_by("-created_at")
 
-    if clean_params.get("size_"):
+    if selected_size:
         for i in selected_size:
             sizies_query = Variation.objects.filter(key="size", value=i, active=True)
             if sizies_query.exists():
@@ -88,17 +88,21 @@ def shop(request, color=None):
                     .distinct()
                 ).order_by("-created_at")
 
-    if clean_params.get("category_"):
-        products = Product.objects.filter(
-            Q(category__name__in=selected_categories)
-        ).order_by("-created_at")
-
-    if clean_params.get("brand_"):
-        products = Product.objects.filter(Q(brand__name__in=selected_brands)).order_by(
-            "-created_at"
+    if selected_categories:
+        products = (
+            Product.objects.filter(Q(category__name__in=selected_categories))
+            .select_related("category")
+            .order_by("-created_at")
         )
 
-    if clean_params.get("sort_by"):
+    if selected_brands:
+        products = (
+            Product.objects.filter(Q(brand__name__in=selected_brands))
+            .select_related("brand")
+            .order_by("-created_at")
+        )
+
+    if sort_by:
         if sort_by == "price-descending":
             products = Product.objects.order_by("-price")
         elif sort_by == "price-ascending":
@@ -108,7 +112,7 @@ def shop(request, color=None):
         elif sort_by == "date-descending":
             products = Product.objects.order_by("-created_at")
 
-    if clean_params.get("min_price") or clean_params.get("max_price"):
+    if min_price or max_price:
         price_query = Q()
         if min_price:
             price_query &= Q(price__gte=Decimal(min_price)) | Q(
@@ -122,10 +126,11 @@ def shop(request, color=None):
 
         products = products.filter(price_query)
 
-    if clean_params.get("query"):
+    if search:
         products = products.filter(
             (Q(name__icontains=search) | Q(category__name__icontains=search))
         ).order_by("-created_at")
+
     paginator = Paginator(products, 1)
 
     try:
@@ -161,7 +166,7 @@ def shop(request, color=None):
 
 def product_detail(request, category_slug, slug, pk):
     product = (
-        Product.objects.select_related("category", "brand")
+        Product.objects.select_related("category")
         .prefetch_related("gallary", "products")
         .get(category__slug=category_slug, slug=slug, pk=pk)
     )
@@ -172,7 +177,9 @@ def product_detail(request, category_slug, slug, pk):
     ).exclude(pk=pk)
 
     if request.user.is_authenticated:
-        orderitem = OrderItem.objects.filter(user=request.user, product=product)
+        orderitem = OrderItem.objects.filter(
+            user=request.user, product=product
+        ).exists()
     else:
         orderitem = None
 
@@ -203,7 +210,7 @@ def product_detail(request, category_slug, slug, pk):
 
 def product_review(request, category_slug, slug, pk):
     product = get_object_or_404(
-        Product.objects.select_related("category").only("category__slug"),
+        Product.objects.select_related("category", "category__slug"),
         category__slug=category_slug,
         slug=slug,
         pk=pk,

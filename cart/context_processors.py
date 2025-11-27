@@ -7,60 +7,82 @@ def CartHandling(request):
 
     if "superuser" in request.path:
         return {}
+
+    CartCount = 0
+    WishCount = 0
+    total_price = 0
+    cartitems = None
+    BuyNow = None
+
+    cleanup_orderitem_session(request)
+
+    if "orderitem_id" in request.session:
+        BuyNow = get_buy_now_item(request)
     else:
-        CartCount = 0
-        WishCount = 0
-        total_price = 0
+        cartitems = get_cart_items(request)
 
-        if (
-            "orders" not in request.path
-            and "accounts" not in request.path
-            and "orderitem_id" in request.session
-        ):
-            OrderItem.objects.filter(id=request.session.get("orderitem_id")).delete()
-            del request.session["orderitem_id"]
+    wishlist = get_wishlist(request)
+    WishCount = sum(item.product.count() for item in wishlist)
 
-        if "orderitem_id" in request.session:
-            BuyNow = OrderItem.objects.filter(id=request.session.get("orderitem_id"))
-            cartitems = None
-        else:
-            cart_obj, created = Cart.objects.get_or_new(request)
-            cartitems = CartItem.objects.filter(cart=cart_obj)
-            BuyNow = None
+    items_to_count = BuyNow or cartitems
+    if items_to_count:
+        CartCount = sum(item.quantity for item in items_to_count)
+        total_price = sum(item.get_product_price() for item in items_to_count)
 
-        list_obj, created = Wishlist.objects.get_or_new(request, product=None)
+    request.session["total_price"] = float(total_price)
 
-        if request.user.is_authenticated:
-            wishlist = Wishlist.objects.filter(user=request.user)
-        else:
-            wishlist = Wishlist.objects.filter(id=request.session.get("list_id"))
-        for item in wishlist:
-            WishCount += item.product.count()
+    if "applied_coupon" in request.session:
+        coupon_discount = float(request.session["applied_coupon"])
+        request.session["total_price"] = float(total_price) - coupon_discount
 
-        if cartitems or BuyNow:
-            for item in cartitems or BuyNow:
-                CartCount += item.quantity
-                total_price += item.get_product_price()
+    if not cartitems and not BuyNow and CartCount == 0:
+        request.session.pop("total_price", None)
+        request.session.pop("applied_coupon", None)
 
-        request.session["total_price"] = float(total_price)
+    context = {
+        "WishCount": WishCount,
+        "wishies": wishlist,
+        "CartCount": CartCount,
+        "total_price": total_price,
+        "cartitems": cartitems,
+        "BuyNow": BuyNow,
+    }
+    return context
 
-        if "applied_coupon" in request.session:
-            request.session["total_price"] = float(total_price) - float(
-                request.session["applied_coupon"]
-            )
 
-        if not cartitems and CartCount == 0 and not BuyNow:
-            if "total_price" in request.session:
-                del request.session["total_price"]
-            if "applied_coupon" in request.session:
-                del request.session["applied_coupon"]
+def cleanup_orderitem_session(request):
+    if "orderitem_id" not in request.session:
+        return
 
-        context = {
-            "WishCount": WishCount,
-            "wishies": wishlist,
-            "CartCount": CartCount,
-            "total_price": total_price,
-            "cartitems": cartitems,
-            "BuyNow": BuyNow,
-        }
-        return context
+    excluded_paths = ("orders", "accounts")
+    if not any(path in request.path for path in excluded_paths):
+        orderitem_id = request.session.pop("orderitem_id", None)
+        if orderitem_id:
+            OrderItem.objects.filter(id=orderitem_id).delete()
+
+
+def get_buy_now_item(request):
+    orderitem_id = request.session.get("orderitem_id")
+    if not orderitem_id:
+        return None
+
+    return OrderItem.objects.filter(id=orderitem_id).select_related(
+        "product", "size", "color"
+    )
+
+
+def get_cart_items(request):
+    cart_obj, created = Cart.objects.get_or_new(request)
+    return CartItem.objects.filter(cart=cart_obj).select_related(
+        "product", "size", "color"
+    )
+
+
+def get_wishlist(request):
+    Wishlist.objects.get_or_new(request, product=None)
+
+    if request.user.is_authenticated:
+        return Wishlist.objects.filter(user=request.user)
+
+    list_id = request.session.get("list_id")
+    return Wishlist.objects.filter(id=list_id) if list_id else Wishlist.objects.none()
