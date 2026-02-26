@@ -14,7 +14,7 @@ Sociala/Order Detail
                     <div class="col-lg-12">
                         <div class="card p-md-5 p-4 bg-primary-gradiant rounded-3 shadow-xss bg-pattern border-0 overflow-hidden">
                             <div class="bg-pattern-div"></div>
-                            <h5 class="display2-size display2-md-size fw-700 text-white mb-0 mt-5">Order - {{ order.order_number }}</h5>
+                            <h5 class="display2-size display2-md-size fw-700 text-white mb-0 mt-5">ID - {{ order.order_number }}</h5>
                         </div>
                     </div>
                 </div>
@@ -50,6 +50,8 @@ Sociala/Order Detail
                                                 <p>
                                                     <a href="{% url 'color_slug' i.color.value %}" class="btn-round-sm" style="background-color: {{i.color.value}}"></a> {% if i.color.price %} +${{i.color.price|intcomma}}{% endif %}
                                                 </p>
+                                            {% else %}
+                                                <p class="text-muted" style='margin-left:40px'>-</p>
                                             {% endif %}
                                         </td>
                                         <td class="product-headline text-left wide-column">
@@ -57,6 +59,8 @@ Sociala/Order Detail
                                                 <h3>
                                                     <a href="/shop/?size_={{i.size.value}}" class="text-grey-900 fw-600 font-xsss">{{ i.size.value }}</a> {% if i.size.price %} +${{i.size.price|intcomma}}{% endif %}
                                                 </h3>
+                                            {% else %}
+                                                <p class="text-muted" style='margin-left:30px'>-</p>
                                             {% endif %}
                                         </td>
 
@@ -134,7 +138,7 @@ Sociala/Order Detail
                                     <a href='{% url "order-canceled" order.order_number %}' class="btn w-100 p-3 mt-3 font-xsss text-center text-white bg-danger rounded-3 fw-600 ls-3">{% trans 'Cancel Order' %}</a>   
                                 </form>
                             </div>
-                        {% elif 'Paid' or 'Delivered'  in order.status and order.payment.method == 'Stripe'  %}
+                        {% elif order.status == 'Paid' or order.status == 'Delivered' and order.payment.method == 'Stripe'  %}
                             <form action="{% url 'request-refund' order.order_number  %}" method="POST">
                                 {% csrf_token %}
                                 <div class="checkout-payment card border-0 mb-3 bg-greyblue p-lg-4 p-4">

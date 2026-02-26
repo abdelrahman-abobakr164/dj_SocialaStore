@@ -250,14 +250,16 @@ Siciala/Checkout
                                     
                                     {% for i in BuyNow|default:cartitems  %}
                                         <tr>
-                                            <td class="text-grey-500 fw-500 font-xsss">{{ i.product.name }}
+                                            <td class="text-grey-500 fw-500 font-xsss">
+                                                <img src="{{i.product.img.url}}" style='max-width:25px; max-height: 25px' alt="ProductImg">
+                                                {{ i.product.name }}
                                                 <strong><span>x</span> {{ i.quantity }}</strong>
                                             </td>
                                             <td class="text-grey-500 fw-500 font-xsss">
                                                 {% if i.color.value %}
                                                     <p class="btn-round-sm d-inline-block" style="background-color: {{ i.color.value }}; width: 25px; height: 25px;" title="{{ i.color.value }}"></p>
                                                 {% else %}
-                                                    <span class="text-muted">-</span>
+                                                    <p class="text-muted ms-3">-</p>
                                                 {% endif %}
                                             </td>
                                             <td class="text-grey-500 fw-500 font-xsss">{{ i.size.value|default:"-" }}</td>
@@ -275,7 +277,7 @@ Siciala/Checkout
                                     {% if request.session.applied_coupon %}
                                         <tr class="order-total">
                                             <th>{% trans 'Coupon' %}</th>
-                                            <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{ request.session.applied_coupon|intcomma }}</span></td>
+                                            <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{ request.session.applied_coupon.amount|intcomma }}</span></td>
                                         </tr>
                                     {% endif %}
 
@@ -291,22 +293,26 @@ Siciala/Checkout
                             
                             <div class="payment-group mb-0">
                                 <div class="payment-radio">
-                                    <input type="radio" {% if last_payment.method == 'PayPal' %}  {% endif %} value="PayPal" name="payment_option" id="PayPal">
-                                    <label class="payment-label fw-600 font-xsss text-grey-900" for="PayPal">PayPal</label>
+                                    <input type="radio" {% if last_payment.method == 'PayPal' %} checked {% endif %} value="PayPal" name="payment_option" id="PayPal">
+                                    <label class="payment-label fw-600 font-xsss text-grey-900" for="PayPal">PayPal</label> <br>
+                                    {% if last_payment.method == 'PayPal' %}<h6 class='ms-4 text-success'> Last Used </h6>{% endif %}
                                 </div>
                             </div>
                             
                             <div class="payment-group mb-0">
                                 <div class="payment-radio">
-                                    <input type="radio" {% if last_payment.method == 'Stripe' %}  {% endif %} value="Stripe" name="payment_option" id="Stripe">
-                                    <label class="payment-label fw-600 font-xsss text-grey-900" for="Stripe">Stripe</label>
+                                    <input type="radio" {% if last_payment.method == 'Stripe' %} checked {% endif %} value="Stripe" name="payment_option" id="Stripe">
+                                    <label class="payment-label fw-600 font-xsss text-grey-900" for="Stripe">Stripe</label> <br>
+                                    {% if last_payment.method == 'Stripe' %}<h6 class='ms-4 text-success'> Last Used </h6>{% endif %}
                                 </div>
                             </div>
                             
                             <div class="payment-group mb-0">
                                 <div class="payment-radio">
                                     <input type="radio" {% if last_payment.method == 'CashOnDelivery' %} checked {% endif %} value="CashOnDelivery" name="payment_option" id="CashOnDelivery">
-                                    <label class="payment-label fw-600 font-xsss text-grey-900" for="CashOnDelivery">{% trans 'CashOnDelivery' %}</label>
+                                    <label class="payment-label fw-600 font-xsss text-grey-900" for="CashOnDelivery">{% trans 'CashOnDelivery' %}</label> <br>
+                                    {% if last_payment.method == 'CashOnDelivery' %}<h6 class='ms-4 text-success'> Last Used </h6>{% endif %}
+                                    {% comment %} <a href="test">test</a> {% endcomment %}
                                 </div>
                             </div>
                             <p class="text-danger text-center mt-3 " id="id_p"></p>

@@ -31,6 +31,11 @@ urlpatterns = [
         views.payment,
         name="payment",
     ),
+    path(
+        "delete_from_order/<str:payment_option>/<uuid:order_number>/",
+        views.delete_from_order,
+        name="delete_from_order",
+    ),
     path("success/<uuid:order_number>/", views.success, name="success"),
     path("failed/<uuid:order_number>/", views.failed, name="failed"),
     path(

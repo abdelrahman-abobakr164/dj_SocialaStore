@@ -145,27 +145,34 @@ Sociala/{{ product }}
                             <br>
 
                             <p class="text-danger" id="id_p"></p>
-                            <button id='add_to_cart' name='action' value='add_to_cart' class="add-to-cart bg-dark text-white fw-700 ps-lg-5 pe-lg-5 text-uppercase font-xssss float-left border-dark border rounded-3 border-size-md d-inline-block mt-0 p-3 text-center ls-3">
-                                {% trans 'Add to cart' %}
-                            </button>
+                            
+                            {% if product.stock == 0 %}
+                                <a href="{% url 'add' product.category.slug product.slug product.pk %}" id="WishLink" class="add-to-cart bg-dark text-white fw-700 ps-lg-5 pe-lg-5 text-uppercase font-xssss float-left border-dark border rounded-3 border-size-md d-inline-block mt-0 p-3 text-center ls-3">Add to Wishlist</a>
+                            {% else %}
+                                <button id='add_to_cart' name='action' value='add_to_cart' class="add-to-cart bg-dark text-white fw-700 ps-lg-5 pe-lg-5 text-uppercase font-xssss float-left border-dark border rounded-3 border-size-md d-inline-block mt-0 p-3 text-center ls-3">
+                                    {% trans 'Add to cart' %}
+                                </button>
+                                
+                                <a href="{% url 'add' product.category.slug product.slug product.pk %}" id="WishLink" class="btn-round-xl alert-dark text-white d-inline-block mt-0 ms-4 float-left"><i class="ti-heart font-sm"></i></a>
+                            {% endif %}
 
-                            <a href="{% url 'add' product.category.slug product.slug product.pk %}" id="WishLink" class="btn-round-xl alert-dark text-white d-inline-block mt-0 ms-4 float-left"><i class="ti-heart font-sm"></i></a>
-
-                            <div class="d-inline-flex">
+                            <div class="d-inline-flex mt-2">
                                 <a class="text-dark px-2" style='text-decoration: none;' href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" target="_blank">
                                     <i class="ti-facebook"></i>
                                 </a>
 
-                                <button class='btn' onclick="copyToClipboard('{{ request.build_absolute_uri }}')">
+                                <button class='btn ' onclick="copyToClipboard('{{ request.build_absolute_uri }}')">
                                     <i class="ti-link"></i>
                                 </button>
                             </div>
 
                             <br><br>
+                            {% if product.stock >= 1 %}
+                                <button name='action' value="buy_now" class="add-to-cart bg-dark text-white fw-700 ps-lg-5 pe-lg-5 text-uppercase font-xssss float-left border-dark border rounded-3 border-size-md d-inline-block mt-0 p-3 text-center ls-3">
+                                    {% trans 'Buy Now' %}
+                                </button>
+                            {% endif %}
 
-                            <button name='action' value="buy_now" class="add-to-cart bg-dark text-white fw-700 ps-lg-5 pe-lg-5 text-uppercase font-xssss float-left border-dark border rounded-3 border-size-md d-inline-block mt-0 p-3 text-center ls-3">
-                                {% trans 'Buy Now' %}
-                            </button>
                         </form>
                     </div>
 

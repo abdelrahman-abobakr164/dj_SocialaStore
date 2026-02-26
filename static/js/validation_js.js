@@ -55,7 +55,7 @@ let oldpasswordfield = document.querySelector("[name='oldpassword']");
 
 if (UnCompleteOrdersForm) {
   UnCompleteOrdersForm.onsubmit = function (e) {
-    if (payment_optionfield[0].checked === false && payment_optionfield[1].checked === false) {
+    if (payment_optionfield[0].checked === false && payment_optionfield[1].checked === false && payment_optionfield[2].checked === false) {
       pmessage.innerHTML = "You Must To Select One Of This Fields";
       e.preventDefault();
     }

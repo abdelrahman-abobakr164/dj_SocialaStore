@@ -30,14 +30,22 @@ def CartHandling(request):
         total_price = sum(item.get_product_price() for item in items_to_count)
 
     request.session["total_price"] = float(total_price)
-
+    request.session.modified = True
     if "applied_coupon" in request.session:
-        coupon_discount = float(request.session["applied_coupon"])
-        request.session["total_price"] = float(total_price) - coupon_discount
+        coupon_discount = request.session.get("applied_coupon")
+        request.session["total_price"] = float(total_price) - float(
+            coupon_discount["amount"]
+        )
 
     if not cartitems and not BuyNow and CartCount == 0:
-        request.session.pop("total_price", None)
-        request.session.pop("applied_coupon", None)
+        excluded_paths = ("orders", "accounts")
+        if not any(path in request.path for path in excluded_paths):
+            request.session.pop("total_price", None)
+            request.session.pop("applied_coupon", None)
+        else:
+            print(f'2 {request.session.get("applied_coupon")}')
+    else:
+        print(f'3 {request.session.get("applied_coupon")}')
 
     context = {
         "WishCount": WishCount,

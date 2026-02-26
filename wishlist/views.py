@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from wishlist.models import Wishlist
 from core.models import Product
 
@@ -16,6 +17,8 @@ def add(request, cat_slug, product_slug, pk):
         pk=pk,
     )
     list_obj, created = Wishlist.objects.get_or_new(request, product)
+
+    messages.success(request, f'"{product.name}" Added To your Wishlist Successfully!')
     return redirect(url)
 
 
@@ -38,4 +41,5 @@ def remove(request, cat_slug, product_slug, pk):
     if wish:
         wish.product.remove(product)
         wish.save()
+        messages.success(request, f'"{product.name}" Removed From your Wishlist')
         return redirect("wish-summary")

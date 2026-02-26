@@ -35,7 +35,7 @@ Sociala/Orders
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for i in orders %}
+                                    {% for i in orders|dictsortreversed:'created_at' %}
                                     <tr>
                                         <td class="product-headline text-left wide-column">
                                             <h3><p class="text-grey-900 fw-600 font-xsss">{{ i.order_number }}</p></h3>

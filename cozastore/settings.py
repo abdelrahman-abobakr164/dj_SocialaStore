@@ -14,6 +14,7 @@ env = environ.Env()
 SECRET_KEY = env("SECRET_KEY", default="")
 STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY", default="")
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
+STRIPE_WEBHOOK_KEY = env("STRIPE_WEBHOOK_KEY", default="")
 
 PAYPAL_CLIENT_ID = env("PAYPAL_CLIENT_ID", default="")
 PAYPAL_CLIENT_SECRET = env("PAYPAL_CLIENT_SECRET", default="")
@@ -131,7 +132,6 @@ TEMPLATES = [
     },
 ]
 
-
 WSGI_APPLICATION = "cozastore.wsgi.application"
 
 
@@ -154,19 +154,16 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
-    }
+    },
+    "postgres": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("DB_NAME"),
+        "USER": env("DB_USER"),
+        "PASSWORD": env("DB_PASSWORD"),
+        "HOST": env("DB_HOST"),
+        "PORT": env("DB_PORT"),
+    },
 }
-# else:
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": env("DB_NAME", default=""),
-#         "USER": env("DB_USER", default=""),
-#         "PASSWORD": env("DB_PASSWORD", default=""),
-#         "HOST": env("DB_HOST", default=""),
-#         "PORT": env("DB_PORT", default=""),
-#     }
-# }
 
 SITE_ID = 1
 

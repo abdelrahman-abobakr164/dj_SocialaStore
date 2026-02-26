@@ -12,7 +12,7 @@ urlpatterns = [
     path("webhook/", stripe_webhook, name="stripe_webhook"),
     path("accounts/", include("allauth.urls")),
     path("accounts/", include("accounts.urls")),
-] + debug_toolbar_urls()
+]
 
 urlpatterns += i18n_patterns(
     path("cart/", include("cart.urls")),

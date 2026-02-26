@@ -175,14 +175,28 @@ Siciala/OrderConfirmation
                                 <tbody>
                                 {% for i in order_items %}
                                     <tr>
-                                        <td class="text-grey-500 fw-500 font-xsss">{{ i.product.name }}
-                                            <strong><span>✕</span>{{ i.quantity }}</strong>
+                                        <td class="text-grey-500 fw-500 font-xsss">
+                                            <img src="{{i.product.img.url}}" style='max-width:25px; max-height: 25px' alt="ProductImg">
+                                            {{ i.product.name }}
+                                            <strong><span>x</span>{{ i.quantity }}</strong>
                                         </td>
                                         <td class="text-grey-500 fw-500 font-xsss">
-                                            <p class="btn-round-sm" style="background-color: {{i.color.value}}"></p>
+                                            {% if i.color.value %}
+                                                <p class="btn-round-sm d-inline-block" style="background-color: {{ i.color.value }}; width: 25px; height: 25px;" title="{{ i.color.value }}"></p>
+                                            {% else %}
+                                                <p class="text-muted ms-3">-</p>
+                                            {% endif %}
                                         </td>
-                                        <td class="text-grey-500 fw-500 font-xsss">{{ i.size.value }}</td>
+                                        <td class="text-grey-500 fw-500 font-xsss">{{ i.size.value|default:"-" }}</td>
                                         <td class="text-grey-500 fw-500 font-xsss">${{ i.get_product_price|intcomma }}</td>
+                                        
+                                        {% if i.product.stock == 0 %}
+                                            <td class="product-remove text-right">
+                                                <a href="{% url 'delete_from_order' payment_option order.order_number %}" class="remove-item" data-cartitem-id="{{ i.product.pk }}">
+                                                    <i class="ti-trash font-xs text-danger"></i>
+                                                </a>
+                                            </td>
+                                        {% endif %}
                                     </tr>
                                 {% endfor %}
 
@@ -192,7 +206,7 @@ Siciala/OrderConfirmation
                                     {% if request.session.applied_coupon %}
                                     <tr class="order-total">
                                         <th>{% trans 'Coupon' %}</th>
-                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{ request.session.applied_coupon|intcomma }}</span></td>
+                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{ request.session.applied_coupon.amount|intcomma }}</span></td>
                                     </tr>
                                     {% endif %}
 

@@ -124,7 +124,7 @@ Sociala/Cart Summary
                                                         <td class="cart-coupon">Coupon</td>
                                                         <td class="text-right">
                                                             {% if request.session.applied_coupon %}
-                                                                <span class="coupon-amount">-${{ request.session.applied_coupon }}</span>
+                                                                <span class="coupon-amount">-${{ request.session.applied_coupon.amount }}</span>
                                                             {% else %}
                                                                 <span class="coupon-amount">$0.00</span>
                                                             {% endif %}
