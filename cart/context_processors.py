@@ -1,69 +1,69 @@
 from orders.models import OrderItem
 from wishlist.models import Wishlist
-from cart.models import *
+from cart.models import Cart, CartItem
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-def CartHandling(request):
+def cart_handling(request):
 
     if "superuser" in request.path:
         return {}
+    try:
 
-    CartCount = 0
-    WishCount = 0
-    total_price = 0
-    cartitems = None
-    BuyNow = None
+        cleanup_orderitem_session(request)
 
-    cleanup_orderitem_session(request)
-
-    if "orderitem_id" in request.session:
-        BuyNow = get_buy_now_item(request)
-    else:
-        cartitems = get_cart_items(request)
-
-    wishlist = get_wishlist(request)
-    WishCount = sum(item.product.count() for item in wishlist)
-
-    items_to_count = BuyNow or cartitems
-    if items_to_count:
-        CartCount = sum(item.quantity for item in items_to_count)
-        total_price = sum(item.get_product_price() for item in items_to_count)
-
-    request.session["total_price"] = float(total_price)
-    request.session.modified = True
-    if "applied_coupon" in request.session:
-        coupon_discount = request.session.get("applied_coupon")
-        request.session["total_price"] = float(total_price) - float(
-            coupon_discount["amount"]
+        buy_now = (
+            get_buy_now_item(request) if "orderitem_id" in request.session else None
         )
+        cartitems = None if buy_now else get_cart_items(request)
 
-    if not cartitems and not BuyNow and CartCount == 0:
-        excluded_paths = ("orders", "accounts")
-        if not any(path in request.path for path in excluded_paths):
-            request.session.pop("total_price", None)
-            request.session.pop("applied_coupon", None)
+        wishlist = get_wishlist(request)
+
+        wish_count = sum(item.product.count() for item in wishlist)
+
+        items = buy_now or cartitems or []
+
+        cart_count = sum(item.quantity for item in items)
+        total_price = sum(item.get_product_price() for item in items)
+
+        coupon_discount = request.session.get("applied_coupon")
+        total_price = (
+            float(total_price) - float(coupon_discount["amount"])
+            if "applied_coupon" in request.session
+            else total_price
+        )
+        request.session["total_price"] = float(total_price)
+
+        if not items:
+            if not any(path in request.path for path in ("orders", "accounts")):
+                request.session.pop("total_price", None)
+                request.session.pop("applied_coupon", None)
         else:
-            print(f'2 {request.session.get("applied_coupon")}')
-    else:
-        print(f'3 {request.session.get("applied_coupon")}')
+            request.session["total_price"] = float(total_price)
+            request.session.modified = True
 
-    context = {
-        "WishCount": WishCount,
-        "wishies": wishlist,
-        "CartCount": CartCount,
-        "total_price": total_price,
-        "cartitems": cartitems,
-        "BuyNow": BuyNow,
-    }
-    return context
+        return {
+            "wish_count": wish_count,
+            "wishies": wishlist,
+            "cart_count": cart_count,
+            "total_price": total_price,
+            "cartitems": cartitems,
+            "buy_now": buy_now,
+        }
+
+    except Exception:
+        logger.exception("cart_handling context processor failed")
+        return {}
 
 
 def cleanup_orderitem_session(request):
     if "orderitem_id" not in request.session:
         return
 
-    excluded_paths = ("orders", "accounts")
-    if not any(path in request.path for path in excluded_paths):
+    if not any(path in request.path for path in ("orders", "accounts")):
         orderitem_id = request.session.pop("orderitem_id", None)
         if orderitem_id:
             OrderItem.objects.filter(id=orderitem_id).delete()

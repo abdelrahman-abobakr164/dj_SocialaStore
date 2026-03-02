@@ -545,7 +545,8 @@ def create_checkout_session(request, order_number):
     try:
         order = Order.objects.get(order_number=order_number, is_ordered=False)
         order_items = OrderItem.objects.filter(order=order).select_related("product")
-
+        discount_amount = request.session.get("applied_coupon", {})["amount"]
+        order_total = sum(item.get_product_price() * item.quantity for item in order_items)
         line_items = [
             {
                 "price_data": {
@@ -556,7 +557,19 @@ def create_checkout_session(request, order_number):
                     },
                     "unit_amount": max(
                         0,
-                        int(item.get_product_price() * 100),
+                        int(
+                            item.get_product_price() * 100
+                            - (
+                                int(discount_amount)
+                                * (
+                                    item.get_product_price()
+                                    * item.quantity
+                                    / order_total
+                                )
+                                / item.quantity
+                                * 100
+                            )
+                        ),
                     ),
                 },
                 "quantity": item.quantity,
@@ -564,7 +577,7 @@ def create_checkout_session(request, order_number):
             for item in order_items
         ]
 
-        session_kwargs = dict(
+        session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             line_items=line_items,
             mode="payment",
@@ -576,23 +589,21 @@ def create_checkout_session(request, order_number):
             ),
             metadata={
                 "order_number": order.order_number,
-                "applied_coupon": request.session.get('applied_coupon', {}).get('code'),
+                "applied_coupon": request.session.get("applied_coupon", {}).get("code"),
             },
         )
-
-        session = stripe.checkout.Session.create(**session_kwargs)
         return JsonResponse({"id": session.id})
 
     except Order.DoesNotExist:
         return JsonResponse({"error": "Order not found"}, status=404)
-    except stripe.StripeError as e:
-        logger.error("Stripe error for order %s: %s", order_number, e)
-        return JsonResponse({"error": str(e)}, status=502)
     except Exception as e:
         logger.exception(
-            "Unexpected error creating checkout session for order %s", order_number
+            f"Unexpected error creating checkout session for order {order_number} {e}"
         )
         return JsonResponse({"error": "Internal server error"}, status=500)
+    except stripe.StripeError as e:
+        logger.error(f"Stripe error for order {order_number}: {e}")
+        return JsonResponse({"error": str(e)}, status=502)
 
 
 @require_POST

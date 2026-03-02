@@ -164,9 +164,9 @@
                         <div class="position-relative me-2">
                             <a href="{% url 'wish-summary' %}" class="nav-icon-link" title="{% trans 'Wishlist' %}">
                                 <i class="feather-heart font-xl {% if 'wishlist' in request.path %} text-current {% else %} text-grey-500 hover-text-primary {% endif %} transition-all"></i>
-                                {% if WishCount > 0 %}
+                                {% if wish_count > 0 %}
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white font-xsssss">
-                                        {{ WishCount }}
+                                        {{ wish_count }}
                                     </span>
                                 {% endif %}
                             </a>
@@ -175,9 +175,9 @@
                         <div class="position-relative">
                             <a href="{% url 'cart-summary' %}" class="nav-icon-link" title="{% trans 'Shopping Cart' %}">
                                 <i class="feather-shopping-cart font-xl {% if 'cart' in request.path %} text-current {% else %} text-grey-500 hover-text-primary {% endif %} transition-all"></i>
-                                {% if CartCount > 0 %}
+                                {% if cart_count > 0 %}
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success text-white font-xsssss">
-                                        {{ CartCount }}
+                                        {{ cart_count }}
                                     </span>
                                 {% endif %}
                             </a>
