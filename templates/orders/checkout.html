@@ -248,7 +248,7 @@ Siciala/Checkout
                                 </thead>
                                 <tbody>
                                     
-                                    {% for i in BuyNow|default:cartitems  %}
+                                    {% for i in buy_now|default:cartitems  %}
                                         <tr>
                                             <td class="text-grey-500 fw-500 font-xsss">
                                                 <img src="{{i.product.img.url}}" style='max-width:25px; max-height: 25px' alt="ProductImg">
@@ -271,7 +271,7 @@ Siciala/Checkout
                                 <tfoot>
                                     <tr class="cart-subtotal">
                                         <th>{% trans 'Subtotal' %}</th>
-                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700">${{ total_price|intcomma }}</td>
+                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700">${{ subtotal|intcomma }}</td>
                                     </tr>
                                     
                                     {% if request.session.applied_coupon %}
@@ -283,7 +283,7 @@ Siciala/Checkout
 
                                     <tr class="order-total">
                                         <th>{% trans 'Order Total' %}</th>
-                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{request.session.total_price|intcomma}}</span></td>
+                                        <td colspan='3' class="text-right text-grey-700 font-xsss fw-700"><span class="order-total-ammount">${{total_price|intcomma}}</span></td>
                                     </tr>
 
                                 </tfoot>

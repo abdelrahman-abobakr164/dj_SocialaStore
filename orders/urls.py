@@ -6,9 +6,9 @@ urlpatterns = [
     path("checkout/", views.checkout, name="checkout"),
     path("order-list/", views.order_list, name="order-list"),
     path(
-        "uncomplete-orders/<uuid:order_number>",
-        views.uncomplete_orders,
-        name="uncomplete-orders",
+        "uncomplete-order/<uuid:order_number>",
+        views.uncomplete_order,
+        name="uncomplete-order",
     ),
     path("canceled/<uuid:order_number>/", views.order_canceled, name="order-canceled"),
     path(

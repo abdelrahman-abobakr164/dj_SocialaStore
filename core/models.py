@@ -30,7 +30,9 @@ class Product(models.Model):
         "Brand", on_delete=models.SET_NULL, null=True, related_name="brands"
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    slug = models.CharField(_("Slug"), max_length=150, null=True, blank=True, db_index=True)
+    slug = models.CharField(
+        _("Slug"), max_length=150, null=True, blank=True, db_index=True
+    )
 
     def discount_percentage(self):
         if self.discount_price and self.price:
@@ -103,7 +105,7 @@ class Brand(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField(_("Category Name"), max_length=150)
+    name = models.CharField(_("Category Name"), max_length=150, db_index=True)
     image = models.ImageField(upload_to="CategoryImage")
     slug = models.CharField(max_length=150, null=True, blank=True, db_index=True)
 
@@ -131,8 +133,8 @@ class Variation(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="variations"
     )
-    key = models.CharField(max_length=150, choices=variation_choices)
-    value = models.CharField(_("Value"), max_length=150)
+    key = models.CharField(max_length=150, choices=variation_choices, db_index=True)
+    value = models.CharField(_("Value"), max_length=150, db_index=True)
     price = models.DecimalField(
         max_digits=10,
         decimal_places=2,

@@ -100,6 +100,11 @@ class Cart(models.Model):
         return str(self.id)
 
 
+class CartItemQuerySet(models.QuerySet):
+    def get_cart(self, cart_obj):
+        return self.filter(cart=cart_obj)
+
+
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, db_index=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -119,6 +124,7 @@ class CartItem(models.Model):
         blank=True,
     )
     price = models.DecimalField(_("Price"), max_digits=10, decimal_places=2)
+    objects = CartItemQuerySet.as_manager()
 
     def __str__(self):
         return str(self.id)

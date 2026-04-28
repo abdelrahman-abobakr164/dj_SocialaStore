@@ -117,7 +117,7 @@ Sociala/Cart Summary
                                             <tbody>
                                                 <tr>
                                                     <td class="cart-subtotal">Subtotal</td>
-                                                    <td class="text-right"><span class="subtotal-price">${{ total_price|intcomma }}</span></td>
+                                                    <td class="text-right"><span class="subtotal-price">${{ subtotal|intcomma }}</span></td>
                                                 </tr>
                                                 <tr>
                                                     {% if request.session.applied_coupon %}
@@ -133,7 +133,7 @@ Sociala/Cart Summary
                                                 </tr>
                                                 <tr>
                                                     <td class="cart-total">Total</td>
-                                                    <td class="text-right"><span class="cart-total-price">${% if request.session.total_price %}{{ request.session.total_price|intcomma}}{% else %}0{% endif %}</span></td>
+                                                    <td class="text-right"><span class="cart-total-price">${% if total_price %}{{ total_price|intcomma}}{% else %}0{% endif %}</span></td>
                                                 </tr>
                                             </tbody>
                                         </table>

@@ -49,6 +49,11 @@ REFUND_CHOICES = [
 ]
 
 
+class OrderQuerySet(models.QuerySet):
+    def get_order(self, order_number):
+        return self.filter(order_number=order_number)
+
+
 class Order(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, db_index=True
@@ -77,6 +82,8 @@ class Order(models.Model):
     is_ordered = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = OrderQuerySet.as_manager()
 
     def __str__(self):
         return self.user.email

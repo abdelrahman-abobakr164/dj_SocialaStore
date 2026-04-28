@@ -27,22 +27,22 @@ def cart_handling(request):
         items = buy_now or cartitems or []
 
         cart_count = sum(item.quantity for item in items)
-        total_price = sum(item.get_product_price() for item in items)
+        subtotal = sum(item.get_product_price() for item in items)
 
         coupon_discount = request.session.get("applied_coupon")
         total_price = (
-            float(total_price) - float(coupon_discount["amount"])
+            float(subtotal) - float(coupon_discount["amount"])
             if "applied_coupon" in request.session
-            else total_price
+            else subtotal
         )
-        request.session["total_price"] = float(total_price)
+        request.session["total_price"] = float(subtotal)
 
         if not items:
             if not any(path in request.path for path in ("orders", "accounts")):
                 request.session.pop("total_price", None)
                 request.session.pop("applied_coupon", None)
         else:
-            request.session["total_price"] = float(total_price)
+            request.session["total_price"] = float(subtotal)
             request.session.modified = True
 
         return {
@@ -50,6 +50,7 @@ def cart_handling(request):
             "wishies": wishlist,
             "cart_count": cart_count,
             "total_price": total_price,
+            "subtotal": subtotal,
             "cartitems": cartitems,
             "buy_now": buy_now,
         }
@@ -81,7 +82,7 @@ def get_buy_now_item(request):
 
 def get_cart_items(request):
     cart_obj, created = Cart.objects.get_or_new(request)
-    return CartItem.objects.filter(cart=cart_obj).select_related(
+    return CartItem.objects.get_cart(cart_obj).select_related(
         "product", "size", "color"
     )
 

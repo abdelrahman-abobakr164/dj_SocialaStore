@@ -1,5 +1,5 @@
-from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.http import require_POST, require_http_methods
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse
@@ -7,9 +7,11 @@ from orders.forms import RefundForm, CheckoutForm
 from django.contrib import messages
 from django.db import transaction
 from django.conf import settings
+from django.db.models import F
 import requests
 import logging
 import json
+
 from orders.tasks import send_mails_to_clients
 from cart.forms import CouponForm
 from core.models import Product
@@ -53,7 +55,7 @@ def is_valid_form(values):
 @login_required(login_url="account_login")
 def checkout(request):
     cart_obj, created = Cart.objects.get_or_new(request)
-    cart_items = CartItem.objects.filter(cart=cart_obj).select_related(
+    cart_items = CartItem.objects.get_cart(cart_obj).select_related(
         "product", "color", "size"
     )
 
@@ -263,7 +265,6 @@ def checkout(request):
                         payment_option="Stripe",
                         order_number=order.order_number,
                     )
-
                 elif payment_option == "PayPal":
                     return redirect(
                         "payment",
@@ -309,9 +310,12 @@ def payment(request, payment_option, order_number):
         return redirect("checkout")
 
     try:
-        order_obj = Order.objects.select_related(
-            "shipping_address", "billing_address"
-        ).get(order_number=order_number, user=request.user, is_ordered=False)
+        order_obj = get_object_or_404(
+            Order.objects.select_related("shipping_address", "billing_address"),
+            order_number=order_number,
+            user=request.user,
+            is_ordered=False,
+        )
     except Order.DoesNotExist:
         messages.error(request, "Order Not Found")
         return redirect("shop")
@@ -361,13 +365,11 @@ def payment(request, payment_option, order_number):
                     )
                     if "applied_coupon" in request.session:
                         try:
-                            coupon = Coupon.objects.get(
-                                amount=request.session["applied_coupon"]
-                            )
-                            coupon.used_count += 1
-                            coupon.save()
+                            Coupon.objects.filter(
+                                code=request.session.get("applied_coupon")["code"]
+                            ).update(used_count=F("used_count") + 1)
                         except Coupon.DoesNotExist:
-                            pass
+                            messages.warning(request, "Coupon is no longer Valid.")
                         finally:
                             del request.session["applied_coupon"]
 
@@ -375,10 +377,12 @@ def payment(request, payment_option, order_number):
                     order_obj.is_ordered = True
                     order_obj.save()
 
-                    send_mails_to_clients.delay(
-                        f"COD Payment Confirmation {order_obj.total}",
-                        f"Payment of ${order_obj.total} was successful, Order id ({order_obj.order_number}).",
-                        request.user.email,
+                    transaction.on_commit(
+                        lambda: send_mails_to_clients.delay(
+                            f"COD Payment Confirmation {order_obj.total}",
+                            f"Payment of ${order_obj.total} was successful, Order id ({order_obj.order_number}).",
+                            request.user.email,
+                        )
                     )
 
                     messages.success(request, "Order placed successfully!")
@@ -546,7 +550,9 @@ def create_checkout_session(request, order_number):
         order = Order.objects.get(order_number=order_number, is_ordered=False)
         order_items = OrderItem.objects.filter(order=order).select_related("product")
         discount_amount = request.session.get("applied_coupon", {})["amount"]
-        order_total = sum(item.get_product_price() * item.quantity for item in order_items)
+        order_total = sum(
+            item.get_product_price() * item.quantity for item in order_items
+        )
         line_items = [
             {
                 "price_data": {
@@ -672,10 +678,12 @@ def stripe_webhook(request):
                 )
 
                 if created:
-                    send_mails_to_clients.delay(
-                        f"Stripe Payment Confirmation {order.total}",
-                        f"Thank you for your purchase. Your order ID is {order_number}.",
-                        order.user.email,
+                    transaction.on_commit(
+                        lambda: send_mails_to_clients.delay(
+                            f"Stripe Payment Confirmation {order.total}",
+                            f"Thank you for your purchase. Your order ID is {order_number}.",
+                            order.user.email,
+                        )
                     )
 
         except Order.DoesNotExist:
@@ -696,27 +704,32 @@ def stripe_webhook(request):
 def delete_from_order(request, payment_option, order_number):
 
     try:
-        order_obj = Order.objects.get(
-            user=request.user, is_ordered=False, order_number=order_number
+        order_obj = get_object_or_404(
+            Order, user=request.user, is_ordered=False, order_number=order_number
         )
         try:
-            orderitem = OrderItem.objects.filter(
-                order=order_obj, user=request.user, product__stock__lt=1
-            )
+            with transaction.atomic():
+                orderitem = OrderItem.objects.filter(
+                    order=order_obj, user=request.user, product__stock__lt=1
+                )
 
-            if order_obj.items.count() == 1:
-                orderitem.delete()
-                order_obj.delete()
-                return redirect(
-                    "payment", payment_option=payment_option, order_number=order_number
-                )
-            elif orderitem.count() == 1:
-                orderitem.delete()
-                return redirect(
-                    "payment", payment_option=payment_option, order_number=order_number
-                )
-            else:
-                order_obj.delete()
+                if order_obj.items.count() == 1:
+                    orderitem.delete()
+                    order_obj.delete()
+                    return redirect(
+                        "payment",
+                        payment_option=payment_option,
+                        order_number=order_number,
+                    )
+                elif orderitem.count() == 1:
+                    orderitem.delete()
+                    return redirect(
+                        "payment",
+                        payment_option=payment_option,
+                        order_number=order_number,
+                    )
+                else:
+                    order_obj.delete()
                 return redirect("shop")
 
         except OrderItem.DoesNotExist:
@@ -742,12 +755,10 @@ def request_refund(request, order_number):
                     request.user.email,
                 )
 
-                return redirect("order-detail", order_number=order_number)
-            else:
-                return redirect("order-detail", order_number=order_number)
+            return redirect("order-detail", order_number=order_number)
 
         except Order.DoesNotExist:
-            pass
+            return redirect("order-list")
     else:
         messages.error(request, "Wrong Request")
 
@@ -765,50 +776,59 @@ def refund_payment(request, refund_number, order_number):
             messages.info(request, "Your Order is being considered")
             return redirect("order-detail", order_number=order_number)
 
-        if payment.method == "Stripe":
-            if request.method == "POST":
-                form = RefundForm(request.POST, request.FILES)
-                if form.is_valid():
-                    refund_model = Refund.objects.create(
-                        user=request.user,
-                        order=order,
-                        email=form.cleaned_data["email"],
-                        image=form.cleaned_data["image"],
-                        reason=form.cleaned_data["reason"],
-                        payment=payment,
-                        refund_id=f"ref_{refund_number}",
-                        amount=int(order.total * 100) / 100,
-                        status="PENDING",
-                    )
-
-                    order.status = "Refund Requested"
-                    order.save()
-
-                    send_mails_to_clients.delay(
-                        "Refund Was Send",
-                        f"We Recieved The Refunded We Well Check Your Order Soon. Refund Id {refund_model.refund_id}.",
-                        form.cleaned_data["email"],
-                    )
-
-                    messages.success(request, f"Refund Requested Successfully!")
-                    return redirect("order-detail", order_number=order_number)
-
-                else:
-                    messages.error(request, form.errors.as_text())
-
-            return render(
-                request, "orders/refund.html", {"order": order, "form": forms}
-            )
-        else:
+        if not payment.method == "Stripe":
+            messages.error(request, "the Payment Method Should by Stripe")
             return redirect("order-detail", order_number=order_number)
+
+        if request.method == "POST":
+            form = RefundForm(request.POST, request.FILES)
+            if form.is_valid():
+                try:
+                    with transaction.atomic():
+                        refund_model = Refund.objects.create(
+                            user=request.user,
+                            order=order,
+                            email=form.cleaned_data["email"],
+                            image=form.cleaned_data["image"],
+                            reason=form.cleaned_data["reason"],
+                            payment=payment,
+                            refund_id=f"ref_{refund_number}",
+                            amount=int(order.total * 100) / 100,
+                            status="PENDING",
+                        )
+
+                        order.status = "Refund Requested"
+                        order.save()
+
+                        transaction.on_commit(
+                            lambda: send_mails_to_clients.delay(
+                                "Refund Was Send",
+                                f"We Recieved The Refunded We Well Check Your Order Soon. Refund Id {refund_model.refund_id}.",
+                                form.cleaned_data["email"],
+                            )
+                        )
+
+                        messages.success(request, f"Refund Requested Successfully!")
+                        return redirect("order-detail", order_number=order_number)
+
+                except Exception:
+                    messages.error(request, "Something Went Wrong. Please try again")
+                    return redirect(
+                        "refund", refund_number=refund_number, order_number=order_number
+                    )
+
+            else:
+                messages.error(request, "Please correct the errors in the form")
+
     except Order.DoesNotExist:
         return redirect("order-detail", order_number=order_number)
+    return render(request, "orders/refund.html", {"order": order, "form": forms})
 
 
 @login_required(login_url="account_login")
 def success(request, order_number):
     try:
-        order = Order.objects.get(order_number=order_number)
+        order = Order.objects.get_order(order_number)
         return render(request, "orders/success.html", {"order": order})
     except Order.DoesNotExist:
         return redirect("order-list")
@@ -817,7 +837,7 @@ def success(request, order_number):
 @login_required(login_url="account_login")
 def failed(request, order_number):
     try:
-        order = Order.objects.get(order_number=order_number)
+        order = Order.objects.get_order(order_number)
         return render(request, "orders/failed.html", {"order": order})
     except Order.DoesNotExist:
         return redirect("order-list")
@@ -825,10 +845,9 @@ def failed(request, order_number):
 
 @login_required(login_url="account_login")
 def order_detail(request, order_number):
-    order = (
-        Order.objects.select_related("shipping_address")
-        .prefetch_related("payment")
-        .get(order_number=order_number)
+    order = get_object_or_404(
+        Order.objects.select_related("shipping_address").prefetch_related("payment"),
+        order_number=order_number,
     )
     order_items = OrderItem.objects.filter(
         order=order, user=request.user
@@ -836,11 +855,7 @@ def order_detail(request, order_number):
 
     form = CheckoutForm()
 
-    context = {
-        "order": order,
-        "form": form,
-        "order_items": order_items,
-    }
+    context = {"order": order, "form": form, "order_items": order_items}
     return render(request, "orders/order-detail.html", context)
 
 
@@ -855,15 +870,10 @@ def order_list(request):
 
 
 @login_required(login_url="account_login")
-def uncomplete_orders(request, order_number):
-    url = request.META.get("HTTP_REFERER")
-    if request.method == "POST":
-        try:
-            order = Order.objects.get(
-                order_number=order_number,
-                status="Uncomplete",
-                user=request.user,
-            )
+def uncomplete_order(request, order_number):
+    try:
+        url = request.META.get("HTTP_REFERER")
+        if request.method == "POST":
             payment_option = request.POST.get("payment_option")
 
             if "payment_option" not in request.POST:
@@ -871,22 +881,28 @@ def uncomplete_orders(request, order_number):
                     request, "You Must To Select One Of Those Fields, Don't Mess"
                 )
                 return redirect(url)
-            elif payment_option not in ["Stripe", "CashOnDelivery", "PayPal"]:
+            if payment_option not in ["Stripe", "CashOnDelivery", "PayPal"]:
                 messages.error(request, "Wrong Payment Option, Don't Mess")
                 return redirect(url)
-            else:
-                return redirect(
-                    "payment", payment_option=payment_option, order_number=order_number
-                )
-        except Order.DoesNotExist:
-            messages.error(request, "Order Does Not Exist")
-            return redirect("order-list")
+
+            order = get_object_or_404(
+                Order,
+                order_number=order_number,
+                status="Uncomplete",
+                user=request.user,
+            )
+            return redirect(
+                "payment", payment_option=payment_option, order_number=order_number
+            )
+    except Order.DoesNotExist:
+        messages.error(request, "Order Does Not Exist")
+        return redirect("order-list")
 
 
 @login_required(login_url="account_login")
 def order_canceled(request, order_number):
     try:
-        order = Order.objects.get(order_number=order_number)
+        order = Order.objects.get_order(order_number)
         if request.method == "POST":
             order.status = "Canceled"
             order.save()
