@@ -71,6 +71,7 @@ Sociala/Cart Summary
                                             <form method="POST" class="quantity-form" action='{% url "c-b" i.product.category.slug i.product.slug i.product.pk %}'>
                                                 <div class="quantity">
                                                     {% csrf_token %}
+                                                    <input type="hidden" name="next" value='{{ request.get_full_path }}'>
                                                     <input readonly type='number' class="quantity-input open-font fw-600" value="{{ i.quantity }}">
                                                     <div class="dec qtybutton">
                                                         <a style='color:black' href="{% url 'minus-from-cart' i.pk %}" class="minus-item" data-cartitem-id="{{ i.pk }}">-</a>
@@ -141,6 +142,7 @@ Sociala/Cart Summary
                                     <div class="coupon-wrap">
                                         <form id='couponForm' method="post" action="{% url 'apply-coupon' %}" class="d-flex mt-3 ">
                                             {% csrf_token %}
+                                            <input type="hidden" name="next" value='{{ request.get_full_path }}'>
                                             {{ couponform.code }}
                                             
                                             {% if couponform.code.errors %}

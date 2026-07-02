@@ -114,7 +114,7 @@ Sociala/{{ product }}
 
                         <form method='POST' action="{% url 'c-b' product.category.slug product.slug product.pk %}" class="form--action mt-4"  id="variationForm">
                             {% csrf_token %}
-
+                            <input type="hidden" name="next" value='{{ request.get_full_path }}'>
                             {% if varform.color %}
                                 <h5>{% trans 'Colors' %}:</h5>
                                 <div class="variation-group" data-variation-prices="{{ varform.color_prices|jsonify }}">

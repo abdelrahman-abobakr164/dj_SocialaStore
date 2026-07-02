@@ -1,4 +1,5 @@
 from django.shortcuts import redirect, get_object_or_404, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from cart.forms import VariationForm, CouponForm
 from django.utils.timezone import now
 from django.db.models import F, Sum
@@ -9,15 +10,23 @@ from core.models import *
 from orders.models import OrderItem
 
 
+def redirect_back(request, fallback="cart-summary"):
+    next_url = request.POST.get("next")
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}
+    ):
+        return redirect(next_url)
+    return redirect(fallback)
+
+
 def validiation_coupon(request, code, cart_obj):
-    url = request.META.get("HTTP_REFERER")
     try:
         coupon = Coupon.objects.get(code=code)
         cart_items = CartItem.objects.get_cart(cart_obj)
 
         if cart_items.count() == 0 and "orderitem_id" not in request.session:
             messages.warning(request, "You Don't Have Any Item.")
-            return redirect(url)
+            return redirect_back(request)
 
         total_price = (
             sum(item.get_product_price() for item in cart_items)
@@ -27,25 +36,24 @@ def validiation_coupon(request, code, cart_obj):
 
         if coupon.amount >= total_price:
             messages.warning(request, "Your Total Price is Less Than Coupon Amount.")
-            return redirect(url)
+            return redirect_back(request)
 
         if coupon.end_date and now() > coupon.end_date:
             messages.warning(request, "This Coupon Code is Expired.")
-            return redirect(url)
+            return redirect_back(request)
 
         if coupon.max_uses and coupon.used_count == coupon.max_uses:
             messages.warning(request, "This Coupon Code Has Been Ended.")
-            return redirect(url)
+            return redirect_back(request)
 
         return coupon
 
     except Coupon.DoesNotExist:
         messages.error(request, "Invlalid Coupon Code")
-        return redirect(url)
+        return redirect_back(request)
 
 
 def apply_coupon(request):
-    url = request.META.get("HTTP_REFERER")
     cart_obj, created = Cart.objects.get_or_new(request)
     cart_items = CartItem.objects.get_cart(cart_obj)
     total_price = sum(item.get_product_price() for item in cart_items)
@@ -66,10 +74,9 @@ def apply_coupon(request):
                 request.session.modified = True
                 messages.success(request, "Your Coupon Added Succesfully!")
 
-            return redirect(url)
-
+            return redirect_back(request)
         else:
-            return redirect(url)
+            return redirect_back(request)
 
 
 def add_and_buy(request, category_slug, product_slug, pk):
@@ -81,6 +88,7 @@ def add_and_buy(request, category_slug, product_slug, pk):
     cart_items = CartItem.objects.filter(cart=cart_obj, product=product)
     products = cart_items.values_list("product_id", flat=True)
     product_count = cart_items.aggregate(total=Sum("quantity"))["total"]
+
     if request.method == "POST":
         action = request.POST.get("action")
         if not action:
@@ -113,7 +121,7 @@ def add_and_buy(request, category_slug, product_slug, pk):
 
             if action in ("add_to_cart", "+"):
                 if product_count:
-                    if product_count >= product.stock:
+                    if product_count == product.stock:
                         if product.id in products:
                             messages.warning(
                                 request,
@@ -123,32 +131,38 @@ def add_and_buy(request, category_slug, product_slug, pk):
                             messages.warning(
                                 request, "This Product is not in Stock Anymore"
                             )
-                        return redirect(request.META.get("HTTP_REFERER", "/"))
+                        return redirect_back(request)
                 else:
-                    if product.stock < 1:
-                        messages.warning(
-                            request, "This Product is not in Stock Anymore"
-                        )
-                        return redirect(request.META.get("HTTP_REFERER", "/"))
+                    if product.stock == 0:
+                        messages.warning(request, "This Product is not in Stock")
+                        return redirect_back(request)
 
-                cartitems = CartItem.objects.filter(
-                    cart=cart_obj,
-                    product=product,
-                    color=color,
-                    size=size,
-                ).update(price=F("price") + total_price, quantity=F("quantity") + 1)
-
-                if not cartitems:
-                    CartItem.objects.create(
+                if product_count > product.stock:
+                    messages.warning(
+                        request, f"There is only {product.stock} Left in Stock"
+                    )
+                    for item in cart_items:
+                        item.quantity = product.stock
+                        item.save()
+                else:
+                    cartitems = CartItem.objects.filter(
                         cart=cart_obj,
                         product=product,
                         color=color,
                         size=size,
-                        price=total_price,
-                    )
+                    ).update(price=F("price") + total_price, quantity=F("quantity") + 1)
 
-                messages.success(request, "Product Added To Cart!")
-                return redirect(request.META.get("HTTP_REFERER", "/"))
+                    if not cartitems:
+                        CartItem.objects.create(
+                            cart=cart_obj,
+                            product=product,
+                            color=color,
+                            size=size,
+                            price=total_price,
+                        )
+
+                    messages.success(request, "Product Added To Cart!")
+                    return redirect_back(request)
 
             elif action == "buy_now":
                 if product.stock <= 1:
@@ -157,12 +171,12 @@ def add_and_buy(request, category_slug, product_slug, pk):
                             request,
                             "This Product is not in Stock Anymore, Complete The Checkout Operation",
                         )
-                        return redirect(request.META.get("HTTP_REFERER", "/"))
+                        return redirect_back(request)
                     else:
                         messages.warning(
                             request, "This Product is not in Stock Anymore"
                         )
-                        return redirect(request.META.get("HTTP_REFERER", "/"))
+                        return redirect_back(request)
                 orderitem = OrderItem.objects.create(
                     user=request.user if request.user.is_authenticated else None,
                     product_id=product.id,
@@ -180,9 +194,9 @@ def add_and_buy(request, category_slug, product_slug, pk):
 
         except Variation.DoesNotExist:
             messages.warning(request, "The selected variation is not available")
-            return redirect(request.META.get("HTTP_REFERER", "/"))
+            return redirect_back(request)
 
-    return redirect(request.META.get("HTTP_REFERER", "/"))
+    return redirect_back(request)
 
 
 def remove_from_cart(request, cartitem_pk):
@@ -190,7 +204,6 @@ def remove_from_cart(request, cartitem_pk):
     if cartitems.exists():
         cartitems.delete()
         return redirect("cart-summary")
-
     else:
         return redirect("cart-summar")
 

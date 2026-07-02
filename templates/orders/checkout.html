@@ -37,6 +37,7 @@ Siciala/Checkout
                         <div class="card bg-greyblue border-0 p-2 mb-5" >
                             <form action="{% url 'apply-coupon' %}" id='coupon_info' method='POST'>
                                 {% csrf_token %}
+                                <input type="hidden" name="next" value='{{ request.get_full_path }}'>
                                 <div class="coupon float-left mb-2">
                                     {{couponform.code}}
                                     <button type="submit" class="bg-dark text-white fw-600 text-uppercase font-xssss border-dark border rounded-3 border-size-md d-inline-block w175 p-3 text-center ls-3">Apply Coupon</button>

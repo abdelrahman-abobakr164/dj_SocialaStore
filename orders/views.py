@@ -13,6 +13,7 @@ import logging
 import json
 
 from orders.tasks import send_mails_to_clients
+from cart.views import redirect_back
 from cart.forms import CouponForm
 from core.models import Product
 from orders.models import *
@@ -340,14 +341,14 @@ def payment(request, payment_option, order_number):
                             messages.error(
                                 request, f"Product {item.product.name} not found"
                             )
-                            return redirect(request.META.get("HTTP_REFERER", "shop"))
+                            return redirect_back(request)
 
                         if product.stock < item.quantity:
                             messages.warning(
                                 request,
                                 f'Sorry, "{product.name}" has insufficient stock. Available: {product.stock}',
                             )
-                            return redirect(request.META.get("HTTP_REFERER"))
+                            return redirect_back(request)
 
                         product.stock -= item.quantity
                         product.bestseller += 1
@@ -872,7 +873,6 @@ def order_list(request):
 @login_required(login_url="account_login")
 def uncomplete_order(request, order_number):
     try:
-        url = request.META.get("HTTP_REFERER")
         if request.method == "POST":
             payment_option = request.POST.get("payment_option")
 
@@ -880,10 +880,10 @@ def uncomplete_order(request, order_number):
                 messages.warning(
                     request, "You Must To Select One Of Those Fields, Don't Mess"
                 )
-                return redirect(url)
+                return redirect_back(request)
             if payment_option not in ["Stripe", "CashOnDelivery", "PayPal"]:
                 messages.error(request, "Wrong Payment Option, Don't Mess")
-                return redirect(url)
+                return redirect_back(request)
 
             order = get_object_or_404(
                 Order,

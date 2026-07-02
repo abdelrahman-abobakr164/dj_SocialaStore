@@ -1,7 +1,10 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.shortcuts import render, redirect
+from django.core.mail import send_mail
 from django.contrib import messages
+from django.db import transaction
+from django.conf import settings
 
 from accounts.models import Contact
 from orders.models import Address
@@ -97,6 +100,20 @@ def contact_us(request):
     if request.method == "POST":
         email = request.POST.get("email")
         message = request.POST.get("message")
-        Contact.objects.create(email=email, message=message)
-        return redirect("contact-us")
+        try:
+            with transaction.atomic():
+                Contact.objects.create(email=email, message=message)
+                transaction.on_commit(
+                    lambda: send_mail(
+                        subject=f"Mail From Store from {email}",
+                        message=message,
+                        from_email=email,
+                        recipient_list=[settings.EMAIL_HOST_USER],
+                        fail_silently=False,
+                    )
+                )
+                return redirect("contact-us")
+        except:
+            messages.error(request, "Something Went Wrong, Please Try again")
+            return redirect("contact-us")
     return render(request, "accounts/contact-us.html")

@@ -3,7 +3,6 @@ import paypalrestsdk
 import environ
 import os
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
@@ -11,7 +10,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 env = environ.Env()
 
 
-SECRET_KEY = env("SECRET_KEY", default="")
+SECRET_KEY = env("SECRET_KEY")
 STRIPE_PUBLISHABLE_KEY = env("STRIPE_PUBLISHABLE_KEY", default="")
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
 STRIPE_WEBHOOK_KEY = env("STRIPE_WEBHOOK_KEY", default="")
@@ -30,15 +29,10 @@ paypalrestsdk.configure(
     }
 )
 
-DEBUG = env.bool("DEBUG", default=True)
+DEBUG = env.bool("DEBUG")
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "eager-badly-crayfish.ngrok-free.app",
-]
-
-CSRF_TRUSTED_ORIGINS = ["https://eager-badly-crayfish.ngrok-free.app"]
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS")
 
 INSTALLED_APPS = [
     "modeltranslation",
@@ -173,6 +167,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 8},
     },
     {
         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
@@ -204,8 +199,8 @@ LOCALE_PATHS = [
 
 
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
@@ -218,8 +213,9 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
+
 LOGIN_REDIRECT_URL = "store"
-LOGOUT_REDIRECT_URL = "/en/store/"
+LOGOUT_REDIRECT_URL = "store"
 
 
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
@@ -264,35 +260,42 @@ PHONENUMBER_DEFAULT_FORMAT = "INTERNATIONAL"
 CELERY_BROKER_URL = env("REDIS_URL", default="")
 CELERY_RESULT_BACKEND = env("REDIS_URL", default="")
 
-CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "Africa/Cairo"
-CELERY_ENABLE_UTC = False
-
-CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
-CELERY_BROKER_CONNECTION_RETRY = True
-CELERY_BROKER_CONNECTION_MAX_RETRIES = 10
-
-CELERY_TASK_ALWAYS_EAGER = False
-CELERY_TASK_EAGER_PROPAGATES = True
-CELERY_TASK_IGNORE_RESULT = True
-CELERY_TASK_STORE_EAGER_RESULT = False
 CELERY_TASK_TRACK_STARTED = False
-CELERY_TASK_TIME_LIMIT = 30 * 60
 
-CELERY_TASK_REJECT_ON_WORKER_LOST = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60
+
+
 CELERY_TASK_ACKS_LATE = True
-CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+
+CELERY_TASK_IGNORE_RESULT = True
+
+CELERY_ENABLE_UTC = False
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_BROKER_CONNECTION_MAX_RETRIES = 10
 CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000
 
-# SECURE_SSL_REDIRECT = True
-# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# CELERY_BROKER_CONNECTION_RETRY = True
+# CELERY_TASK_ALWAYS_EAGER = False
+# CELERY_TASK_EAGER_PROPAGATES = True
+# CELERY_TASK_STORE_EAGER_RESULT = False
 
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = "DENY"
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+if DEBUG == False:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_HSTS_SECONDS = 31_536_000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_SSL_REDIRECT = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    X_FRAME_OPTIONS = "DENY"
+    CSRF_COOKIE_SECURE = True
