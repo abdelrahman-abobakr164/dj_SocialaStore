@@ -84,7 +84,7 @@ class Product(models.Model):
         )
         avg = 0
         if reviews["average"] is not None:
-            avg = sum(reviews["average"])
+            avg = Avg(reviews["average"])
         return avg
 
 
