@@ -379,14 +379,6 @@
 },
 {
   "model": "wishlist.wishlist",
-  "pk": 56,
-  "fields": {
-    "user": 2,
-    "product": []
-  }
-},
-{
-  "model": "wishlist.wishlist",
   "pk": 57,
   "fields": {
     "user": null,
@@ -529,14 +521,6 @@
   "pk": 69,
   "fields": {
     "user": null,
-    "active": true
-  }
-},
-{
-  "model": "cart.cart",
-  "pk": 70,
-  "fields": {
-    "user": 2,
     "active": true
   }
 },
@@ -905,40 +889,6 @@
     "zipcode": "11111",
     "address_type": "Billing",
     "default": false
-  }
-},
-{
-  "model": "orders.address",
-  "pk": 11,
-  "fields": {
-    "user": 2,
-    "first_name": "john",
-    "last_name": "doe",
-    "phone": "+20 10 99999999",
-    "email": "ahmedalyboss3@gmail.com",
-    "address1": "street address",
-    "address2": "",
-    "city": "Giza",
-    "zipcode": "11111",
-    "address_type": "Shipping",
-    "default": true
-  }
-},
-{
-  "model": "orders.address",
-  "pk": 12,
-  "fields": {
-    "user": 2,
-    "first_name": "john",
-    "last_name": "doe",
-    "phone": "+20 10 99999999",
-    "email": "ahmedalyboss3@gmail.com",
-    "address1": "street address",
-    "address2": "",
-    "city": "Giza",
-    "zipcode": "11111",
-    "address_type": "Billing",
-    "default": true
   }
 },
 {
