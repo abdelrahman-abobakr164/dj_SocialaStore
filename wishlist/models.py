@@ -78,8 +78,10 @@ class WishManager(models.Manager):
                     request.session["list_id"] = list_obj.id
             else:
                 list_obj = self.model.objects.create(id=list_id)
-                list_obj.product.add(product)
+                if product is not None:
+                    list_obj.product.add(product)
                 created = True
+
                 request.session["list_id"] = list_obj.id
 
         return list_obj, created

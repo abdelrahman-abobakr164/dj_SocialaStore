@@ -20,7 +20,7 @@ PAYPAL_CLIENT_ID = env("PAYPAL_CLIENT_ID")
 PAYPAL_CLIENT_SECRET = env("PAYPAL_CLIENT_SECRET")
 PAYPAL_MODE = "sandbox"
 PAYPAL_BASE_URL = "https://api-m.sandbox.paypal.com"
-SITE_URL = "https://eager-badly-crayfish.ngrok-free.app"
+SITE_URL = "https://dj-socialastore.onrender.com"
 
 paypalrestsdk.configure(
     {
