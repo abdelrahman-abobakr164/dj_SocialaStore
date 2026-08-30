@@ -3,6 +3,9 @@ import paypalrestsdk
 import environ
 import os
 import dj_database_url
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
@@ -33,6 +36,12 @@ paypalrestsdk.configure(
 DEBUG = env.bool("DEBUG", default=True)
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": env("CLOUD_NAME"),
+    "API_KEY": env("CLOUDINARY_API_KEY"),
+    "API_SECRET": env("CLOUDINARY_API_SECRET"),
+}
+
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS")
 
 INSTALLED_APPS = [
@@ -58,6 +67,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "phonenumber_field",
     "django.contrib.humanize",
+    "cloudinary",
+    "cloudinary_storage",
 ]
 
 DEBUG_TOOLBAR_PANELS = [
@@ -193,6 +204,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
