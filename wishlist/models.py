@@ -37,7 +37,8 @@ class WishManager(models.Manager):
                         list_obj = session_list
 
                     else:
-                        user_list.product.add(product)
+                        if product:
+                            user_list.product.add(product)
                         user_list.save()
                         list_obj = user_list
 
