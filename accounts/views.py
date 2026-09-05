@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from django.core.mail import send_mail
 from django.contrib import messages
 from django.db import transaction
-from django.conf import settings
+from django.conf import settings as setting_file
 
 from accounts.models import Contact
 from orders.models import Address
@@ -108,7 +108,7 @@ def contact_us(request):
                         subject=f"Mail From Store from {email}",
                         message=message,
                         from_email=email,
-                        recipient_list=[settings.EMAIL_HOST_USER],
+                        recipient_list=[setting_file.EMAIL_HOST_USER],
                         fail_silently=False,
                     )
                 )

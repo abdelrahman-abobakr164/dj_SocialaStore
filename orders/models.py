@@ -51,7 +51,7 @@ REFUND_CHOICES = [
 
 class OrderQuerySet(models.QuerySet):
     def get_order(self, order_number):
-        return self.filter(order_number=order_number)
+        return self.get(order_number=order_number)
 
 
 class Order(models.Model):

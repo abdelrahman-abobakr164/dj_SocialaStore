@@ -550,7 +550,7 @@ def create_checkout_session(request, order_number):
     try:
         order = Order.objects.get(order_number=order_number, is_ordered=False)
         order_items = OrderItem.objects.filter(order=order).select_related("product")
-        discount_amount = request.session.get("applied_coupon", {})["amount"]
+        discount_amount = request.session.get("applied_coupon", {}).get("amount", 0)
         order_total = sum(
             item.get_product_price() * item.quantity for item in order_items
         )

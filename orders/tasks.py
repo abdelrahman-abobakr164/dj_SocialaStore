@@ -12,5 +12,4 @@ def send_mails_to_clients(subject, message, to_client_email):
         recipient_list=[to_client_email],
         fail_silently=False,
     )
-
     return None

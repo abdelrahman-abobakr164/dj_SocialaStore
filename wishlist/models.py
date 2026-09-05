@@ -39,7 +39,7 @@ class WishManager(models.Manager):
                     else:
                         if product:
                             user_list.product.add(product)
-                        user_list.save()
+                            user_list.save()
                         list_obj = user_list
 
                 except self.model.DoesNotExist:
@@ -69,9 +69,10 @@ class WishManager(models.Manager):
         else:
             if list_id:
                 try:
-                    list_obj = self.get_queryset().get(id=list_id)
-                    list_obj.product.add(product)
-                    list_obj.save()
+                    if product:
+                        list_obj = self.get_queryset().get(id=list_id)
+                        list_obj.product.add(product)
+                        list_obj.save()
                 except self.model.DoesNotExist:
                     list_obj = self.model.objects.create(id=list_id)
                     list_obj.product.add(product)

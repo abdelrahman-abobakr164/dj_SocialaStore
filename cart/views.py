@@ -87,7 +87,7 @@ def add_and_buy(request, category_slug, product_slug, pk):
     cart_obj, created = Cart.objects.get_or_new(request)
     cart_items = CartItem.objects.filter(cart=cart_obj, product=product)
     products = cart_items.values_list("product_id", flat=True)
-    product_count = cart_items.aggregate(total=Sum("quantity"))["total"]
+    product_count = cart_items.aggregate(total=Sum("quantity"))["total"] or 0
 
     if request.method == "POST":
         action = request.POST.get("action")
