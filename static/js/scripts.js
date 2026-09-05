@@ -1,6 +1,10 @@
 $(document).ready(function() {
     "use strict";
 
+    // Detect the active text direction so every Owl Carousel instance
+    // mirrors correctly on Arabic pages instead of rendering off-screen.
+    const isRtl = document.documentElement.getAttribute('dir') === 'rtl';
+
     PageScroll();
 
     // Loading Box (Preloader)
@@ -25,6 +29,7 @@ $(document).ready(function() {
     PageLoad();
 
     $('.carousel-card').owlCarousel({
+        rtl: isRtl,
         loop:false,
         margin:10,
         nav:false,
@@ -34,6 +39,7 @@ $(document).ready(function() {
     })
 
      $('.category-card').owlCarousel({
+        rtl: isRtl,
         loop:false,
         margin:7,
         nav:true,
@@ -44,6 +50,7 @@ $(document).ready(function() {
     })
 
      $('.banner-slider').owlCarousel({
+        rtl: isRtl,
         loop:true,
         margin:15,
         nav:true,
@@ -65,6 +72,7 @@ $(document).ready(function() {
     })
 
      $('.brand-slider').owlCarousel({
+        rtl: isRtl,
         loop:true,
         margin:15,
         nav:false,
@@ -86,6 +94,7 @@ $(document).ready(function() {
     })
 
     $('.product-slider').owlCarousel({
+        rtl: isRtl,
         loop:true,
         margin:3,
         // nav:true,
@@ -107,6 +116,7 @@ $(document).ready(function() {
     })
 
      $('.feedback-slider').owlCarousel({
+        rtl: isRtl,
         loop:true,
         margin:15,
         nav:true,
@@ -128,6 +138,7 @@ $(document).ready(function() {
         }
     })
      $('.feedback-slider2').owlCarousel({
+        rtl: isRtl,
         loop:true,
         margin:15,
         nav:true,
@@ -150,6 +161,7 @@ $(document).ready(function() {
     })
 
     $('.story-slider').owlCarousel({
+        rtl: isRtl,
         loop:true,
         margin:0,
         nav:true,
@@ -172,6 +184,7 @@ $(document).ready(function() {
     })
 
     $('.product-slider-6').owlCarousel({
+        rtl: isRtl,
         loop:true,
         margin:15,
         nav:false,
