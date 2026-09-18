@@ -183,3 +183,9 @@ class Review(models.Model):
 
     class Meta:
         ordering = ("-updated_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "product"],
+                name="unique_user_product",
+            ),
+        ]

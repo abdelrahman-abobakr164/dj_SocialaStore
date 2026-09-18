@@ -67,7 +67,7 @@ def checkout(request):
         if item.product.stock < item.quantity:
             messages.warning(
                 request,
-                f'Sorry, The Quantity of "{product.name}" has Run Out',
+                f'Sorry, The Quantity of "{item.product.name}" has Run Out',
             )
             return redirect("shop")
 
@@ -873,6 +873,9 @@ def order_list(request):
 @login_required(login_url="account_login")
 def uncomplete_order(request, order_number):
     try:
+        order = get_object_or_404(
+            Order, order_number=order_number, status="Uncomplete", user=request.user
+        )
         if request.method == "POST":
             payment_option = request.POST.get("payment_option")
 
@@ -885,12 +888,6 @@ def uncomplete_order(request, order_number):
                 messages.error(request, "Wrong Payment Option, Don't Mess")
                 return redirect_back(request)
 
-            order = get_object_or_404(
-                Order,
-                order_number=order_number,
-                status="Uncomplete",
-                user=request.user,
-            )
             return redirect(
                 "payment", payment_option=payment_option, order_number=order_number
             )
