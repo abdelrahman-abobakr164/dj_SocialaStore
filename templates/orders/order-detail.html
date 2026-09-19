@@ -149,6 +149,14 @@ Sociala/Order Detail
                             <div class="checkout-payment card border-0 mb-3 bg-greyblue p-lg-4 p-4">
                                 <h3 class="w-100 p-3 mt-3 font-xsss text-center text-white bg-secondary rounded-3 fw-600 ls-3">{{order.status}}</h3>
                             </div>
+                        {% elif order.status == 'Canceled' %}
+                            <div class="checkout-payment card border-0 mb-3 bg-greyblue p-lg-4 p-4">
+                                <h3 class="w-100 p-3 mt-3 font-xsss text-center text-white bg-danger rounded-3 fw-600 ls-3">Canceled</h3>
+                            </div>
+                        {% elif order.status == 'Refund Declined' %}
+                            <div class="checkout-payment card border-0 mb-3 bg-greyblue p-lg-4 p-4">
+                                <h3 class="w-100 p-3 mt-3 font-xsss text-center text-white bg-success rounded-3 fw-600 ls-3">Refund Declined</h3>
+                            </div>
                         {% endif %}
                     </div>
                 </div>

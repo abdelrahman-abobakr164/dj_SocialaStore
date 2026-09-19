@@ -32,6 +32,7 @@ ORDER_STATUS = (
     ("Canceled", "Canceled"),
     ("Refund Requested", "Refund Requested"),
     ("Refunded", "Refunded"),
+    ("Refund Declined", "Refund Declined"),
 )
 
 
@@ -215,7 +216,6 @@ class Refund(models.Model):
     def process_refund(self, payment_intent_id):
         try:
             payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
-
             charge_id = payment_intent.latest_charge
 
             refund = stripe.Refund.create(
@@ -224,9 +224,12 @@ class Refund(models.Model):
             )
             self.status = "APPROVED"
             self.order.status = "Refunded"
+            self.order.save()
             self.save()
             return refund
         except StripeError as e:
             self.status = "DECLINED"
+            self.order.status = "Refund Declined"
+            self.order.save()
             self.save()
             raise e

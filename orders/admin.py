@@ -88,7 +88,7 @@ class RefundAdmin(admin.ModelAdmin):
                 try:
                     refund.process_refund(refund.payment.payment_id)
                     self.message_user(request, f"Refund APPROVED.")
-
+                    # Email after approvedc
                 except Exception as e:
                     self.message_user(request, f"Error processing {e}")
             else:
@@ -98,7 +98,10 @@ class RefundAdmin(admin.ModelAdmin):
         for refund in queryset.filter(status="PENDING"):
             try:
                 refund.status = "DECLINED"
+                refund.order.status = "Refund Declined"
                 refund.save()
+                refund.order.save()
+                # Email after Declined
                 self.message_user(request, f"Refund DECLINED.")
             except Exception as e:
                 self.message_user(request, f"Error processing {e}")
