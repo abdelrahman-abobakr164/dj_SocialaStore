@@ -197,9 +197,9 @@ Sociala/{{ product }}
 
             <div class="tab-pane fade show active" id="tab-pane-3">
                 <div class="row">
-                    <h4 class="mb-4">{{ product.products.all.count }} review for "{{ product.name }}"</h4>
-                    {% if product.products.all %}
-                        {% for i in product.products.all %}
+                    <h4 class="mb-4">{{ reviews_count }} review for "{{ product.name }}"</h4>
+                    {% if reviews %}
+                        {% for i in reviews %}
                             <div class="col-md-6">
                                 <div class="media mb-4">
                                     <div class="media-body">

@@ -200,12 +200,9 @@ def add_and_buy(request, category_slug, product_slug, pk):
 
 
 def remove_from_cart(request, cartitem_pk):
-    cartitems = get_object_or_404(CartItem, id=cartitem_pk)
-    if cartitems.exists():
-        cartitems.delete()
-        return redirect("cart-summary")
-    else:
-        return redirect("cart-summar")
+    cartitem = get_object_or_404(CartItem, id=cartitem_pk)
+    cartitem.delete()
+    return redirect("cart-summary")
 
 
 def minus_from_cart(request, cartitem_pk):

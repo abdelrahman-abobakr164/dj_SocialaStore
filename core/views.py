@@ -227,7 +227,8 @@ def product_detail(request, category_slug, slug, pk):
                 pk=pk,
             )
             cache.set(cache_key, product, timeout=60 * 15)
-
+        reviews = product.products.select_related("user").order_by("-updated_at")
+        reviews_count = reviews.count()
         varform = VariationForm(product=product)
 
         if request.user.is_authenticated:
@@ -252,6 +253,8 @@ def product_detail(request, category_slug, slug, pk):
         request.session.modified = True
         context = {
             "product": product,
+            "reviews": reviews,
+            "reviews_count": reviews_count,
             "form": ReviewForm(),
             "varform": varform,
             "orderitem": orderitem,
@@ -264,7 +267,7 @@ def product_detail(request, category_slug, slug, pk):
 
 def product_review(request, category_slug, slug, pk):
     product = get_object_or_404(
-        Product.objects.select_related("category", "category__slug"),
+        Product.objects.select_related("category"),
         category__slug=category_slug,
         slug=slug,
         pk=pk,

@@ -44,8 +44,9 @@ class WishManager(models.Manager):
 
                 except self.model.DoesNotExist:
                     if user_list:
-                        user_list.product.add(product)
-                        user_list.save()
+                        if product:
+                            user_list.product.add(product)
+                            user_list.save()
                         list_obj = user_list
                     else:
                         create_obj = self.model.objects.create(user=request.user)
@@ -55,8 +56,9 @@ class WishManager(models.Manager):
                         created = True
             else:
                 if user_list:
-                    user_list.product.add(product)
-                    user_list.save()
+                    if product:
+                        user_list.product.add(product)
+                        user_list.save()
                     list_obj = user_list
                 else:
                     create_obj = self.model.objects.create(user=request.user)
