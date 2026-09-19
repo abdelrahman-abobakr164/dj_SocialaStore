@@ -214,55 +214,52 @@ def shop(request, color=None):
 
 
 def product_detail(request, category_slug, slug, pk):
-    try:
-        cache_key = f"Product{pk}"
-        product = cache.get(cache_key)
-        if not product:
-            product = get_object_or_404(
-                Product.objects.select_related("category")
-                .prefetch_related("gallary", "products")
-                .annotate(reviews_count=Count("products")),
-                category__slug=category_slug,
-                slug=slug,
-                pk=pk,
-            )
-            cache.set(cache_key, product, timeout=60 * 15)
-        reviews = product.products.select_related("user").order_by("-updated_at")
-        reviews_count = reviews.count()
-        varform = VariationForm(product=product)
+    cache_key = f"Product{pk}"
+    product = cache.get(cache_key)
+    if not product:
+        product = get_object_or_404(
+            Product.objects.select_related("category")
+            .prefetch_related("gallary")
+            .annotate(reviews_count=Count("products")),
+            category__slug=category_slug,
+            slug=slug,
+            pk=pk,
+        )
+        cache.set(cache_key, product, timeout=60 * 15)
+    reviews = product.products.select_related("user").order_by("-updated_at")
+    reviews_count = reviews.count()
+    varform = VariationForm(product=product)
 
-        if request.user.is_authenticated:
-            orderitem = OrderItem.objects.filter(
-                user=request.user, product=product
-            ).exists()
-        else:
-            orderitem = None
+    if request.user.is_authenticated:
+        orderitem = OrderItem.objects.filter(
+            user=request.user, product=product
+        ).exists()
+    else:
+        orderitem = None
 
-        if "recently_products" in request.session:
-            if product.category.name in request.session["recently_products"]:
-                request.session["recently_products"].remove(product.category.name)
+    if "recently_products" in request.session:
+        if product.category.name in request.session["recently_products"]:
+            request.session["recently_products"].remove(product.category.name)
 
-            request.session["recently_products"].append(product.category.name)
+        request.session["recently_products"].append(product.category.name)
 
-            if len(request.session["recently_products"]) > 4:
-                request.session["recently_products"].pop(0)
+        if len(request.session["recently_products"]) > 4:
+            request.session["recently_products"].pop(0)
 
-        else:
-            request.session["recently_products"] = [product.category.name]
+    else:
+        request.session["recently_products"] = [product.category.name]
 
-        request.session.modified = True
-        context = {
-            "product": product,
-            "reviews": reviews,
-            "reviews_count": reviews_count,
-            "form": ReviewForm(),
-            "varform": varform,
-            "orderitem": orderitem,
-        }
+    request.session.modified = True
+    context = {
+        "product": product,
+        "reviews": reviews,
+        "reviews_count": reviews_count,
+        "form": ReviewForm(),
+        "varform": varform,
+        "orderitem": orderitem,
+    }
 
-        return render(request, "core/detail.html", context)
-    except Product.DoesNotExist:
-        return redirect("shop")
+    return render(request, "core/detail.html", context)
 
 
 def product_review(request, category_slug, slug, pk):
@@ -284,6 +281,7 @@ def product_review(request, category_slug, slug, pk):
                         "review": form.cleaned_data["review"],
                     },
                 )
+                cache.delete(f"Product{product.pk}")
                 messages.success(
                     request, "Your Review has been Submitted Successfully!"
                 )
