@@ -1,4 +1,5 @@
 from django.contrib import admin
+from .tasks import send_mails_to_clients
 from .models import *
 
 
@@ -88,7 +89,11 @@ class RefundAdmin(admin.ModelAdmin):
                 try:
                     refund.process_refund(refund.payment.payment_id)
                     self.message_user(request, f"Refund APPROVED.")
-                    # Email after approvedc
+                    send_mails_to_clients.delay(
+                        "Refund APPROVED.",
+                        "Your Refund has been APPROVED.",
+                        refund.email,
+                    )
                 except Exception as e:
                     self.message_user(request, f"Error processing {e}")
             else:
@@ -101,8 +106,12 @@ class RefundAdmin(admin.ModelAdmin):
                 refund.order.status = "Refund Declined"
                 refund.save()
                 refund.order.save()
-                # Email after Declined
                 self.message_user(request, f"Refund DECLINED.")
+                send_mails_to_clients.delay(
+                    "Refund Declined",
+                    "Your Refund has been DECLINED.",
+                    refund.email,
+                )
             except Exception as e:
                 self.message_user(request, f"Error processing {e}")
 
