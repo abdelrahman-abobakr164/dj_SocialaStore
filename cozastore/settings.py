@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "phonenumber_field",
     "django.contrib.humanize",
+    "drf_spectacular",
 ]
 
 JAZZMIN_SETTINGS = {
@@ -140,6 +141,9 @@ DATABASES = {"default": dj_database_url.config(default=os.environ.get("DATABASE_
 
 SITE_ID = 1
 
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
